@@ -53,13 +53,22 @@ In cPanel:
 1. Open **Git™ Version Control**.
 2. Click **Create**.
 3. Choose **Clone a Repository**.
-4. Clone URL: the private GitHub HTTPS URL or SSH URL.
-5. Repository Path: **outside** `public_html`, for example:
+4. Clone URL: `https://github.com/bodaboraapp-commits/mzigo.online.git`
+5. Repository Path:
    ```
-   /home/<cpanel-user>/repositories/mzigo
+   /home/tokeqvlx/mzigo.online
    ```
-6. Repository Name: `mzigo`.
+6. Repository Name: `mzigo.online`.
 7. Create.
+
+The deployment target in `.cpanel.yml` is currently `$HOME/public_html/`. Confirm the domain's Document Root in cPanel → **Domains**:
+
+- If it is `/home/tokeqvlx/public_html`, the current file is correct.
+- If the domain root is `/home/tokeqvlx/mzigo.online`, change the first task in `.cpanel.yml` to:
+  ```
+  - export DEPLOYPATH=/home/tokeqvlx/mzigo.online/
+  ```
+  Do not clone the Git repository directly into the live document root.
 
 ### Private repo access
 
