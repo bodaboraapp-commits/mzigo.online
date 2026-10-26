@@ -1,0 +1,14 @@
+# Build/capture artefacts and local state must not enter the image.
+_raw/
+.git/
+.gitignore
+node_modules/
+**/node_modules/
+_server/logs/*
+_server/backups/*
+*.log
+.env
+*.tmp
+
+_server/sessions/*
+

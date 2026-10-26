@@ -1,0 +1,15 @@
+{
+  "name": "Mzigo Scan — Partner point",
+  "short_name": "Mzigo Scan",
+  "description": "Scan parcels at partner drop-off, handover, arrival and collection points.",
+  "start_url": "/scan",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#eef8ec",
+  "theme_color": "#2f4d1f",
+  "icons": [
+    { "src": "/assets/img/scan-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/assets/img/scan-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

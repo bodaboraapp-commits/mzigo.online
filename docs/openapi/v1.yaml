@@ -1,0 +1,399 @@
+openapi: 3.1.0
+info:
+  title: Mzigo.online Public API
+  version: "1.0"
+  description: |
+    Server-to-server API for creating, listing and tracking parcels in a
+    Mzigo.online workspace. Authenticate with a workspace API key in the
+    `X-API-Key` header.
+
+    API keys are created in Workspace → Settings → API keys and are scoped
+    `read` and/or `write`. A key can access only its own workspace.
+  contact:
+    name: Mzigo.online Support
+    email: hello@mzigo.online
+  license:
+    name: Proprietary
+servers:
+  - url: https://mzigo.online
+    description: Production
+  - url: http://localhost:8090
+    description: Local/demo
+security:
+  - ApiKeyAuth: []
+tags:
+  - name: Parcels
+  - name: Tracking
+paths:
+  /api/v1/parcels.php:
+    get:
+      tags: [Parcels]
+      summary: List recent parcels
+      description: Returns up to 50 recent parcels in the API key's workspace, newest first, or one parcel when `tracking` is supplied.
+      operationId: listParcels
+      parameters:
+        - name: tracking
+          in: query
+          required: false
+          description: Tracking number or locker ID. When supplied, returns that parcel only.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Parcel list or single parcel
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/ParcelListResponse"
+                  - $ref: "#/components/schemas/SingleParcelResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+    post:
+      tags: [Parcels]
+      summary: Create a parcel
+      description: Creates a parcel in the API key's workspace and returns the parcel plus the tenant quote.
+      operationId: createParcel
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateParcelRequest"
+      responses:
+        "201":
+          description: Parcel created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SingleParcelResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+  /api/v1/track.php:
+    get:
+      tags: [Tracking]
+      summary: Track a parcel or errand
+      description: Searches the API key's workspace by tracking number, locker ID or errand reference.
+      operationId: trackParcel
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: Tracking number, locker ID or errand reference.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Tracking result or not-found result
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/TrackFoundResponse"
+                  - $ref: "#/components/schemas/TrackNotFoundResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+  schemas:
+    CreateParcelRequest:
+      type: object
+      required:
+        - carrier_slug
+        - from
+        - to
+        - sender_name
+        - sender_phone
+        - receiver_name
+        - receiver_phone
+        - description
+        - size
+        - value
+        - payment
+      properties:
+        carrier_slug:
+          type: string
+          example: chania
+        from:
+          type: string
+          example: Nairobi
+        to:
+          type: string
+          example: Mombasa
+        sender_name:
+          type: string
+          minLength: 3
+          maxLength: 120
+        sender_phone:
+          type: string
+          example: "0733111222"
+        receiver_name:
+          type: string
+          minLength: 3
+          maxLength: 120
+        receiver_phone:
+          type: string
+          example: "0744333444"
+        description:
+          type: string
+          minLength: 3
+          maxLength: 255
+        size:
+          type: string
+          enum:
+            - Envelope
+            - Small
+            - Medium
+            - Large
+            - Extra Large
+            - Extra Extra Large
+            - Extra Extra Extra Large
+        value:
+          type: integer
+          minimum: 1
+          maximum: 1000000
+          description: Declared parcel value in KES.
+        payment:
+          type: string
+          enum: [CASH, M-PESA]
+    Parcel:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        kind:
+          type: string
+          const: parcel
+        tracking:
+          type: string
+          example: TRK-XXXXXXXX
+        locker:
+          type: string
+          example: LK-XXXXXXXX
+        carrier:
+          type: string
+        carrier_slug:
+          type: string
+        from:
+          type: string
+        to:
+          type: string
+        sender:
+          type: string
+        sender_phone:
+          type: string
+        receiver:
+          type: string
+        receiver_phone:
+          type: string
+        description:
+          type: string
+        size:
+          type: string
+        value:
+          type: integer
+        tier:
+          type: string
+          enum: [A, B]
+        payment:
+          type: string
+        status:
+          type: string
+          example: CREATED
+        collect_code:
+          type: string
+        payment_status:
+          type: string
+        paid_at:
+          type: [string, "null"]
+          format: date-time
+        payment_ref:
+          type: [string, "null"]
+        fee:
+          $ref: "#/components/schemas/Fee"
+        registered_at:
+          type: string
+          format: date-time
+        scans:
+          type: array
+          items:
+            $ref: "#/components/schemas/Scan"
+    Fee:
+      type: object
+      properties:
+        base:
+          type: integer
+        holding:
+          type: integer
+        insurance:
+          type: integer
+        platform:
+          type: integer
+        total:
+          type: integer
+    Scan:
+      type: object
+      properties:
+        status:
+          type: string
+        label:
+          type: string
+        where:
+          type: string
+        note:
+          type: [string, "null"]
+        at:
+          type: string
+          format: date-time
+    ParcelListResponse:
+      type: object
+      required: [ok, source, workspace, parcels]
+      properties:
+        ok:
+          type: boolean
+          const: true
+        source:
+          type: string
+        workspace:
+          type: string
+        parcels:
+          type: array
+          items:
+            $ref: "#/components/schemas/Parcel"
+    SingleParcelResponse:
+      type: object
+      required: [ok, source, parcel]
+      properties:
+        ok:
+          type: boolean
+          const: true
+        source:
+          type: string
+        parcel:
+          $ref: "#/components/schemas/Parcel"
+        notifications:
+          type: array
+          items:
+            type: object
+        usage:
+          type: object
+    TrackFoundResponse:
+      type: object
+      required: [ok, source, found, kind, record]
+      properties:
+        ok:
+          type: boolean
+          const: true
+        source:
+          type: string
+        found:
+          type: boolean
+          const: true
+        kind:
+          type: string
+          enum: [parcel, errand]
+        record:
+          type: object
+    TrackNotFoundResponse:
+      type: object
+      required: [ok, source, found, query]
+      properties:
+        ok:
+          type: boolean
+          const: true
+        source:
+          type: string
+        found:
+          type: boolean
+          const: false
+        query:
+          type: string
+    Error:
+      type: object
+      required: [ok, error]
+      properties:
+        ok:
+          type: boolean
+          const: false
+        error:
+          type: object
+          required: [code, message, fields, meta]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            fields:
+              type: object
+              additionalProperties:
+                type: string
+            meta:
+              type: object
+  responses:
+    Unauthorized:
+      description: Missing or invalid API key
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            ok: false
+            error:
+              code: api_key_invalid
+              message: Invalid API key.
+              fields: {}
+              meta: {}
+    Forbidden:
+      description: Scope, tenant or authorization failure
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: Resource not found in this workspace
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    ValidationError:
+      description: Request validation failed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    RateLimited:
+      description: API key rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            ok: false
+            error:
+              code: rate_limited
+              message: Too many attempts. Please try again shortly.
+              fields: {}
+              meta: {}

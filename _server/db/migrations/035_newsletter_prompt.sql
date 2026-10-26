@@ -1,0 +1,28 @@
+﻿-- Newsletter and product-alert subscribers captured by the public prompt.
+CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    email VARCHAR(190) NULL,
+    phone VARCHAR(30) NULL,
+    user_id BIGINT UNSIGNED NULL,
+    channel VARCHAR(20) NOT NULL DEFAULT 'email',
+    interests VARCHAR(40) NOT NULL DEFAULT 'newsletter,alerts',
+    status ENUM('pending','confirmed','unsubscribed') NOT NULL DEFAULT 'pending',
+    source VARCHAR(40) NULL,
+    page_path VARCHAR(255) NULL,
+    trigger_source VARCHAR(30) NULL,
+    consent_version VARCHAR(40) NULL,
+    token_hash CHAR(64) NULL,
+    token_expires_at DATETIME NULL,
+    confirmed_at DATETIME NULL,
+    unsubscribed_at DATETIME NULL,
+    ip_hash CHAR(64) NULL,
+    user_agent VARCHAR(255) NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uniq_newsletter_email (email),
+    UNIQUE KEY uniq_newsletter_phone (phone),
+    KEY idx_newsletter_status (status),
+    KEY idx_newsletter_channel (channel),
+    KEY idx_newsletter_created (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

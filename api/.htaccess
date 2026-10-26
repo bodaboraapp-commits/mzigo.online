@@ -1,0 +1,4 @@
+# Internal PHP include/config files are not endpoints.
+<FilesMatch "^_">
+    Require all denied
+</FilesMatch>

@@ -1,0 +1,10 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=$HOME/public_html/
+    - /bin/mkdir -p "$DEPLOYPATH"
+    - /bin/cp -R api "$DEPLOYPATH"
+    - /bin/cp -R assets "$DEPLOYPATH"
+    - /bin/cp -R _server "$DEPLOYPATH"
+    - /bin/cp .htaccess "$DEPLOYPATH"
+    - /bin/find . -maxdepth 1 -type f \( -name "*.html" -o -name "*.php" -o -name "*.js" -o -name "*.txt" -o -name "*.xml" -o -name "*.ico" \) -exec /bin/cp {} "$DEPLOYPATH" \;

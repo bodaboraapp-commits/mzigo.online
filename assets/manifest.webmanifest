@@ -1,0 +1,22 @@
+{
+  "name": "Mzigo.online \u2014 send or track Mzigo",
+  "short_name": "mzigo",
+  "description": "Send, track and manage parcels with trusted courier partners across Kenya.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#c2f8cb",
+  "theme_color": "#3c5223",
+  "icons": [
+    {
+      "src": "/assets/img/favicon-64.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/img/mzigo-logo.png",
+      "sizes": "150x55",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

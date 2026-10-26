@@ -1,0 +1,36 @@
+﻿ID,Page,Audience,Placement,CTA label,Destination,Style,Priority
+G1,Global header,All,"Desktop header, after logo",Send a parcel,/send-mzigo,Filled primary,P0
+G2,Global header,All,Desktop header nav,Track · Partners · Help,"/track-mzigo, /partners, /help",Text nav,P0
+G3,Global header,Merchant,Header utility,Start free trial,/signup,Outline,P0
+G4,Global header,All,Header utility,Sign in,/login,Text,P0
+G5,Global mobile nav,All,Role-aware bottom nav (guest/merchant/freelancer/customer),Role-specific tabs,—,Icon tabs,P2
+G6,Global footer,Merchant,New link group 'For merchants',Start free trial · Pricing · API access,"/signup, /pricing, /contact",Links,P1
+G7,Global footer,Freelancer,New link group 'For runners',Join as a runner · How errands work · Freelancer sign in,"/login?role=freelancer, /help",Links,P0
+G8,Global footer,Customer,New link group 'For receivers',Track a parcel · Pay on collection guide · Help Centre,"/track-mzigo, /help/mpesa-pay-on-collection, /help",Links,P0
+H1,Home /,All,Hero,Send a parcel + Track a parcel (exists),"/send-mzigo, /track-mzigo",Filled + outline,—
+H2,Home /,All,New 3-audience band after hero/send card,Start free trial · Join as a runner · Track a parcel,"/signup, /login?role=freelancer, /track-mzigo","3 cards, 1 CTA each (filled + text)",P0
+H3,Home /,Customer/individual,'For individuals' card,Send a parcel,/send-mzigo,Outline,P1
+H4,Home /,Merchant,'For e-commerce sellers' card,Start free trial,/signup,Outline,P1
+H5,Home /,Merchant,'For teams' card,Explore workspaces,/signup,Outline,P1
+H6,Home /,All,Final CTA band,Start free trial (filled) + Track a parcel + Earn as a runner,"/signup, /track-mzigo, /login?role=freelancer",1 filled + 2 text/outline,P1
+S1,Send /send-mzigo,Merchant,Above wizard for guests,Save senders next time — Create a workspace,/signup,Outline + microcopy,P1
+S2,Send /send-mzigo,All,Step 1 helper,Need help choosing a courier?,/help,Text link,P2
+S3,Send /send-mzigo,All,Insurance copy block,How parcel insurance works,/about,Text link,P2
+T1,Track /track-mzigo,Customer,Below search/results,Sign in as a customer,/login?role=customer,Filled,P0
+T2,Track /track-mzigo,Customer,Receiver block secondary,Pay on collection guide,/help/mpesa-pay-on-collection,Text link,P1
+T3,Track /track-mzigo,All,End of SEO copy,Send a parcel with Mzigo,/send-mzigo,Outline,P1
+P2,Pricing /pricing,Customer/Freelancer,Under plans,Track a parcel · join as a runner,"/track-mzigo, /login?role=freelancer",Text links,P2
+SU1,Signup /signup,Customer,Under form,Receiving a parcel? Track it,/track-mzigo,Text link,P0
+SU2,Signup /signup,Freelancer,Under form,Want to earn? Join as a runner,/login?role=freelancer,Text link,P0
+SU3,Signup /signup,Courier business,Under form,Run a courier business? Apply as a partner,/partners/become,Text link,P2
+L2,Login /login,Freelancer,Freelancer panel step 1,Continue — new runners get an account automatically,in-page,Filled,P0
+L3,Login /login,Freelancer,Freelancer panel footer,What runners do / earn,/faq,Text,P2
+L4,Login /login,Customer,Customer panel,Track without signing in,/track-mzigo,Text,P1
+L5,Login /login,All,Deep links,Pre-select tab from ?role=business|freelancer|customer,—,Query param,P0
+D1,Freelancer /freelancer,Freelancer,Hero / empty state,Find errand jobs,jobs section,Filled,P0
+D2,Freelancer /freelancer,Freelancer,Hero secondary,Update availability/profile,/profile,Outline,P0
+D3,Freelancer /freelancer,Freelancer,Utility row,View earnings · Help,— / /help,Outline/text,P1
+D4,Customer /customer,Customer,Beside unpaid parcel,Need help with this parcel?,/contact,Text link + keep pay filled,P0
+D5,Customer /customer,Customer,Sticky while unpaid,Pay now,in-page pay action,Filled sticky,P1
+D6,Merchant /profile,Merchant,Usage / team cards,Invite your team · Upgrade plan · Create API key,"/settings, /billing, /settings",Outline,P1
+D7,Merchant /profile,Merchant,Empty states,Send your first parcel / Create a saved sender,"/send-mzigo, /profile",Filled,P2

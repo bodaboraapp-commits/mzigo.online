@@ -1,0 +1,64 @@
+# Mzigo.online — local/dev compose stack (app + MariaDB)
+# Usage:  docker compose -f deploy/docker-compose.yml up --build
+#         open http://localhost:8090
+services:
+  db:
+    image: mariadb:10.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-change-me-in-env}
+      MYSQL_DATABASE: ${DB_NAME:-mzigo_online}
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${DB_ROOT_PASSWORD:-change-me-in-env}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  app:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${APP_PORT:-8090}:80"
+    environment:
+      APP_ENV: ${APP_ENV:-production}
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:8090}
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME:-mzigo_online}
+      DB_USER: root
+      DB_PASS: ${DB_ROOT_PASSWORD:-change-me-in-env}
+      PLATFORM_ADMIN_EMAIL: ${PLATFORM_ADMIN_EMAIL:-admin@mzigo.online}
+      SUPPORT_EMAIL: ${SUPPORT_EMAIL:-hello@mzigo.online}
+      PAYMENT_PROVIDER: ${PAYMENT_PROVIDER:-demo}
+      MAIL_DRIVER: ${MAIL_DRIVER:-log}
+    volumes:
+      - app_logs:/var/www/html/_server/logs
+
+  # Optional daily lifecycle job (trials / overdue invoices). Run manually:
+  #   docker compose -f deploy/docker-compose.yml run --rm cron
+  cron:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    profiles: ["jobs"]
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME:-mzigo_online}
+      DB_USER: root
+      DB_PASS: ${DB_ROOT_PASSWORD:-change-me-in-env}
+    entrypoint: ["php", "api/cron.php"]
+
+volumes:
+  db_data:
+  app_logs:
