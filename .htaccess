@@ -5,6 +5,17 @@
 Options -MultiViews -Indexes
 DirectoryIndex index.html
 
+# Never expose the deployment environment file.
+<Files ".env">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</Files>
+
 <IfModule mod_rewrite.c>
     RewriteEngine On
 

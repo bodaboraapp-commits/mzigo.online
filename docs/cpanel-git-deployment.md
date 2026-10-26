@@ -99,9 +99,11 @@ Git only copies code. The following are separate:
    - Import the migrations through phpMyAdmin, in order.
    - If PHP CLI/Terminal is available, run `php _server/db/migrate.php`.
 2. **Environment/config**
-   - `.env` is not read automatically by this PHP app outside Docker.
-   - Set `APP_ENV=production`, `DEMO_MODE=0`, `APP_BASE_URL=https://mzigo.online`, DB credentials and `APP_CONFIG_KEY` through the server’s environment/config mechanism.
-   - Do not commit secrets or `_server/config-key.php`.
+   - The app now auto-loads a project-root `.env` (real server environment variables still win).
+   - Create `/home/tokeqvlx/public_html/.env` from `.env.example` through cPanel File Manager and set:
+     `APP_ENV=production`, `DEMO_MODE=0`, `APP_BASE_URL=https://mzigo.online`, the cPanel MySQL credentials and `APP_CONFIG_KEY`.
+   - The deployed `.htaccess` denies direct access to `.env`.
+   - Do not commit `.env` or `_server/config-key.php`.
 3. **Cron**
    - `php /home/<user>/public_html/api/cron.php` daily.
    - `php /home/<user>/public_html/_server/cron/whatsapp_queue.php` every minute (if WhatsApp is enabled).

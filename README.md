@@ -230,6 +230,8 @@ the scaling path.
 
 ```bash
 cp .env.example .env
+# Optional for XAMPP/cPanel: the app now loads a project-root .env automatically.
+# Real server environment variables always take precedence over .env values.
 docker compose -f deploy/docker-compose.yml up --build -d
 ```
 

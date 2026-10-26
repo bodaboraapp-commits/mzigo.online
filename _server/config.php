@@ -6,6 +6,9 @@
  * overridden with environment variables, which is what the Docker/deployment
  * examples use.
  */
+require_once __DIR__ . '/env.php';
+mzigo_load_env(dirname(__DIR__) . DIRECTORY_SEPARATOR . '.env');
+
 $db = require __DIR__ . '/db-config.php';
 $configKey = getenv('APP_CONFIG_KEY') ?: (is_file(__DIR__ . '/config-key.php') ? require __DIR__ . '/config-key.php' : '');
 $appEnv = getenv('APP_ENV') ?: 'local';
