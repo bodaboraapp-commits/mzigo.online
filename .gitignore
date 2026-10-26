@@ -1,0 +1,27 @@
+# Mzigo.online — secrets and local state
+.env
+.env.*
+!.env.example
+
+# Local logs, backups and caches
+_server/logs/*
+_server/backups/*
+!*.gitkeep
+*.log
+
+# Crawl captures / build artefacts (kept locally, not versioned)
+_raw/
+node_modules/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+*.swp
+
+_server/sessions/*
+
+
+# local encryption key (never commit)
+_server/config-key.php
+
+_server/config-key.php.bak.*

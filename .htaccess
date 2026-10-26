@@ -1,0 +1,65 @@
+﻿# Clean URLs for the static Mzigo.online clone.
+# Mirrors the original routes: / , /send-mzigo , /send-mzigo/<carrier> ,
+# /track-mzigo , /partners , /profile , /send-errand
+
+Options -MultiViews -Indexes
+DirectoryIndex index.html
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Never expose server internals, keys, logs or raw build scripts.
+    RewriteRule ^_server(?:/|$) - [F,L]
+    RewriteRule ^_raw(?:/|$) - [F,L]
+
+    # Pricing page is gated: hidden when the platform is free.
+    RewriteRule ^pricing(\.html)?/?$ /api/pricing-gate.php [L]
+
+    # Phase 2 nested content routes.
+    RewriteRule ^partners/become/?$ /partners-become.html [L]
+RewriteRule ^partners/([a-z0-9_-]+)/?$ /partners-filter.php?slug=$1 [L,QSA]
+    RewriteRule ^help/([A-Za-z0-9_-]+)/?$ /help-$1.html [L]
+    RewriteRule ^blog/([A-Za-z0-9_-]+)/?$ /blog-$1.html [L]
+
+    # Serve existing files and directories as-is.
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Carrier-specific send wizard -> the shared wizard page.
+    RewriteRule ^send-mzigo/[A-Za-z0-9_-]+/?$ /send-mzigo.html [L]
+
+    # Clean URL -> .html page.
+    RewriteRule ^([A-Za-z0-9_-]+)/?$ $1.html [L]
+</IfModule>
+
+ErrorDocument 403 /403.html
+ErrorDocument 404 /404.html
+ErrorDocument 500 /500.html
+
+# Caching policy.
+#   â€¢ HTML + CSS/JS: always revalidate, so edits show immediately (304 is cheap).
+#   â€¢ Images/fonts/manifest: cache for a week; uploaded brand files get unique
+#     names and the bundled assets are effectively static.
+<IfModule mod_headers.c>
+    <FilesMatch "\.(html|css|js)$">
+        Header set Cache-Control "no-cache, must-revalidate"
+    </FilesMatch>
+    <FilesMatch "\.(png|jpe?g|webp|svg|ico|woff2?|webmanifest)$">
+        Header set Cache-Control "public, max-age=604800, immutable"
+    </FilesMatch>
+</IfModule>
+
+# Compression is disabled in this XAMPP install (mod_deflate is not loaded).
+# In production enable mod_deflate for text/css, application/javascript and
+# image/svg+xml â€” site.js alone is ~285 KB uncompressed.
+
+
+
+
+# Browser hardening. HSTS should be enabled by the production vhost after TLS.
+<IfModule mod_headers.c>
+    Header always unset X-Powered-By
+    Header always set Content-Security-Policy "frame-ancestors 'self'; base-uri 'self'; object-src 'none'"
+    Header always set X-Permitted-Cross-Domain-Policies "none"
+</IfModule>

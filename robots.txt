@@ -1,0 +1,20 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin
+Disallow: /orders
+Disallow: /billing
+Disallow: /settings
+Disallow: /profile
+Disallow: /claims
+Disallow: /freelancer
+Disallow: /customer
+Disallow: /login
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /verify-email
+Disallow: /403.html
+Disallow: /404.html
+Disallow: /500.html
+
+Sitemap: https://mzigo.online/sitemap.xml

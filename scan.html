@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#2f4d1f">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Mzigo Scan · Partner point</title>
+  <link rel="icon" href="/assets/img/favicon.ico" sizes="any">
+  <link rel="icon" href="/assets/img/favicon-64.png" type="image/png">
+  <link rel="apple-touch-icon" href="/assets/img/scan-icon-192.png">
+  <link rel="manifest" href="/assets/scan-manifest.webmanifest">
+  <link rel="stylesheet" href="/assets/css/scan.css">
+</head>
+<body>
+  <header class="scan-head">
+    <div class="scan-brand">
+      <img src="/assets/img/mzigo-logo.png" alt="Mzigo.online" width="109" height="40">
+      <span>SCAN</span>
+    </div>
+    <div class="scan-head__right">
+      <span id="netState" class="scan-pill scan-pill--ok">Online</span>
+      <button type="button" id="installBtn" class="scan-icon-btn" hidden title="Install scanner">↓</button>
+      <button type="button" id="changeToken" class="scan-icon-btn" title="Change point token">⚙</button>
+    </div>
+  </header>
+
+  <main class="scan-main">
+    <section id="setup" class="scan-card">
+      <div class="scan-kicker">Partner point access</div>
+      <h1>Connect this phone</h1>
+      <p class="scan-muted">Enter the point access token generated in Admin → Scan points. It is stored only on this device.</p>
+      <form id="tokenForm" class="scan-form">
+        <label class="scan-label" for="tokenInput">Point access token</label>
+        <input id="tokenInput" class="scan-input scan-mono" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="mzp_…" required>
+        <button class="scan-btn scan-btn--primary" type="submit">Connect scanner</button>
+      </form>
+      <div id="setupError" class="scan-error" hidden></div>
+      <p class="scan-hint">Need a token? Ask the platform administrator to create a scan point.</p>
+    </section>
+
+    <section id="app" hidden>
+      <div class="scan-card scan-point-card">
+        <div class="scan-row">
+          <div>
+            <div class="scan-kicker">Scanning point</div>
+            <h1 id="pointName">—</h1>
+            <div id="pointMeta" class="scan-muted">—</div>
+          </div>
+          <span id="pointType" class="scan-pill scan-pill--ok">—</span>
+        </div>
+      </div>
+
+      <div id="result" class="scan-result" hidden></div>
+
+      <form id="scanForm" class="scan-card scan-form">
+        <div class="scan-field">
+          <label class="scan-label" for="tracking">Tracking number</label>
+          <div class="scan-input-row">
+            <input id="tracking" class="scan-input scan-mono" placeholder="TRK-XXXXXXXX" autocomplete="off" autocapitalize="characters" required>
+            <button type="button" id="qrBtn" class="scan-btn scan-btn--scan" title="Scan QR code">▣</button>
+          </div>
+        </div>
+
+        <div class="scan-field">
+          <span class="scan-label">Scan action</span>
+          <div id="actionGrid" class="scan-actions"></div>
+        </div>
+
+        <div id="collectWrap" class="scan-field" hidden>
+          <label class="scan-label" for="collectCode">Customer collection code</label>
+          <input id="collectCode" class="scan-input scan-mono" placeholder="6-character code" maxlength="6" autocomplete="off" autocapitalize="characters">
+          <span class="scan-hint">Payment must be complete. Ask the customer for the code in their portal.</span>
+        </div>
+
+        <div class="scan-field">
+          <label class="scan-label" for="noteInput">Note (optional)</label>
+          <input id="noteInput" class="scan-input" placeholder="e.g. package condition, bay number" maxlength="255">
+        </div>
+
+        <button id="submitScan" class="scan-btn scan-btn--primary scan-btn--large" type="submit">Record scan</button>
+        <div id="scanError" class="scan-error" hidden></div>
+      </form>
+
+      <div class="scan-card">
+        <div class="scan-row"><div class="scan-card-title">Recent scans on this phone</div><button id="clearRecent" type="button" class="scan-link">Clear</button></div>
+        <div id="recentList" class="scan-recent"><p class="scan-hint">No scans yet on this device.</p></div>
+      </div>
+    </section>
+  </main>
+
+  <video id="qrVideo" playsinline hidden class="scan-video"></video>
+  <div id="qrOverlay" class="scan-qr-overlay" hidden>
+    <div class="scan-qr-box">
+      <div class="scan-row"><strong>Scan parcel QR</strong><button type="button" id="qrClose" class="scan-link">Cancel</button></div>
+      <video id="qrPreview" playsinline></video>
+      <p class="scan-hint">Point the camera at the parcel QR/Locker label.</p>
+    </div>
+  </div>
+
+  <script src="/assets/js/scan.js" defer></script>
+</body>
+</html>
