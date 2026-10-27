@@ -59,6 +59,77 @@ function sms_channel_ready(): bool
     return $channel['provider'] === 'log';
 }
 
+/**
+ * Optional Twilio Verify service for login OTPs. Verify uses Twilio's generic
+ * sender instead of the account's long code, which is important in countries
+ * such as Kenya where ordinary long-code SMS is not supported.
+ */
+function sms_twilio_verify_config(): ?array
+{
+    $channel = sms_channel();
+    if (!$channel || $channel['provider'] !== 'twilio-sms') return null;
+    $config = $channel['config'];
+    $sid = trim((string) ($config['account_sid'] ?? ''));
+    $token = trim((string) ($config['auth_token'] ?? ''));
+    $service = trim((string) ($config['verify_service_sid'] ?? ''));
+    if ($sid === '' || $token === '' || $service === '') return null;
+    return ['account_sid' => $sid, 'auth_token' => $token, 'service_sid' => $service];
+}
+
+function sms_twilio_verify_call(string $path, array $fields): array
+{
+    $cfg = sms_twilio_verify_config();
+    if ($cfg === null) return ['ok' => false, 'provider' => 'twilio-verify', 'error' => 'Twilio Verify Service SID is not configured.'];
+    $ch = curl_init('https://verify.twilio.com/v2/Services/' . rawurlencode($cfg['service_sid']) . $path);
+    curl_setopt_array($ch, [
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => http_build_query($fields),
+        CURLOPT_HTTPHEADER => ['Content-Type: application/x-www-form-urlencoded'],
+        CURLOPT_USERPWD => $cfg['account_sid'] . ':' . $cfg['auth_token'],
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 20,
+        CURLOPT_CONNECTTIMEOUT => 8,
+    ]);
+    $raw = curl_exec($ch);
+    $code = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+    $curlError = curl_error($ch);
+    curl_close($ch);
+    $decoded = json_decode((string) $raw, true);
+    if ($raw === false || $code < 200 || $code >= 300) {
+        $error = $curlError !== '' ? $curlError : (string) ($decoded['message'] ?? ('HTTP ' . $code));
+        return ['ok' => false, 'provider' => 'twilio-verify', 'http' => $code, 'error' => $error];
+    }
+    return ['ok' => true, 'provider' => 'twilio-verify', 'data' => is_array($decoded) ? $decoded : []];
+}
+
+function sms_twilio_verify_start(string $phone): array
+{
+    $to = sms_e164($phone);
+    if ($to === '') return ['ok' => false, 'provider' => 'twilio-verify', 'error' => 'No recipient phone number.'];
+    $result = sms_twilio_verify_call('/Verifications', ['To' => '+' . $to, 'Channel' => 'sms']);
+    sms_log(['at' => date('c'), 'to' => '+' . substr($to, 0, 5) . '…' . substr($to, -2), 'status' => $result['ok'] ? 'sent' : 'failed', 'provider' => 'twilio-verify', 'http' => $result['http'] ?? null, 'error' => $result['error'] ?? null]);
+    if (!$result['ok']) return $result;
+    return [
+        'ok' => true,
+        'provider' => 'twilio-verify',
+        'status' => (string) ($result['data']['status'] ?? 'pending'),
+        'sid' => (string) ($result['data']['sid'] ?? ''),
+    ];
+}
+
+function sms_twilio_verify_check(string $phone, string $code): array
+{
+    $to = sms_e164($phone);
+    if ($to === '') return ['ok' => false, 'provider' => 'twilio-verify', 'error' => 'No recipient phone number.'];
+    $result = sms_twilio_verify_call('/VerificationCheck', ['To' => '+' . $to, 'Code' => $code]);
+    if (!$result['ok']) return $result;
+    $status = strtolower((string) ($result['data']['status'] ?? ''));
+    if ($status !== 'approved') {
+        return ['ok' => false, 'provider' => 'twilio-verify', 'approved' => false, 'status' => $status, 'error' => 'That code is not correct or has expired.'];
+    }
+    return ['ok' => true, 'provider' => 'twilio-verify', 'approved' => true, 'status' => $status];
+}
+
 function sms_log(array $entry): void
 {
     $dir = dirname(__DIR__) . DIRECTORY_SEPARATOR . '_server' . DIRECTORY_SEPARATOR . 'logs';

@@ -106,6 +106,7 @@ function channel_provider_catalog(): array
                 ['key' => 'auth_token', 'label' => 'Auth token', 'placeholder' => 'your Twilio auth token', 'type' => 'password', 'required' => true],
                 ['key' => 'from_number', 'label' => 'From number', 'placeholder' => '+254 712 345 678', 'required' => true],
                 ['key' => 'messaging_service_sid', 'label' => 'Messaging Service SID (optional)', 'placeholder' => 'MG9f8e7d6c5b4a…'],
+                ['key' => 'verify_service_sid', 'label' => 'Verify Service SID for login OTP (recommended for Kenya)', 'placeholder' => 'VA1a2b3c4d…', 'hint' => 'Create a Twilio Verify Service and set its code length to 4 digits. Login OTPs will use Twilio Verify instead of the long code.'],
             ],
         ],
 
