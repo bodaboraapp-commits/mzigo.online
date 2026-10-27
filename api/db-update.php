@@ -56,6 +56,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         $destructive = [];
         foreach ($pending as $item) {
             $sqlForCheck = preg_replace('/^\s*--.*$/m', '', $item['sql']) ?? $item['sql'];
+            $sqlForCheck = preg_replace('/^\s*USE\s+`?[A-Za-z0-9_]+`?\s*;\s*/mi', '', $sqlForCheck) ?? $sqlForCheck;
             if (preg_match('/\b(DELETE\s+FROM|TRUNCATE|DROP\s+TABLE|DROP\s+DATABASE|DROP\s+COLUMN|DROP\s+INDEX)\b/i', $sqlForCheck)) {
                 $destructive[] = $item['version'];
             }
@@ -72,6 +73,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                 ) ENGINE=InnoDB');
                 foreach ($pending as $item) {
                     $clean = preg_replace('/^\s*--.*$/m', '', $item['sql']) ?? $item['sql'];
+                    // Hosting databases are not named `mzigo_online`; execute
+                    // against the connection's selected database instead.
+                    $clean = preg_replace('/^\s*USE\s+`?[A-Za-z0-9_]+`?\s*;\s*/mi', '', $clean) ?? $clean;
                     $statements = array_filter(array_map('trim', preg_split('/;\s*(?:\r?\n|$)/', $clean)));
                     foreach ($statements as $statement) {
                         if ($statement === '') continue;
@@ -99,7 +103,9 @@ if (isset($_GET['download'])) {
     echo "-- Generated " . date('c') . "\n";
     echo "-- Review before importing. This file does not drop existing tables.\n\n";
     foreach ($pending as $item) {
-        echo "-- ===== " . $item['version'] . " =====\n" . $item['sql'] . "\n\n";
+        $downloadSql = preg_replace('/^\s*--.*$/m', '', $item['sql']) ?? $item['sql'];
+        $downloadSql = preg_replace('/^\s*USE\s+`?[A-Za-z0-9_]+`?\s*;\s*/mi', '', $downloadSql) ?? $downloadSql;
+        echo "-- ===== " . $item['version'] . " =====\n" . $downloadSql . "\n\n";
     }
     exit;
 }

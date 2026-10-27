@@ -1,6 +1,4 @@
 -- Mzigo.online — migration 039: secondary customer/freelancer access for existing accounts.
-USE mzigo_online;
-
 CREATE TABLE IF NOT EXISTS user_roles (
   user_id BIGINT UNSIGNED NOT NULL,
   role ENUM('customer','freelancer') NOT NULL,
