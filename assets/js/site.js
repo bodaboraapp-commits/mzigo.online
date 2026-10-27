@@ -3311,9 +3311,10 @@ return '<div class="mz-mobile-card">' +
   }
 
   function initLoginPage() {
-    if (APP.showDemoAccounts === false) {
-      var demoBox = $('.mz-demo-box');
-      if (demoBox) demoBox.remove();
+    var demoBox = $('.mz-demo-box');
+    if (demoBox) {
+      if (APP.showDemoAccounts === false) demoBox.remove();
+      else demoBox.hidden = false;
     }
     var loginTabs = $$('[data-login-tab]');
     function showLoginPanel(name) {
