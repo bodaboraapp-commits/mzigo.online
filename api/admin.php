@@ -146,7 +146,7 @@ function admin_sessions(): array
 function admin_users(): array
 {
     $stmt = db()->query(
-        'SELECT u.id, u.name, u.email, u.phone, u.role, u.status, u.created_at, u.last_login_at,
+        'SELECT u.id, u.name, u.email, u.email_verified_at, u.phone, u.role, u.status, u.created_at, u.last_login_at,
                 (SELECT t.name FROM tenant_members m JOIN tenants t ON t.id = m.tenant_id
                  WHERE m.user_id = u.id ORDER BY m.tenant_id LIMIT 1) AS tenant_name,
                 (SELECT m.role FROM tenant_members m WHERE m.user_id = u.id ORDER BY m.tenant_id LIMIT 1) AS member_role
@@ -670,6 +670,17 @@ switch ($action) {
         }
         audit('admin.user_' . ($status === 'suspended' ? 'suspended' : 'activated'), 'user', (string) $userId);
         json_out(['ok' => true, 'source' => 'mysql', 'users' => admin_users(), 'metrics' => admin_metrics()]);
+        // no break
+
+    case 'verify_user_email':
+        $userId = (int) param($data, 'user_id', 1, 20, 'User');
+        $stmt = $pdo->prepare('SELECT email FROM users WHERE id = ? LIMIT 1');
+        $stmt->execute([$userId]);
+        $email = trim((string) ($stmt->fetchColumn() ?: ''));
+        if ($email === '') fail_error('email_missing', 'Add an email address before verifying it.', 422);
+        $pdo->prepare('UPDATE users SET email_verified_at = NOW() WHERE id = ?')->execute([$userId]);
+        audit('admin.user_email_verified', 'user', (string) $userId, ['email' => $email]);
+        json_out(['ok' => true, 'source' => 'mysql', 'users' => admin_users(), 'message' => 'Email marked as verified.']);
         // no break
 
     case 'restore_user':
