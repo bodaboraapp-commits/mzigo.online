@@ -1,6 +1,6 @@
 # Infobip SMS integration
 
-**Status:** implemented 27 October 2026. Production credentials and one live test message still need to be configured/validated.
+**Status:** implemented 27 October 2026. Production channel configured and a live test SMS was accepted by Infobip on 27 October 2026. Customer login OTP testing remains to be confirmed on a real customer phone.
 
 ## What is wired
 
@@ -35,6 +35,7 @@ Demo mode keeps returning `1234` codes and does not call Infobip. In production,
 - `send_test_sms` reached Infobip and returned Infobip's `Invalid login details` response using a placeholder API key — confirming URL, auth header and payload are accepted by the endpoint.
 - Channel restored to `log` / inactive after the test; no real SMS was sent.
 - `sms_e164` normalization tested for `0712345678`, `+254712345678`, `254712345678` and `712345678`.
+- Production base URL initially lacked `https://`; this caused a 502 on login OTP. The channel was corrected to `https://d845wr.api.infobip.com`, the test SMS returned `status: sent`, and the client now auto-prefixes a missing scheme.
 - PHP lint and JS syntax clean.
 
 A green end-to-end test still requires a real Infobip API key and sender ID.
@@ -47,6 +48,7 @@ A green end-to-end test still requires a real Infobip API key and sender ID.
 - If SMS delivery fails in production, retry/contact support; the code hash is regenerated on the next request.
 - No Infobip delivery-report webhook is implemented yet; outbound status in `notifications` means Infobip accepted the message, not that the handset received it.
 - Use an approved sender ID; unapproved alphanumeric senders will be rejected by Infobip.
+- `MZIGO ONLINE` is 12 characters including a space; most alphanumeric sender IDs allow up to 11 characters. The working production sender is currently `MZIGO`. If exact “Mzigo Online” branding is required, register an approved 11-character sender ID first.
 - Monitor `_server/logs/sms.log`, failed `sms` rows in `notifications`, and auth failure rates.
 
 ## Test flow
