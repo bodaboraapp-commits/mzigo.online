@@ -672,6 +672,20 @@ switch ($action) {
         json_out(['ok' => true, 'source' => 'mysql', 'users' => admin_users(), 'metrics' => admin_metrics()]);
         // no break
 
+    case 'restore_user':
+        $userId = (int) param($data, 'user_id', 1, 20, 'User');
+        $stmt = $pdo->prepare('SELECT id, role, status FROM users WHERE id = ? LIMIT 1');
+        $stmt->execute([$userId]);
+        $target = $stmt->fetch();
+        if (!$target) fail_error('not_found', 'User not found.', 404);
+        if (($target['status'] ?? '') !== 'deleted') {
+            fail_error('not_deleted', 'Only soft-deleted users can be restored.', 422);
+        }
+        $pdo->prepare('UPDATE users SET status = "active" WHERE id = ?')->execute([$userId]);
+        audit('admin.user_restored', 'user', (string) $userId, ['role' => $target['role']]);
+        json_out(['ok' => true, 'source' => 'mysql', 'users' => admin_users(), 'metrics' => admin_metrics(), 'message' => 'User restored to active status.']);
+        // no break
+
     case 'reset_user_credentials':
         $userId = (int) param($data, 'user_id', 1, 20, 'User');
         $stmt = $pdo->prepare('SELECT id, role FROM users WHERE id = ? LIMIT 1');
