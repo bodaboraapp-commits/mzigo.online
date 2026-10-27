@@ -3430,7 +3430,7 @@ return '<div class="mz-mobile-card">' +
     });
     // Deep links: /login?role=freelancer or ?role=customer preselects the tab.
     var roleParam = new URLSearchParams(window.location.search).get('role');
-    if (roleParam && ['business', 'phone', 'freelancer', 'customer'].indexOf(roleParam) !== -1) {
+    if (roleParam && ['business', 'freelancer', 'customer'].indexOf(roleParam) !== -1) {
       showLoginPanel(roleParam);
     }
 
@@ -3539,76 +3539,6 @@ return '<div class="mz-mobile-card">' +
     if (back) back.addEventListener('click', function () {
       var step1 = $('[data-freelancer-step="1"]');
       var step2 = $('[data-freelancer-step="2"]');
-      if (step1) step1.hidden = false;
-      if (step2) step2.hidden = true;
-    });
-
-    /* unified phone sign-in: customer or freelancer */
-    var phoneRole = 'customer';
-    var phoneNumber = '';
-    var pStart = $('[data-phone-form="start"]');
-    var pLogin = $('[data-phone-form="login"]');
-    function syncPhoneRole() {
-      var roleSel = $('[data-phone-role]');
-      phoneRole = roleSel ? roleSel.value : 'customer';
-      var terms = document.querySelector('[data-phone-terms]');
-      if (terms) {
-        terms.hidden = phoneRole !== 'freelancer';
-        var box = terms.querySelector('[name="runner_terms"]');
-        if (box) box.required = phoneRole === 'freelancer';
-      }
-      var codeLabel = $('[data-phone-code-label]');
-      if (codeLabel) codeLabel.textContent = phoneRole === 'freelancer' ? '4-digit runner PIN' : '4-digit code';
-    }
-    var phoneRoleSel = $('[data-phone-role]');
-    if (phoneRoleSel) phoneRoleSel.addEventListener('change', syncPhoneRole);
-    syncPhoneRole();
-    if (pStart) pStart.addEventListener('submit', function (ev) {
-      ev.preventDefault();
-      syncPhoneRole();
-      var btn = pStart.querySelector('[type="submit"]');
-      var phone = formValue(pStart, 'phone');
-      if (!phone) { toast('Enter your phone number.', 'error'); return; }
-      if (phoneRole === 'freelancer') {
-        var terms = pStart.querySelector('[name="runner_terms"]');
-        if (terms && !terms.checked) { toast('Please accept the Runner Terms and Privacy Policy to continue.', 'error'); return; }
-      }
-      var body = { action: phoneRole === 'freelancer' ? 'freelancer-start' : 'customer-start', phone: phone };
-      body.channel = formValue(pStart, 'channel') || 'sms';
-      btn.disabled = true;
-      api('auth.php', { method: 'POST', body: body }).then(function (res) {
-        phoneNumber = res.phone || phone;
-        var demo = res.demo_code || res.demo_pin || '';
-        var hint = $('[data-phone-hint]');
-        if (hint) hint.innerHTML = demo
-          ? 'Demo ' + (phoneRole === 'freelancer' ? 'PIN' : 'code') + ': <strong>' + esc(demo) + '</strong>.'
-          : (phoneRole === 'freelancer' ? 'Enter the 4-digit PIN sent to your phone.' : 'Enter the code sent to ' + esc(res.sent_to || 'your phone') + '.');
-        var step1 = $('[data-phone-step="1"]');
-        var step2 = $('[data-phone-step="2"]');
-        if (step1) step1.hidden = true;
-        if (step2) step2.hidden = false;
-        var codeInput = pLogin ? pLogin.querySelector('[name="code"]') : null;
-        if (codeInput) { codeInput.value = ''; codeInput.focus(); }
-        toast(demo ? 'Demo ' + (phoneRole === 'freelancer' ? 'PIN' : 'code') + ': ' + demo : 'Code sent to ' + phoneNumber, 'info');
-        btn.disabled = false;
-      }).catch(function (err) { toast(err.message, 'error'); btn.disabled = false; });
-    });
-    if (pLogin) pLogin.addEventListener('submit', function (ev) {
-      ev.preventDefault();
-      var btn = pLogin.querySelector('[type="submit"]');
-      var code = formValue(pLogin, 'code');
-      if (!phoneNumber) { toast('Enter your phone number first.', 'error'); showLoginPanel('phone'); return; }
-      btn.disabled = true;
-      api('auth.php', { method: 'POST', body: { action: phoneRole === 'freelancer' ? 'freelancer-login' : 'customer-login', phone: phoneNumber, code: code, pin: code } })
-        .then(function (res) {
-          toast(phoneRole === 'freelancer' ? 'Signed in as a freelancer.' : 'Signed in as a customer.');
-          window.location.href = safeNext(res.redirect || (phoneRole === 'freelancer' ? '/freelancer' : '/customer'));
-        }).catch(function (err) { toast(err.message, 'error'); btn.disabled = false; });
-    });
-    var phoneBack = $('[data-phone-back]');
-    if (phoneBack) phoneBack.addEventListener('click', function () {
-      var step1 = $('[data-phone-step="1"]');
-      var step2 = $('[data-phone-step="2"]');
       if (step1) step1.hidden = false;
       if (step2) step2.hidden = true;
     });
