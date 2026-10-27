@@ -227,6 +227,13 @@ function notification_targets(array $user): array
     return $active;
 }
 
+/** Receiver order updates always cover phone and email when both are active. */
+function receiver_notification_targets(array $user): array
+{
+    $active = notification_channels(true);
+    return array_values(array_filter($active, fn ($c) => in_array($c['code'], ['sms', 'email'], true)));
+}
+
 function notification_send(string $channel, array $user, string $subject, string $body, string $template, array $parcel, string $provider = 'log',
     ?string $relatedType = null, ?string $relatedId = null, array $data = []): array
 {
@@ -447,7 +454,7 @@ function notify_customer_email(array $parcel, string $template, string $subject,
     $customer = notification_customer_for($phone, (string) ($parcel['receiver_name'] ?? 'Customer'));
     $user = $customer['user'];
     notify_customer_in_app($parcel, $user, $subject, $body, $template);
-    $targets = notification_targets($user);
+    $targets = receiver_notification_targets($user);
     $hasEmail = !empty($user['email']);
     $sent = 0;
 
@@ -641,7 +648,7 @@ function notify_parcel_created(array $parcel): array
     $body = implode("\n", $lines);
     $template = $customer['created'] ? 'parcel_created_new_customer' : 'parcel_created';
     $attempts = [];
-    foreach (notification_targets($user) as $channel) {
+    foreach (receiver_notification_targets($user) as $channel) {
         notification_send($channel['code'], $user, $subject, $body, $template, $parcel,
             (string) ($channel['provider'] ?? 'log'), 'parcel', $tracking, ['insurance_ref' => $insuranceRef]);
         $attempts[] = $channel['code'];
@@ -677,7 +684,7 @@ function notify_track_subscribers(array $parcel, string $label, string $note = '
             $subject = 'Parcel ' . $tracking . ' · ' . $label;
             $body = 'Parcel ' . $tracking . ' is now: ' . $label . '.' . ($note ? "\n" . $note : '') . "\nTrack: " . rtrim((string) (config()['app']['base_url'] ?? ''), '/') . '/track-mzigo?num=' . rawurlencode($tracking);
             $user = ['id' => 0, 'name' => 'Receiver', 'email' => (string) ($sub['email'] ?? ''), 'phone' => (string) ($sub['phone'] ?? ''), 'comm_channel' => null];
-            foreach (notification_targets($user) as $channel) {
+            foreach (receiver_notification_targets($user) as $channel) {
                 notification_send($channel['code'], $user, $subject, $body, 'parcel_status', $parcel,
                     (string) ($channel['provider'] ?? 'log'), 'parcel', (string) ($parcel['id'] ?? ''), ['tracking' => $tracking, 'status_label' => $label]);
             }
