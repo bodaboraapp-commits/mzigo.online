@@ -1873,3 +1873,6 @@ header .mz-tollfree { display: none; }
   .mz-deliverability-table--events th:nth-child(1),
   .mz-deliverability-table--suppressions th:nth-child(1) { width: auto; }
 }
+
+/* Prevent the bundled hero from flashing before CMS branding resolves. */
+img[data-mz-hero-placeholder] { opacity: 0; }

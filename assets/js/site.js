@@ -1095,19 +1095,22 @@
 
   /** Apply admin-uploaded brand assets (logo + favicon) to the current page. */
   function applyBranding(branding) {
-    if (!branding) return;
+    branding = branding || {};
     var logo = branding.logo_url;
     var favicon = branding.favicon_url;
     var hero = branding.hero_url;
+    var defaultHero = '/assets/img/delivery.jpg';
+    $$('[data-mz-hero-image], img[alt="Parcel delivery"]').forEach(function (img) {
+      var next = hero || defaultHero;
+      if (img.getAttribute('src') !== next) img.setAttribute('src', next);
+      img.removeAttribute('data-mz-hero-placeholder');
+      img.style.opacity = '';
+    });
+    if (!branding) return;
     if (logo && branding.custom_logo) {
       $$('img').forEach(function (img) {
         var src = img.getAttribute('src') || '';
         if (src.indexOf('mzigo-logo') !== -1) img.setAttribute('src', logo);
-      });
-    }
-    if (hero) {
-      $$('[data-mz-hero-image], img[alt="Parcel delivery"]').forEach(function (img) {
-        if (img.getAttribute('src') !== hero) img.setAttribute('src', hero);
       });
     }
     if (branding.hero_title) {
@@ -10002,7 +10005,7 @@ return '<div class="mz-mobile-card">' +
       initAnalytics();
       initWebVitals();
       initNewsletterPrompt();
-      loadCms().then(function (res) { if (res) applyBranding(res.branding); });
+      loadCms().then(function (res) { applyBranding(res && res.branding); });
       initFaq();
       var page = doc.body.getAttribute('data-page') || '';
       if (page === 'home') initHome();
