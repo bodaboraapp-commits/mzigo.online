@@ -195,15 +195,21 @@ function channel_sender_hints(): array
     ];
 }
 
+function notification_user_by_phone(string $phone): ?array
+{
+    if (trim($phone) === '') return null;
+    $stmt = db()->prepare(
+        'SELECT id, name, email, phone, role, status, comm_channel FROM users
+         WHERE RIGHT(REGEXP_REPLACE(phone, "[^0-9]", ""), 9) = ? AND status = "active" LIMIT 1'
+    );
+    $stmt->execute([phone_key($phone)]);
+    return $stmt->fetch() ?: null;
+}
+
 function notification_customer_for(string $receiverPhone, string $receiverName): array
 {
     $key = phone_key($receiverPhone);
-    $stmt = db()->prepare(
-        'SELECT id, name, email, phone, role, status, comm_channel FROM users
-         WHERE RIGHT(REGEXP_REPLACE(phone, "[^0-9]", ""), 9) = ? LIMIT 1'
-    );
-    $stmt->execute([$key]);
-    $existing = $stmt->fetch();
+    $existing = notification_user_by_phone($receiverPhone);
     if ($existing) {
         return ['user' => $existing, 'created' => false];
     }
@@ -520,10 +526,7 @@ function notify_order_creator(array $parcel, string $template, string $subject, 
     if (!$creator && (string) ($parcel['sender_phone'] ?? '') !== '') {
         // Public/walk-in orders have no user_id; match the sender phone to the
         // merchant/customer account so the order creator still gets alerts.
-        $stmt = db()->prepare('SELECT id, name, email, phone, role, status, comm_channel FROM users
-            WHERE RIGHT(REGEXP_REPLACE(phone, "[^0-9]", ""), 9) = ? AND status = "active" LIMIT 1');
-        $stmt->execute([phone_key((string) $parcel['sender_phone'])]);
-        $creator = $stmt->fetch() ?: null;
+        $creator = notification_user_by_phone((string) $parcel['sender_phone']);
         if ($creator) $creatorId = (int) $creator['id'];
     }
     if ($creator && $creatorId > 0 && $creatorId !== $excludeUserId) {
