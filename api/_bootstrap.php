@@ -248,6 +248,28 @@ function rate_limit(string $bucket, int $maxHits, int $windowSeconds): void
 }
 
 /* --------------------------------------------------------------- identity */
+function user_has_role(int $userId, string $role): bool
+{
+    if (!in_array($role, ['customer', 'freelancer'], true)) return false;
+    try {
+        $stmt = db()->prepare('SELECT 1 FROM user_roles WHERE user_id = ? AND role = ? LIMIT 1');
+        $stmt->execute([$userId, $role]);
+        return (bool) $stmt->fetchColumn();
+    } catch (Throwable $e) {
+        return false;
+    }
+}
+
+function user_grant_role(int $userId, string $role): void
+{
+    if (!in_array($role, ['customer', 'freelancer'], true)) return;
+    try {
+        db()->prepare('INSERT IGNORE INTO user_roles (user_id, role, created_at) VALUES (?, ?, NOW())')->execute([$userId, $role]);
+    } catch (Throwable $e) {
+        error_log('user_grant_role failed: ' . $e->getMessage());
+    }
+}
+
 function current_user(): ?array
 {
     static $cached = false;
@@ -264,7 +286,14 @@ function current_user(): ?array
     $row = $stmt->fetch();
     $user = $row ?: null;
     if (!$user) {
-        unset($_SESSION['user_id'], $_SESSION['tenant_id']);
+        unset($_SESSION['user_id'], $_SESSION['tenant_id'], $_SESSION['active_role']);
+        return null;
+    }
+    $activeRole = (string) ($_SESSION['active_role'] ?? '');
+    if (in_array($activeRole, ['customer', 'freelancer'], true) && user_has_role((int) $user['id'], $activeRole)) {
+        $user['base_role'] = $user['role'];
+        $user['active_role'] = $activeRole;
+        $user['role'] = $activeRole;
     }
     return $user;
 }
@@ -299,6 +328,9 @@ function current_tenant(): ?array
     if (!$user) {
         return null;
     }
+    if (in_array((string) ($_SESSION['active_role'] ?? ''), ['customer', 'freelancer'], true)) {
+        return null;
+    }
     $memberships = user_tenants((int) $user['id']);
     if (!$memberships) {
         return null;
@@ -319,13 +351,18 @@ function current_tenant(): ?array
     return $tenant;
 }
 
-function set_session_user(int $userId, ?int $tenantId = null): void
+function set_session_user(int $userId, ?int $tenantId = null, ?string $activeRole = null): void
 {
     session_regenerate_id(true);
     $_SESSION['csrf'] = bin2hex(random_bytes(24));
     $_SESSION['user_id'] = $userId;
     $_SESSION['_session_started'] = time();
     $_SESSION['_last_activity'] = time();
+    if ($activeRole !== null && in_array($activeRole, ['customer', 'freelancer'], true)) {
+        $_SESSION['active_role'] = $activeRole;
+    } else {
+        unset($_SESSION['active_role']);
+    }
     if ($tenantId !== null) {
         $_SESSION['tenant_id'] = $tenantId;
     } else {
