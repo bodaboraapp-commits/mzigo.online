@@ -962,6 +962,7 @@
       function showTrackMode(on) {
         if (mainRow) mainRow.hidden = on;
         if (trackRow) trackRow.hidden = !on;
+        if (hint) hint.hidden = on;
         if (on && trackInput) trackInput.focus();
       }
 
