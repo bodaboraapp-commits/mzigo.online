@@ -522,7 +522,12 @@ switch ($action) {
                     [], ['config' => $field['label'] . ' is required.']);
             }
         }
-        $config = !empty($cleanConfig) ? channel_config_encode($cleanConfig) : null;
+        try {
+            $config = !empty($cleanConfig) ? channel_config_encode($cleanConfig) : null;
+        } catch (Throwable $e) {
+            error_log('Channel credential encryption failed: ' . $e->getMessage());
+            fail_error('encryption_not_configured', 'Provider credentials cannot be saved because APP_CONFIG_KEY is missing or invalid in the production .env. Add a strong APP_CONFIG_KEY, then save again.', 500);
+        }
         $active = !empty($data['is_active']) ? 1 : 0;
         if ($originalCode === '') {
             $exists = $pdo->prepare('SELECT 1 FROM communication_channels WHERE code = ? LIMIT 1');
