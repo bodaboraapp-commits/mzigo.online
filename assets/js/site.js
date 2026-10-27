@@ -1106,7 +1106,6 @@
       img.removeAttribute('data-mz-hero-placeholder');
       img.style.opacity = '';
     });
-    if (!branding) return;
     if (logo && branding.custom_logo) {
       $$('img').forEach(function (img) {
         var src = img.getAttribute('src') || '';
