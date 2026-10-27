@@ -119,11 +119,47 @@
           err.code = data.error && data.error.code;
           err.meta = data.error && data.error.meta;
           err.status = res.status;
+          if (res.status === 401 && err.code === 'unauthenticated') redirectSignedOut();
           throw err;
         }
         return data;
       });
     });
+  }
+
+  var authRedirecting = false;
+  function loginRedirectUrl() {
+    var next = window.location.pathname + window.location.search + window.location.hash;
+    return '/login?signed_out=1&next=' + encodeURIComponent(next);
+  }
+  function isAuthPage() {
+    return ['/login', '/signup', '/forgot-password', '/reset-password', '/verify-email'].indexOf(window.location.pathname) !== -1;
+  }
+  function redirectSignedOut() {
+    if (authRedirecting || isAuthPage()) return;
+    authRedirecting = true;
+    window.location.replace(loginRedirectUrl());
+  }
+  var protectedPages = ['profile', 'billing', 'settings', 'admin', 'freelancer', 'customer', 'orders', 'claims'];
+  function initSessionGuard() {
+    var page = doc.body.getAttribute('data-page') || '';
+    if (!APP.user && protectedPages.indexOf(page) !== -1) {
+      redirectSignedOut();
+      return false;
+    }
+    if (!APP.user) return true;
+    function verify() {
+      if (authRedirecting || !APP.user) return;
+      api('bootstrap.php').then(function (b) {
+        if (!b.user) { APP.user = null; redirectSignedOut(); }
+      }).catch(function () { /* 401 is handled centrally; transient errors should not sign the user out */ });
+    }
+    doc.addEventListener('visibilitychange', function () {
+      if (doc.visibilityState === 'visible') verify();
+    });
+    window.addEventListener('focus', verify);
+    setInterval(verify, 120000);
+    return true;
   }
 
   /** Load MySQL-backed state (user, catalog, parcels, errands, senders). */
@@ -193,8 +229,7 @@
         APP.packages = [];
         APP.errands = [];
         APP.senders = [];
-        toast('Signed out.');
-        return refreshData();
+        window.location.replace('/login?signed_out=1');
       });
   }
 
@@ -9909,6 +9944,10 @@ return '<div class="mz-mobile-card">' +
 
   function init() {
     hydrate().then(function () {
+      if (!initSessionGuard()) return;
+      if (new URLSearchParams(window.location.search).get('signed_out') === '1') {
+        toast('Your session has ended. Please sign in again.', 'info');
+      }
       initHeaderSearch();
       initAuthUI();
       initAuth();
