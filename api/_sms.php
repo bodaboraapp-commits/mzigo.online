@@ -49,6 +49,13 @@ function sms_channel_ready(): bool
             && trim((string) ($channel['config']['api_key'] ?? '')) !== ''
             && $channel['sender'] !== '';
     }
+    if ($channel['provider'] === 'twilio-sms') {
+        $hasSender = trim((string) ($channel['config']['from_number'] ?? '')) !== ''
+            || trim((string) ($channel['config']['messaging_service_sid'] ?? '')) !== '';
+        return trim((string) ($channel['config']['account_sid'] ?? '')) !== ''
+            && trim((string) ($channel['config']['auth_token'] ?? '')) !== ''
+            && $hasSender;
+    }
     return $channel['provider'] === 'log';
 }
 
@@ -80,6 +87,44 @@ function sms_send(string $phone, string $body): array
         sms_log(['at' => date('c'), 'to' => $masked, 'status' => 'skipped', 'provider' => 'log', 'body_preview' => mb_substr($body, 0, 80)]);
         return ['ok' => false, 'skipped' => true, 'provider' => 'log', 'error' => 'SMS provider is set to demo log.'];
     }
+    if ($channel['provider'] === 'twilio-sms') {
+        $config = $channel['config'];
+        $sid = trim((string) ($config['account_sid'] ?? ''));
+        $token = trim((string) ($config['auth_token'] ?? ''));
+        $from = trim((string) ($config['from_number'] ?? ''));
+        $service = trim((string) ($config['messaging_service_sid'] ?? ''));
+        if ($sid === '' || $token === '' || ($from === '' && $service === '')) {
+            return ['ok' => false, 'provider' => 'twilio-sms', 'error' => 'Twilio Account SID, Auth token and From number/Messaging Service are missing.'];
+        }
+        $twilioTo = '+' . ltrim($to, '+');
+        $fields = ['To' => $twilioTo, 'Body' => mb_substr($body, 0, 1600)];
+        if ($service !== '') $fields['MessagingServiceSid'] = $service;
+        if ($from !== '') $fields['From'] = '+' . ltrim($from, '+');
+        $ch = curl_init('https://api.twilio.com/2010-04-01/Accounts/' . rawurlencode($sid) . '/Messages.json');
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => http_build_query($fields),
+            CURLOPT_HTTPHEADER => ['Content-Type: application/x-www-form-urlencoded'],
+            CURLOPT_USERPWD => $sid . ':' . $token,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 20,
+            CURLOPT_CONNECTTIMEOUT => 8,
+        ]);
+        $raw = curl_exec($ch);
+        $code = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+        $curlError = curl_error($ch);
+        curl_close($ch);
+        $decoded = json_decode((string) $raw, true);
+        if ($raw === false || $code < 200 || $code >= 300) {
+            $error = $curlError !== '' ? $curlError : (string) ($decoded['message'] ?? ('HTTP ' . $code));
+            sms_log(['at' => date('c'), 'to' => $masked, 'status' => 'failed', 'provider' => 'twilio-sms', 'http' => $code, 'error' => $error]);
+            return ['ok' => false, 'provider' => 'twilio-sms', 'error' => $error];
+        }
+        $status = (string) ($decoded['status'] ?? 'accepted');
+        sms_log(['at' => date('c'), 'to' => $masked, 'status' => 'sent', 'provider' => 'twilio-sms', 'message_id' => (string) ($decoded['sid'] ?? ''), 'twilio_status' => $status]);
+        return ['ok' => true, 'provider' => 'twilio-sms', 'message_id' => (string) ($decoded['sid'] ?? ''), 'status' => $status];
+    }
+
     if ($channel['provider'] !== 'infobip') {
         return ['ok' => false, 'provider' => $channel['provider'], 'error' => 'SMS provider "' . $channel['provider'] . '" is not implemented.'];
     }
