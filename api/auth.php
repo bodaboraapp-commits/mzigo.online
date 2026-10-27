@@ -276,9 +276,10 @@ switch ($action) {
                     '<p style="font-size:32px;font-weight:800;letter-spacing:6px;color:#3c5223;margin:16px 0;">' . htmlspecialchars($code, ENT_QUOTES) . '</p>' .
                     '<p style="font-size:13px;color:#63705a;">It expires in 10 minutes. If you did not request this, you can ignore this email.</p>');
                 $mail = mzigo_mail_send($email, $subject, $textBody, $html);
-                if (empty($mail['sent'])) {
-                    audit('auth.customer_code_email_failed', 'user', $phone, ['phone' => $phone, 'channel' => 'email', 'provider' => $mail['provider'] ?? 'log', 'error' => $mail['error'] ?? '']);
-                    fail_error('email_delivery_failed', 'We could not send the sign-in code by email. Use SMS or contact support.', 502);
+                $logOnly = (($mail['provider'] ?? 'log') === 'log') && !$demo;
+                if (empty($mail['sent']) || $logOnly) {
+                    audit('auth.customer_code_email_failed', 'user', $phone, ['phone' => $phone, 'channel' => 'email', 'provider' => $mail['provider'] ?? 'log', 'error' => $mail['error'] ?? 'log-only']);
+                    fail_error('email_delivery_failed', 'Email delivery is not live. Configure SMTP in Admin → Communications, or choose SMS.', 502);
                 }
                 $sentTo = preg_replace('/(^.).*(@.*)$/', '$1***$2', $email);
                 audit('auth.customer_code_email', 'user', $phone, ['phone' => $phone, 'channel' => 'email', 'provider' => $mail['provider'] ?? 'smtp']);
