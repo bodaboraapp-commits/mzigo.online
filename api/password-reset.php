@@ -50,8 +50,8 @@ if ($action === 'request') {
         db()->prepare('UPDATE password_resets SET used_at = NOW() WHERE user_id = ? AND used_at IS NULL')->execute([(int) $user['id']]);
         $token = bin2hex(random_bytes(32));
         db()->prepare('INSERT INTO password_resets (user_id, token_hash, expires_at, requested_ip)
-            VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 60 MINUTE), ?)')
-            ->execute([(int) $user['id'], hash('sha256', $token), client_ip()]);
+            VALUES (?, ?, ?, ?)')
+            ->execute([(int) $user['id'], hash('sha256', $token), date('Y-m-d H:i:s', time() + 3600), client_ip()]);
         $base = rtrim((string) (config()['app']['base_url'] ?? 'http://localhost:8090'), '/');
         $link = $base . '/reset-password?token=' . rawurlencode($token);
         $body = implode("\n", [
