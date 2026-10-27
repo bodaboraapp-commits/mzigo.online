@@ -367,7 +367,8 @@ switch ($action) {
         $freelancer = freelancer_user_for($phone);
         $pin = freelancer_pin();
         $demo = config()['app']['demo_mode'] === true;
-        $useVerify = !$demo && sms_twilio_verify_config() !== null;
+        $channel = strtolower(trim((string) ($data['channel'] ?? 'sms'))) === 'email' ? 'email' : 'sms';
+        $useVerify = !$demo && $channel === 'sms' && sms_twilio_verify_config() !== null;
         if ($useVerify) {
             $verifyStart = sms_twilio_verify_start($phone);
             if (empty($verifyStart['ok'])) {
@@ -379,15 +380,37 @@ switch ($action) {
             db()->prepare('UPDATE users SET pin_hash = ? WHERE id = ?')
                 ->execute([password_hash($pin, PASSWORD_DEFAULT), $freelancer['id']]);
         }
-        audit('auth.freelancer_pin_issued', 'user', (string) $freelancer['id'], ['phone' => $phone, 'verify' => $useVerify]);
+        audit('auth.freelancer_pin_issued', 'user', (string) $freelancer['id'], ['phone' => $phone, 'channel' => $channel, 'verify' => $useVerify]);
+        $sentTo = $channel === 'email' ? 'email address on file' : 'your phone';
         if (!$demo) {
-            if ($useVerify) {
+            if ($channel === 'email') {
+                $emailStmt = db()->prepare('SELECT email FROM users WHERE RIGHT(REGEXP_REPLACE(phone, "[^0-9]", ""), 9) = ? LIMIT 1');
+                $emailStmt->execute([phone_key($phone)]);
+                $email = trim((string) ($emailStmt->fetchColumn() ?: ''));
+                if ($email === '') {
+                    fail_error('email_missing', 'No email address is on this runner account. Use SMS or ask an admin to add an email.', 422);
+                }
+                $subject = 'Your Mzigo.online runner code';
+                $textBody = 'Your Mzigo.online runner sign-in code is ' . $pin . '. It expires when you request a new code. Never share it.';
+                $html = email_shell('Your Mzigo runner sign-in code', 'Runner sign-in code',
+                    '<p style="font-size:15px;color:#26331a;">Your runner sign-in code is:</p>' .
+                    '<p style="font-size:32px;font-weight:800;letter-spacing:6px;color:#3c5223;margin:16px 0;">' . htmlspecialchars($pin, ENT_QUOTES) . '</p>' .
+                    '<p style="font-size:13px;color:#63705a;">Use this code to sign in to the runner dashboard. If you did not request it, ignore this email.</p>');
+                $mail = mzigo_mail_send($email, $subject, $textBody, $html);
+                $logOnly = (($mail['provider'] ?? 'log') === 'log') && !$demo;
+                if (empty($mail['sent']) || $logOnly) {
+                    audit('auth.freelancer_pin_email_failed', 'user', (string) $freelancer['id'], ['phone' => $phone, 'provider' => $mail['provider'] ?? 'log', 'error' => $mail['error'] ?? 'log-only']);
+                    fail_error('email_delivery_failed', 'Email delivery is not live. Configure SMTP in Admin → Communications, use SMS, or ask an admin to add an email.', 502);
+                }
+                $sentTo = preg_replace('/(^.).*(@.*)$/', '$1***$2', $email);
+                audit('auth.freelancer_pin_email', 'user', (string) $freelancer['id'], ['phone' => $phone, 'provider' => $mail['provider'] ?? 'smtp']);
+            } elseif ($useVerify) {
                 audit('auth.freelancer_pin_verify', 'user', (string) $freelancer['id'], ['phone' => $phone, 'provider' => 'twilio-verify']);
             } else {
                 $sms = sms_send_code($phone, $pin, 'runner');
                 if (empty($sms['ok'])) {
                     audit('auth.freelancer_pin_sms_failed', 'user', (string) $freelancer['id'], ['phone' => $phone, 'provider' => $sms['provider'] ?? 'log', 'error' => $sms['error'] ?? '']);
-                    fail_error('sms_delivery_failed', 'We could not send the runner PIN. Check the number or contact support.', 502);
+                    fail_error('sms_delivery_failed', 'We could not send the runner PIN. Check the number, choose email, or contact support.', 502);
                 }
                 audit('auth.freelancer_pin_sms', 'user', (string) $freelancer['id'], ['phone' => $phone, 'provider' => $sms['provider'] ?? 'infobip']);
             }
@@ -396,6 +419,8 @@ switch ($action) {
             'ok'        => true,
             'source'    => 'mysql',
             'sent'      => true,
+            'channel'   => $channel,
+            'sent_to'   => $sentTo,
             'new_user'  => (int) $freelancer['id'] > 0 && str_starts_with((string) $freelancer['name'], 'Freelancer '),
             'demo_pin'  => $demo ? $pin : null,
             'phone'     => $phone,
