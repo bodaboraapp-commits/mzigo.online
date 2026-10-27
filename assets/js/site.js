@@ -3450,8 +3450,9 @@ return '<div class="mz-mobile-card">' +
       });
     });
 
-    /* freelancer: phone -> system-generated PIN -> verify */
+    /* freelancer: phone -> system-generated PIN/code -> verify */
     var freelancerPhone = '';
+    var freelancerChannel = 'sms';
     var startForm = $('[data-freelancer-form="start"]');
     if (startForm) startForm.addEventListener('submit', function (ev) {
       ev.preventDefault();
@@ -3462,16 +3463,19 @@ return '<div class="mz-mobile-card">' +
       }
       var btn = startForm.querySelector('[type="submit"]');
       var phone = formValue(startForm, 'phone');
+      freelancerChannel = formValue(startForm, 'channel') || 'sms';
       btn.disabled = true;
-      api('auth.php', { method: 'POST', body: { action: 'freelancer-start', phone: phone } })
+      api('auth.php', { method: 'POST', body: { action: 'freelancer-start', phone: phone, channel: freelancerChannel } })
         .then(function (res) {
           freelancerPhone = res.phone || phone;
+          freelancerChannel = res.channel || freelancerChannel;
           trackEvent('runner_phone_submitted', { label: 'Runner phone submitted' });
           var hint = $('[data-freelancer-hint]');
+          var where = freelancerChannel === 'email' ? (res.sent_to || 'your email') : 'your phone';
           if (hint) {
             hint.innerHTML = res.demo_pin
-              ? 'Demo PIN: <strong>' + esc(res.demo_pin) + '</strong>. In production this PIN is sent by SMS.'
-              : 'Enter the 4-digit PIN sent to your phone.';
+              ? 'Demo PIN: <strong>' + esc(res.demo_pin) + '</strong>. In production this PIN is sent by ' + esc(freelancerChannel === 'email' ? 'email' : 'SMS') + '.'
+              : 'Enter the 4-digit code sent to ' + esc(where) + '.';
           }
           var step1 = $('[data-freelancer-step="1"]');
           var step2 = $('[data-freelancer-step="2"]');
@@ -3479,7 +3483,7 @@ return '<div class="mz-mobile-card">' +
           if (step2) step2.hidden = false;
           var pinInput = $('[data-freelancer-form="login"] [name="pin"]');
           if (pinInput) { pinInput.value = ''; pinInput.focus(); }
-          toast(res.demo_pin ? 'PIN issued for ' + freelancerPhone + ' — demo PIN ' + res.demo_pin : 'PIN sent to ' + freelancerPhone, 'info');
+          toast(res.demo_pin ? 'PIN issued for ' + freelancerPhone + ' — demo PIN ' + res.demo_pin : 'Code sent via ' + (freelancerChannel === 'email' ? 'email' : 'SMS') + ' to ' + where, 'info');
           btn.disabled = false;
         }).catch(function (err) {
           toast(err.message, 'error');
@@ -3493,13 +3497,15 @@ return '<div class="mz-mobile-card">' +
       resendPin.disabled = true;
       var original = resendPin.textContent;
       resendPin.textContent = 'Sending…';
-      api('auth.php', { method: 'POST', body: { action: 'freelancer-start', phone: freelancerPhone } })
+      api('auth.php', { method: 'POST', body: { action: 'freelancer-start', phone: freelancerPhone, channel: freelancerChannel } })
         .then(function (res) {
+          freelancerChannel = res.channel || freelancerChannel;
+          var where = freelancerChannel === 'email' ? (res.sent_to || 'your email') : 'your phone';
           if (res.demo_pin) {
             var hint = $('[data-freelancer-hint]');
-            if (hint) hint.innerHTML = 'New demo PIN: <strong>' + esc(res.demo_pin) + '</strong>. In production this PIN is sent by SMS.';
+            if (hint) hint.innerHTML = 'New demo PIN: <strong>' + esc(res.demo_pin) + '</strong>. In production this PIN is sent by ' + esc(freelancerChannel === 'email' ? 'email' : 'SMS') + '.';
           }
-          toast(res.demo_pin ? 'New PIN issued — demo PIN ' + res.demo_pin : 'A new PIN was sent to your phone.', 'info');
+          toast(res.demo_pin ? 'New PIN issued — demo PIN ' + res.demo_pin : 'A new code was sent via ' + (freelancerChannel === 'email' ? 'email' : 'SMS') + ' to ' + where, 'info');
           resendPin.textContent = 'PIN sent';
           setTimeout(function () { resendPin.textContent = original; resendPin.disabled = false; }, 6000);
         }).catch(function (err) {
