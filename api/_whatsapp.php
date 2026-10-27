@@ -223,9 +223,44 @@ function wa_handoff(int $conversationId, string $reason, string $note = ''): voi
     db()->prepare('UPDATE wa_conversations SET status = "human" WHERE id = ?')->execute([$conversationId]);
 }
 
+function wa_infobip_base(array $config): string
+{
+    $base = trim((string) ($config['infobip_base_url'] ?? ''));
+    if ($base !== '' && !preg_match('#^https?://#i', $base)) $base = 'https://' . $base;
+    return rtrim($base, '/');
+}
+
 function wa_send_text(string $to, string $body, bool $forceDemo = false): array
 {
     $config = wa_config();
+    $provider = $config['provider'] ?? 'meta';
+    if ($provider === 'infobip') {
+        if ($forceDemo || $config['mode'] !== 'live') {
+            return ['ok' => true, 'provider' => 'demo', 'message_id' => 'DEMO-WA-' . strtoupper(bin2hex(random_bytes(4)))];
+        }
+        $base = wa_infobip_base($config);
+        $sender = trim((string) ($config['infobip_sender'] ?? ''));
+        if ($base === '' || $sender === '' || trim((string) ($config['infobip_api_key'] ?? '')) === '') {
+            return ['ok' => false, 'provider' => 'infobip', 'error' => 'Infobip WhatsApp base URL, API key or sender is missing.'];
+        }
+        $payload = ['from' => $sender, 'to' => wa_normalize_phone($to), 'content' => ['text' => mb_substr($body, 0, 4096)]];
+        $ch = curl_init($base . '/whatsapp/1/message/text');
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true, CURLOPT_POSTFIELDS => json_encode($payload),
+            CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'Authorization: App ' . $config['infobip_api_key']],
+            CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 20, CURLOPT_CONNECTTIMEOUT => 8,
+        ]);
+        $raw = curl_exec($ch);
+        $code = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+        $curlError = curl_error($ch);
+        curl_close($ch);
+        $decoded = json_decode((string) $raw, true);
+        if ($raw === false || $code < 200 || $code >= 300) {
+            $error = $curlError !== '' ? $curlError : (string) ($decoded['requestError']['serviceException']['text'] ?? ('HTTP ' . $code));
+            return ['ok' => false, 'provider' => 'infobip', 'error' => $error];
+        }
+        return ['ok' => true, 'provider' => 'infobip', 'message_id' => (string) ($decoded['messageId'] ?? '')];
+    }
     if ($forceDemo || $config['mode'] !== 'live' || $config['access_token'] === '' || $config['phone_number_id'] === '') {
         return ['ok' => true, 'provider' => 'demo', 'message_id' => 'DEMO-WA-' . strtoupper(bin2hex(random_bytes(4)))];
     }

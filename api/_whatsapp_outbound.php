@@ -10,8 +10,9 @@ function wa_out_config(): array
     $raw = platform_setting('whatsapp_config', '');
     $config = $raw !== '' ? (json_decode($raw, true) ?: []) : [];
     return array_replace([
-        'enabled' => false, 'mode' => 'demo', 'graph_version' => 'v23.0',
+        'enabled' => false, 'mode' => 'demo', 'provider' => 'meta', 'graph_version' => 'v23.0',
         'phone_number_id' => '', 'access_token' => '', 'business_name' => 'Mzigo.online',
+        'infobip_base_url' => '', 'infobip_api_key' => '', 'infobip_sender' => '',
     ], $config);
 }
 
@@ -58,7 +59,45 @@ function wa_out_store_message(int $contactId, string $body, string $status, stri
 function wa_out_send_template(string $to, string $templateName, string $language, array $params, bool $forceDemo = false): array
 {
     $config = wa_out_config();
-    if ($forceDemo || $config['mode'] !== 'live' || empty($config['enabled']) || $config['access_token'] === '' || $config['phone_number_id'] === '') {
+    if ($forceDemo || $config['mode'] !== 'live' || empty($config['enabled'])) {
+        return ['ok' => true, 'demo' => true, 'message_id' => 'DEMO-WA-TPL-' . strtoupper(bin2hex(random_bytes(4)))];
+    }
+    if (($config['provider'] ?? 'meta') === 'infobip') {
+        $base = trim((string) ($config['infobip_base_url'] ?? ''));
+        if ($base !== '' && !preg_match('#^https?://#i', $base)) $base = 'https://' . $base;
+        $base = rtrim($base, '/');
+        $sender = trim((string) ($config['infobip_sender'] ?? ''));
+        if ($base === '' || $sender === '' || trim((string) ($config['infobip_api_key'] ?? '')) === '') {
+            return ['ok' => false, 'error' => 'Infobip WhatsApp base URL, API key or sender is missing.'];
+        }
+        $payload = ['messages' => [[
+            'from' => $sender,
+            'to' => wa_out_phone($to),
+            'content' => [
+                'templateName' => $templateName,
+                'templateData' => ['body' => ['placeholders' => array_values(array_map(fn ($v) => (string) $v, $params))]],
+                'language' => $language,
+            ],
+        ]]];
+        $ch = curl_init($base . '/whatsapp/1/message/template');
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true, CURLOPT_POSTFIELDS => json_encode($payload),
+            CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'Authorization: App ' . $config['infobip_api_key']],
+            CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 20, CURLOPT_CONNECTTIMEOUT => 8,
+        ]);
+        $raw = curl_exec($ch);
+        $code = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+        $curlError = curl_error($ch);
+        curl_close($ch);
+        $decoded = json_decode((string) $raw, true);
+        if ($raw === false || $code < 200 || $code >= 300) {
+            $error = $curlError !== '' ? $curlError : (string) ($decoded['requestError']['serviceException']['text'] ?? ('HTTP ' . $code));
+            return ['ok' => false, 'error' => $error];
+        }
+        $item = $decoded['messages'][0] ?? [];
+        return ['ok' => true, 'message_id' => (string) ($item['messageId'] ?? '')];
+    }
+    if ($config['access_token'] === '' || $config['phone_number_id'] === '') {
         return ['ok' => true, 'demo' => true, 'message_id' => 'DEMO-WA-TPL-' . strtoupper(bin2hex(random_bytes(4)))];
     }
     $url = 'https://graph.facebook.com/' . rawurlencode($config['graph_version']) . '/' . rawurlencode($config['phone_number_id']) . '/messages';
