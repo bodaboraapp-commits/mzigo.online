@@ -1022,7 +1022,7 @@
     }
     if (hero) {
       $$('[data-mz-hero-image], img[alt="Parcel delivery"]').forEach(function (img) {
-        img.setAttribute('src', hero);
+        if (img.getAttribute('src') !== hero) img.setAttribute('src', hero);
       });
     }
     if (branding.hero_title) {
