@@ -3549,9 +3549,7 @@ return '<div class="mz-mobile-card">' +
     function syncPhoneRole() {
       var roleSel = $('[data-phone-role]');
       phoneRole = roleSel ? roleSel.value : 'customer';
-      var channelWrap = $('[data-phone-channel-wrap]');
       var terms = document.querySelector('[data-phone-terms]');
-      if (channelWrap) channelWrap.hidden = phoneRole !== 'customer';
       if (terms) {
         terms.hidden = phoneRole !== 'freelancer';
         var box = terms.querySelector('[name="runner_terms"]');
@@ -3574,7 +3572,7 @@ return '<div class="mz-mobile-card">' +
         if (terms && !terms.checked) { toast('Please accept the Runner Terms and Privacy Policy to continue.', 'error'); return; }
       }
       var body = { action: phoneRole === 'freelancer' ? 'freelancer-start' : 'customer-start', phone: phone };
-      if (phoneRole === 'customer') body.channel = formValue(pStart, 'channel') || 'sms';
+      body.channel = formValue(pStart, 'channel') || 'sms';
       btn.disabled = true;
       api('auth.php', { method: 'POST', body: body }).then(function (res) {
         phoneNumber = res.phone || phone;

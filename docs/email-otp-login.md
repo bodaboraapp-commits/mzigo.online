@@ -1,58 +1,81 @@
-# Email OTP login channel
+# Email OTP login and admin email management
 
-**Status:** implemented 27 October 2026 for customer login. The customer can choose SMS or email when requesting a login code.
+**Status:** customer and freelancer email OTP implemented 27 October 2026. Admin add/verify email added 27 October 2026.
 
-## Login flow
+## Login channels
 
-On `/login` → **Customer** tab:
+On `/login`:
 
-1. Enter the delivery phone number
-2. Choose **Send the login code by**
-   - SMS to my phone
-   - Email (address on my account)
-3. Continue
-4. Enter the 4-digit code
+- **Freelancer** tab — choose **SMS** or **Email**
+- **Customer** tab — choose **SMS** or **Email**
+- **Phone** tab — choose Customer/Freelancer and the delivery channel
 
-The code is still tied to the customer phone account in `users.otp_hash`. Only the delivery channel changes.
+The login identifier remains the phone number. The selected channel controls where the 4+ digit code is sent.
 
-## Email requirements
+### Freelancer email
 
-The customer account must have an email address in `users.email`. If it is missing, the API returns:
-
-```text
-No email address is on this customer account. Use SMS or add an email in the customer portal first.
-```
-
-The email channel must be live. In demo mode the code remains `1234`; in production the email must be delivered through a real SMTP/SendGrid/Mailgun configuration. If the email channel is still set to `log`, the API returns a clear error instead of pretending the code was sent.
-
-## Add email to an existing customer
-
-Options:
-
-1. Customer portal after signing in by SMS → Email & notification preferences → save email
-2. Admin API `admin.php` action:
+`freelancer-start` accepts:
 
 ```json
 {
-  "action": "update_user_email",
-  "user_id": 65,
-  "email": "customer@example.com"
+  "action": "freelancer-start",
+  "phone": "0712345678",
+  "channel": "email"
 }
 ```
 
-3. phpMyAdmin for a one-off account update:
+The runner PIN is generated, stored as a hash, and emailed. If the runner account has no email, the API returns:
 
-```sql
-UPDATE users SET email = 'customer@example.com', email_verified_at = NULL
-WHERE id = 65;
+```text
+No email address is on this runner account. Use SMS or ask an admin to add an email.
 ```
 
-## Production checklist
+### Customer email
 
-- Email channel configured (Admin → Communications → Email → SMTP/SendGrid/Mailgun)
-- Send a test email to confirm live delivery
-- Customer email populated
-- Deploy the latest Git commit
-- Hard-refresh `/login`
+`customer-start` accepts:
 
-The current customer account for `254798335246` has **no email address** (`users.email = NULL`). Email OTP cannot work for that account until an email is added.
+```json
+{
+  "action": "customer-start",
+  "phone": "0712345678",
+  "channel": "email"
+}
+```
+
+## Admin add/verify email
+
+Admin → Users rows now show:
+
+- Email address
+- `verified` / `unverified` badge
+- **Add email** or **Change email**
+- **Verify email**
+
+Admin actions:
+
+```json
+{ "action": "update_user_email", "user_id": 65, "email": "user@example.com" }
+{ "action": "verify_user_email", "user_id": 65 }
+```
+
+Adding/changing an email clears the verified flag. Verify marks `users.email_verified_at` as now.
+
+Email OTP itself does not require the verified badge: receiving the code at the address proves access. The badge is for admin records and communication trust.
+
+## Email delivery requirement
+
+A real email provider must be configured in **Admin → Communications → Email**.
+
+If the channel is still `log`, email OTP returns a clear delivery error instead of pretending to send. Production currently needs SMTP/SendGrid/Mailgun credentials.
+
+## Twilio Verify
+
+If Twilio Verify is configured for the SMS channel, SMS login OTP uses Twilio Verify. Selecting **Email** continues to use SMTP.
+
+## Tested locally
+
+```text
+freelancer-start channel=email → channel=email, demo PIN issued
+admin update_user_email → email saved
+admin verify_user_email → email_verified_at set
+```
