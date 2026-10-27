@@ -60,7 +60,7 @@ The current app cannot complete steps 3–4 without demo mode, and cannot sign i
 
 | ID | Missing workflow | Impact | V1 class |
 |---|---|---|---|
-| CST-01 | **Production login code is never sent.** `auth.php customer-start` generates a 4-digit code/hash but has no SMS/WhatsApp/email dispatch. In production `demo_code` is null, so the receiver cannot sign in. | Receivers cannot access parcels or pay. | **V1 blocker** |
+| CST-01 | Production code is now sent through the Infobip SMS channel; it still needs live credentials and end-to-end delivery validation. | Receivers cannot access parcels until SMS is verified. | **Pending credentials/QA** |
 | CST-02 | **Delivery-fee payment is demo only.** `customer.php` returns `DEMO-MPESA-…` and marks the parcel paid without a real STK push/callback. | Receivers cannot actually pay; collection code cannot be released. | **V1 blocker** |
 | CST-03 | No failed payment/retry/refund state, no STK pending/timeout UI. | Payment support gaps. | Pending |
 | CST-04 | No SMS fallback for notification/receipts; email is optional. | Some receivers receive nothing. | **V1 blocker via notifications** |
@@ -88,7 +88,7 @@ The current app cannot complete steps 3–4 without demo mode, and cannot sign i
 
 | ID | Missing workflow | Impact | V1 class |
 |---|---|---|---|
-| RUN-01 | **Production PIN is never sent.** `auth.php freelancer-start` generates a PIN/hash but never dispatches it. In production `demo_pin` is null, so the runner cannot log in. | Runners cannot access jobs. | **V1 blocker** |
+| RUN-01 | Production runner PIN is now sent through the Infobip SMS channel; live delivery still needs validation. | Runners cannot access jobs until SMS is verified. | **Pending credentials/QA** |
 | RUN-02 | **Live payout callback is missing.** B2C initiation stores status `processing`, but there is no Daraja result callback endpoint to mark paid/failed/reconcile. | Runners may never be marked paid; money state uncertain. | **V1 blocker for live payouts** (manual payout acceptable only with sign-off) |
 | RUN-03 | SMS/WhatsApp job notifications are not live. | Runners miss jobs. | **V1 blocker via notifications** |
 | RUN-04 | No earnings statement/tax export or payout receipt download. | Runner support/accounting. | Pending |
@@ -153,7 +153,7 @@ The current app cannot complete steps 3–4 without demo mode, and cannot sign i
 | PRD-09 | Independent penetration test + remediation | Required before public launch. | Pending |
 | PRD-10 | Load/soak test public tracking, intake, scanner ingestion and API limits | Unknown capacity. | Pending |
 | PAY-01 | Real M-Pesa customer/invoice payments: STK/callback/replay protection/reconciliation/refunds | Core collection loop is demo only. | **V1 blocker** |
-| MSG-01 | SMS/WhatsApp transport + delivery of customer codes/freelancer PIN/job/receipt messages | Auth and notifications fail in production. | **V1 blocker** |
+| MSG-01 | Infobip SMS transport is implemented for codes, PINs, OTPs and parcel notifications. Production Infobip credentials/sender and live validation are still pending; WhatsApp delivery remains separate. | Auth/notifications can now be configured, but live credentials are still required. | **Pending credentials/QA** |
 | PAY-02 | Live Daraja payout/recovery credentials + payout result callback/reconciliation | Live payouts may stay `processing`. | **V1 blocker for live payouts** |
 | MAIL-01 | Live email provider validation (SMTP/SendGrid/Mailgun), bounce/complaint callbacks, SPF/DKIM/DMARC | Invites/receipts/reset reliability. | Pending |
 | LEG-01 | Legal sign-off on runner/referral/insurance terms, privacy, DSR/retention | Compliance risk. | Pending |

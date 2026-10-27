@@ -7182,6 +7182,23 @@ return '<div class="mz-mobile-card">' +
     });
   }
 
+  function renderAdminSmsTest(card) {
+    if (!card) return;
+    card.innerHTML = '<div class="mz-card__title" style="margin:0 0 8px;">SMS delivery test</div>' +
+      '<div class="mz-hint" style="margin-bottom:10px;">Sends a real SMS through the active SMS channel. Use Infobip in Admin → Communications → SMS channel.</div>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;"><input class="mz-input" data-sms-test-phone placeholder="+254 712 345 678" style="max-width:320px;">' +
+      '<button type="button" class="mz-btn" data-sms-test-send>Send test SMS</button></div>' +
+      '<div class="mz-hint" data-sms-test-result style="margin-top:8px;"></div>';
+    var btn = card.querySelector('[data-sms-test-send]');
+    btn.addEventListener('click', function () {
+      btn.disabled = true;
+      var out = card.querySelector('[data-sms-test-result]');
+      api('admin.php', { method: 'POST', body: { action: 'send_test_sms', phone: card.querySelector('[data-sms-test-phone]').value } })
+        .then(function (res) { if (out) out.textContent = res.message; toast(res.message); btn.disabled = false; })
+        .catch(function (err) { if (out) out.textContent = err.message; toast(err.message, 'error'); btn.disabled = false; });
+    });
+  }
+
   function renderAdminDemoAccounts(card, visible) {
     if (!card) return;
     card.innerHTML = '<div class="mz-row">' +
@@ -9264,6 +9281,7 @@ return '<div class="mz-mobile-card">' +
           '<section class="mz-admin-section" data-admin-section="communications" hidden>' +
             adminSectionHead('Communications', 'Channel controls, SMTP delivery testing and the outbound customer message log.') +
             '<div class="mz-saas-card" data-admin-email-test style="margin-bottom:16px;"></div>' +
+            '<div class="mz-saas-card" data-admin-sms-test style="margin-bottom:16px;"></div>' +
             '<div class="mz-saas-card" data-admin-deliverability style="margin-bottom:16px;"></div>' +
             '<div class="mz-saas-grid mz-saas-grid--2 mz-comms-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));">' +
               '<div class="mz-saas-card" data-admin-channels></div>' +
@@ -9406,6 +9424,7 @@ return '<div class="mz-mobile-card">' +
     renderAdminUsers(host.querySelector('[data-admin-users]'), data);
     renderAdminChannels(host.querySelector('[data-admin-channels]'), data.channels || []);
     renderAdminEmailTest(host.querySelector('[data-admin-email-test]'), data.admin || {});
+    renderAdminSmsTest(host.querySelector('[data-admin-sms-test]'));
     renderAdminNotifications(host.querySelector('[data-admin-notifications]'), data.notifications || []);
     renderAdminCommsTemplates(host.querySelector('[data-admin-comms-templates]'), data.comms_templates || []);
     renderAdminDeliverability(host.querySelector('[data-admin-deliverability]'), data.email_deliverability || {});

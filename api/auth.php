@@ -254,15 +254,24 @@ switch ($action) {
             $stmt = db()->prepare('INSERT INTO users (name, phone, role) VALUES (?, ?, "customer")');
             $stmt->execute(['Customer ' . substr(phone_key($phone), -4), $phone]);
         }
-        $code = config()['app']['demo_mode'] === true ? '1234' : str_pad((string) random_int(0, 9999), 4, '0', STR_PAD_LEFT);
+        $demo = config()['app']['demo_mode'] === true;
+        $code = $demo ? '1234' : str_pad((string) random_int(0, 9999), 4, '0', STR_PAD_LEFT);
         db()->prepare('UPDATE users SET otp_hash = ?, otp_expires_at = DATE_ADD(NOW(), INTERVAL 10 MINUTE) WHERE phone = ?')
             ->execute([password_hash($code, PASSWORD_DEFAULT), $phone]);
         audit('auth.customer_code_issued', 'user', $phone, ['phone' => $phone]);
+        if (!$demo) {
+            $sms = sms_send_code($phone, $code, 'customer');
+            if (empty($sms['ok'])) {
+                audit('auth.customer_code_sms_failed', 'user', $phone, ['phone' => $phone, 'provider' => $sms['provider'] ?? 'log', 'error' => $sms['error'] ?? '']);
+                fail_error('sms_delivery_failed', 'We could not send the sign-in code. Check your number or contact support.', 502);
+            }
+            audit('auth.customer_code_sms', 'user', $phone, ['phone' => $phone, 'provider' => $sms['provider'] ?? 'infobip']);
+        }
         json_out([
             'ok'        => true,
             'source'    => 'mysql',
             'sent'      => true,
-            'demo_code' => config()['app']['demo_mode'] === true ? $code : null,
+            'demo_code' => $demo ? $code : null,
             'phone'     => $phone,
             'csrf'      => csrf_token(),
         ]);
@@ -302,15 +311,24 @@ switch ($action) {
         rate_limit('freelancer-start:' . client_ip() . ':' . $phone, 10, 300);
         $freelancer = freelancer_user_for($phone);
         $pin = freelancer_pin();
+        $demo = config()['app']['demo_mode'] === true;
         db()->prepare('UPDATE users SET pin_hash = ? WHERE id = ?')
             ->execute([password_hash($pin, PASSWORD_DEFAULT), $freelancer['id']]);
         audit('auth.freelancer_pin_issued', 'user', (string) $freelancer['id'], ['phone' => $phone]);
+        if (!$demo) {
+            $sms = sms_send_code($phone, $pin, 'runner');
+            if (empty($sms['ok'])) {
+                audit('auth.freelancer_pin_sms_failed', 'user', (string) $freelancer['id'], ['phone' => $phone, 'provider' => $sms['provider'] ?? 'log', 'error' => $sms['error'] ?? '']);
+                fail_error('sms_delivery_failed', 'We could not send the runner PIN. Check the number or contact support.', 502);
+            }
+            audit('auth.freelancer_pin_sms', 'user', (string) $freelancer['id'], ['phone' => $phone, 'provider' => $sms['provider'] ?? 'infobip']);
+        }
         json_out([
             'ok'        => true,
             'source'    => 'mysql',
             'sent'      => true,
             'new_user'  => (int) $freelancer['id'] > 0 && str_starts_with((string) $freelancer['name'], 'Freelancer '),
-            'demo_pin'  => config()['app']['demo_mode'] === true ? $pin : null,
+            'demo_pin'  => $demo ? $pin : null,
             'phone'     => $phone,
             'csrf'      => csrf_token(),
         ]);

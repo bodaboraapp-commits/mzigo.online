@@ -31,6 +31,7 @@ function runner_notify(int $userId, string $title, string $body, ?int $jobId = n
     try {
         if (!function_exists('notification_send')) {
             require_once __DIR__ . '/_notifications.php';
+    require_once __DIR__ . '/_sms.php';
         }
         $stmt = db()->prepare('SELECT id, name, email, phone, comm_channel FROM users WHERE id = ? LIMIT 1');
         $stmt->execute([$userId]);
@@ -119,30 +120,48 @@ function runner_job_issue_delivery_otp(int $jobId): array
     $customer = notification_customer_for($phone, $name);
     $user = $customer['user'];
     $targets = notification_targets($user);
+    $smsTarget = null;
     $emailTarget = null;
     foreach ($targets as $target) {
-        if (($target['code'] ?? '') !== 'email') { continue; }
-        if ((string) ($target['provider'] ?? 'log') === 'log') { continue; }
-        if (trim((string) ($user['email'] ?? '')) === '') { continue; }
-        $emailTarget = $target;
-        break;
+        $code = (string) ($target['code'] ?? '');
+        $provider = (string) ($target['provider'] ?? 'log');
+        if ($code === 'sms' && $provider !== 'log' && function_exists('sms_channel_ready') && sms_channel_ready()) {
+            $smsTarget = $target;
+        }
+        if ($code === 'email' && $provider !== 'log' && trim((string) ($user['email'] ?? '')) !== '') {
+            $emailTarget = $target;
+        }
     }
-    if ($emailTarget === null) {
+    $target = $smsTarget ?: $emailTarget;
+    if ($target === null) {
         db()->prepare('UPDATE runner_jobs SET delivery_otp_hash = NULL, delivery_otp_required = 0 WHERE id = ?')->execute([$jobId]);
         return ['ok' => true, 'required' => false, 'sent' => 0];
     }
+    $channel = (string) $target['code'];
+    $provider = (string) ($target['provider'] ?? 'log');
     $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
     $hash = password_hash($code, PASSWORD_DEFAULT);
     db()->prepare('UPDATE runner_jobs SET delivery_otp_hash = ?, delivery_otp_expires_at = DATE_ADD(NOW(), INTERVAL 30 MINUTE),
         delivery_otp_attempts = 0, delivery_otp_sent_at = NOW(), delivery_otp_required = 1, delivery_otp_channel = ? WHERE id = ?')
-        ->execute([$hash, 'email', $jobId]);
+        ->execute([$hash, $channel, $jobId]);
     $parcel = ['id' => 0, 'tracking' => (string) ($job['ref'] ?? ''), 'receiver_name' => $name,
         'receiver_phone' => $phone, 'sender_name' => (string) ($job['contact_name'] ?? ''),
         'sender_phone' => (string) ($job['contact_phone'] ?? ''), 'tenant_id' => null];
     $body = "Hi " . $name . ",\n\nYour receiver code for errand " . $job['ref'] . " is " . $code . ".\n\nGive this code to the runner only after you receive the item. It expires in 30 minutes.";
-    notification_send('email', $user, 'Receiver code for errand ' . $job['ref'], $body, 'delivery_otp', $parcel,
-        (string) ($emailTarget['provider'] ?? 'log'), 'runner_job', (string) $jobId, ['code' => $code, 'ref' => $job['ref'], 'tracking' => $job['ref']]);
-    return ['ok' => true, 'required' => true, 'sent' => 1, 'channel' => 'email', 'user_id' => (int) $user['id']];
+    $result = notification_send($channel, $user, 'Receiver code for errand ' . $job['ref'], $body, 'delivery_otp', $parcel,
+        $provider, 'runner_job', (string) $jobId, ['code' => $code, 'ref' => $job['ref'], 'tracking' => $job['ref']]);
+    if (($result['status'] ?? '') !== 'sent' && $channel === 'sms' && $emailTarget !== null) {
+        $result = notification_send('email', $user, 'Receiver code for errand ' . $job['ref'], $body, 'delivery_otp', $parcel,
+            (string) ($emailTarget['provider'] ?? 'log'), 'runner_job', (string) $jobId, ['code' => $code, 'ref' => $job['ref'], 'tracking' => $job['ref']]);
+        $channel = 'email';
+        $provider = (string) ($emailTarget['provider'] ?? 'log');
+        db()->prepare('UPDATE runner_jobs SET delivery_otp_channel = ? WHERE id = ?')->execute([$channel, $jobId]);
+    }
+    if (($result['status'] ?? '') !== 'sent') {
+        db()->prepare('UPDATE runner_jobs SET delivery_otp_hash = NULL, delivery_otp_required = 0 WHERE id = ?')->execute([$jobId]);
+        return ['ok' => false, 'required' => false, 'sent' => 0, 'error' => (string) ($result['error'] ?? 'Could not deliver the receiver code.')];
+    }
+    return ['ok' => true, 'required' => true, 'sent' => 1, 'channel' => $channel, 'user_id' => (int) $user['id']];
 }
 
 function runner_job_create_from_errand(array $errand): ?int

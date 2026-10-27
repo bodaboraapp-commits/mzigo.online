@@ -208,14 +208,19 @@ if ($action === 'request_claim_otp') {
     db()->prepare('INSERT INTO claim_otps (parcel_id, user_id, phone_key, code_hash, expires_at)
         VALUES (?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL ? MINUTE))')
         ->execute([$parcel['id'], (int) $user['id'], $key, password_hash($code, PASSWORD_DEFAULT), CLAIM_OTP_TTL_MINUTES]);
+    $demo = config()['app']['demo_mode'] === true;
+    $delivered = false;
     foreach (notification_targets($user) as $channel) {
-        notification_send($channel['code'], $user, 'Your Mzigo verification code',
+        $result = notification_send($channel['code'], $user, 'Your Mzigo verification code',
             'Your Mzigo claim verification code for ' . $tracking . ' is ' . $code . '. It expires in ' . CLAIM_OTP_TTL_MINUTES . ' minutes.',
             'claim_otp', $parcel, (string) ($channel['provider'] ?? 'log'), 'parcel', (string) $parcel['id'],
             ['code' => $code, 'tracking' => $tracking]);
+        if (($result['status'] ?? '') === 'sent') $delivered = true;
     }
-    audit('customer.claim_otp_requested', 'parcel', (string) $parcel['id'], ['tracking' => $tracking, 'type' => $type]);
-    $demo = config()['app']['demo_mode'] === true;
+    audit('customer.claim_otp_requested', 'parcel', (string) $parcel['id'], ['tracking' => $tracking, 'type' => $type, 'delivered' => $delivered]);
+    if (!$demo && !$delivered) {
+        fail_error('otp_delivery_failed', 'We could not send the verification code. Try again or contact support.', 502);
+    }
     json_out(['ok' => true, 'source' => 'mysql', 'sent' => true, 'expires_minutes' => CLAIM_OTP_TTL_MINUTES,
         'demo_otp' => $demo ? $code : null,
         'message' => $demo ? 'Demo verification code: ' . $code : 'Verification code sent to your phone.']);

@@ -148,10 +148,12 @@ welcome, trial ending, invoice paid, payment failed.
 writes a bcrypt hash of the 4-digit PIN; `{action:'customer-start'}` does the same
 for a customer with a 10-minute `otp_hash`. In production:
 
-1. Set `demo_mode => false` in `_server/config.php` (or `APP_DEMO_MODE=0`).
-2. Send the generated PIN through your SMS/WhatsApp provider (add the send call
-   where the PIN is generated in `api/auth.php`); never return it in the response.
-3. Keep/raise the `freelancer-start` / `customer-start` (10/5 min) and
+1. Set `DEMO_MODE=0` in the production `.env` (or `APP_ENV=production`).
+2. Configure the **SMS** channel with the Infobip provider in Admin → Communications
+   (base URL, API key, approved sender ID) and send a test SMS.
+3. The customer sign-in code and runner PIN are now delivered by SMS through
+   `api/auth.php` → `api/_sms.php`; never return the production code in the response.
+4. Keep/raise the `freelancer-start` / `customer-start` (10/5 min) and
    `freelancer-login` / `customer-login` (6/5 min) rate limits and alert on failures.
    For customers, replace the demo M-Pesa settlement in `api/customer.php` with a
    Daraja STK push + callback that flips `parcels.payment_status` to `paid`.
@@ -262,6 +264,12 @@ Claim participants can message each other on a claim thread (`claim_messages`); 
 Password reset is available only to `platform_admin` and `user` (merchant/business) accounts via `/forgot-password` and `/reset-password?token=…`. Tokens are 32-byte random values stored as SHA-256 hashes in `password_resets`, expire after 60 minutes, are single-use, and request/attempts are rate-limited. A successful reset revokes all existing sessions for the account. Email is sent through the notification service's email channel (log provider in demo mode); in demo mode the reset link is also returned to the requesting page for testing. Customers and freelancers keep phone + code/PIN sign-in and cannot request an emailed password reset. Admin → Website exposes a demo-accounts visibility toggle (`platform_settings.show_demo_accounts`, default visible); when hidden, the credentials box is removed from `/login`. Production should configure a real SMTP/email provider and keep `api/cron.php` scheduled; monitor reset requests and review `audit` entries for `auth.password_reset_*`.
 
 ## Stage E — security operations
+
+**SMS (Infobip):** The SMS channel supports Infobip via `api/_sms.php`. Customer codes,
+runner PINs, claim OTPs, delivery OTPs and parcel notifications use the active SMS
+channel. Configure the provider, base URL, API key and approved sender ID in
+Admin → Communications, then use **Send test SMS**. See
+`docs/infobip-sms-integration.md`.
 
 **SMTP:** `assets/js` send flows now deliver email through `api/_mailer.php`, which reads the email channel in Admin → Communications (provider `smtp`, config host/port/username/password/encryption, sender) and falls back to environment `MAIL/SMTP_HOST` values. Status and errors are stored on `notifications` (`sent`/`failed`) and `_server/logs/mail.log`. A local SMTP capture test verified real message delivery. Configure the email channel before relying on password-reset or verification emails; demo mode still exposes reset/verification links for testing. Only SMTP transport is implemented — SendGrid/Mailgun API providers remain a seam.
 

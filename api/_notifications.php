@@ -19,6 +19,7 @@ require_once __DIR__ . '/_mailer.php';
 require_once __DIR__ . '/_email_templates.php';
 require_once __DIR__ . '/_crypto.php';
 require_once __DIR__ . '/_whatsapp_outbound.php';
+require_once __DIR__ . '/_sms.php';
 require_once __DIR__ . '/_template_store.php';
 require_once __DIR__ . '/_notification_prefs.php';
 
@@ -85,6 +86,17 @@ function channel_provider_catalog(): array
                 ['key' => 'sandbox', 'label' => 'Sandbox mode', 'placeholder' => '0 for live, 1 for sandbox'],
             ],
         ],
+        'infobip' => [
+            'label' => 'Infobip (SMS)',
+            'group' => 'sms',
+            'hint'  => 'Infobip SMS API. Copy the base URL from the Infobip portal, paste an API key and use an approved sender ID in the Sender field.',
+            'fields' => [
+                ['key' => 'base_url', 'label' => 'Infobip base URL', 'placeholder' => 'https://xxxxx.api.infobip.com', 'required' => true],
+                ['key' => 'api_key', 'label' => 'API key', 'placeholder' => 'your Infobip API key', 'type' => 'password', 'required' => true],
+                ['key' => 'sender_id', 'label' => 'Sender ID (optional)', 'placeholder' => 'MZIGO', 'hint' => 'Used only if the channel Sender field is empty.'],
+            ],
+        ],
+
         'twilio-sms' => [
             'label' => 'Twilio (SMS)',
             'group' => 'sms',
@@ -208,7 +220,7 @@ function notification_targets(array $user): array
 }
 
 function notification_send(string $channel, array $user, string $subject, string $body, string $template, array $parcel, string $provider = 'log',
-    ?string $relatedType = null, ?string $relatedId = null, array $data = []): void
+    ?string $relatedType = null, ?string $relatedId = null, array $data = []): array
 {
     $recipient = $channel === 'email' ? (string) ($user['email'] ?? '') : (string) ($user['phone'] ?? '');
     $status = 'sent';
@@ -245,6 +257,11 @@ function notification_send(string $channel, array $user, string $subject, string
         $provider = (string) $mail['provider'];
         $status = $mail['sent'] ? 'sent' : (($mail['skipped'] ?? false) ? 'skipped' : 'failed');
         $error = $mail['error'];
+    } elseif ($channel === 'sms') {
+        $sms = sms_send($recipient, $body);
+        $provider = (string) ($sms['provider'] ?? 'log');
+        $status = !empty($sms['ok']) ? 'sent' : (!empty($sms['skipped']) ? 'skipped' : 'failed');
+        $error = (string) ($sms['error'] ?? '');
     }
     $stmt = db()->prepare(
         'INSERT INTO notifications (channel, recipient_user_id, recipient, subject, body, template,
@@ -264,6 +281,7 @@ function notification_send(string $channel, array $user, string $subject, string
                 'template' => $template, 'parcel' => $parcel['tracking'] ?? null, 'subject' => $subject]) . "\n",
             FILE_APPEND);
     }
+    return ['status' => $status, 'provider' => $provider, 'error' => $error];
 }
 
 
