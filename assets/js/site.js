@@ -8524,7 +8524,12 @@ return '<div class="mz-mobile-card">' +
         '<form data-wa-config-form style="margin-top:12px;"><div class="mz-wa-form">' +
           '<label class="mz-field"><span class="mz-label">Mode</span><select class="mz-input" data-wa-field="mode"><option value="demo"' + (cfg.mode === 'demo' ? ' selected' : '') + '>Demo (no Meta calls)</option><option value="live"' + (cfg.mode === 'live' ? ' selected' : '') + '>Live Meta Cloud API</option></select></label>' +
           '<label class="mz-field"><span class="mz-label">Assistant</span><select class="mz-input" data-wa-field="enabled"><option value="1"' + (cfg.enabled ? ' selected' : '') + '>Enabled</option><option value="0"' + (!cfg.enabled ? ' selected' : '') + '>Paused</option></select></label>' +
+          '<label class="mz-field"><span class="mz-label">WhatsApp provider</span><select class="mz-input" data-wa-field="provider"><option value="meta"' + (cfg.provider === 'meta' ? ' selected' : '') + '>Meta WhatsApp Cloud API</option><option value="infobip"' + (cfg.provider === 'infobip' ? ' selected' : '') + '>Infobip WhatsApp</option></select></label>' +
           field('business_name', 'Business name', cfg.business_name, 'text', 'Mzigo.online') +
+          field('infobip_base_url', 'Infobip WhatsApp base URL', cfg.infobip_base_url, 'text', 'd845wr.api.infobip.com') +
+          field('infobip_sender', 'Infobip WhatsApp sender', cfg.infobip_sender, 'text', 'Your approved WhatsApp sender') +
+          field('infobip_api_key', 'Infobip WhatsApp API key', '', 'password', cfg.infobip_api_key_set ? 'Saved — leave blank to keep' : 'Infobip API key') +
+          field('infobip_webhook_secret', 'Infobip webhook secret', '', 'password', cfg.infobip_webhook_secret_set ? 'Saved — leave blank to keep' : 'Optional Authorization secret') +
           field('phone_number_id', 'Meta phone number ID', cfg.phone_number_id, 'text', '1234567890') +
           field('waba_id', 'WABA ID', cfg.waba_id, 'text', 'WhatsApp Business Account ID') +
           field('graph_version', 'Graph API version', cfg.graph_version, 'text', 'v23.0') +
