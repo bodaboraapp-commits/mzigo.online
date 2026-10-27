@@ -31,6 +31,36 @@ if ($method !== 'POST') {
 }
 
 $raw = file_get_contents('php://input') ?: '';
+$body = json_decode($raw, true);
+if (!is_array($body)) {
+    http_response_code(400);
+    echo 'Invalid payload';
+    exit;
+}
+
+$provider = (string) ($config['provider'] ?? 'meta');
+$isInfobip = $provider === 'infobip' || (isset($body['results']) && !isset($body['object']));
+
+if ($isInfobip) {
+    $secret = trim((string) ($config['infobip_webhook_secret'] ?? ''));
+    if ($secret !== '') {
+        $provided = (string) ($_SERVER['HTTP_AUTHORIZATION'] ?? '');
+        if (!hash_equals('App ' . $secret, $provided) && !hash_equals($secret, $provided)) {
+            http_response_code(403);
+            echo 'Invalid webhook authorization';
+            exit;
+        }
+    }
+    try {
+        $count = wa_handle_infobip_webhook($body);
+        error_log('Infobip WhatsApp webhook accepted ' . $count . ' message(s)');
+    } catch (Throwable $e) {
+        error_log('Infobip WhatsApp webhook error: ' . $e->getMessage());
+    }
+    http_response_code(200);
+    json_out(['ok' => true]);
+}
+
 if ((string) $config['app_secret'] === '') {
     if ($config['mode'] === 'live') {
         http_response_code(403);
@@ -44,13 +74,6 @@ if ((string) $config['app_secret'] === '') {
         echo 'Invalid signature';
         exit;
     }
-}
-
-$body = json_decode($raw, true);
-if (!is_array($body)) {
-    http_response_code(400);
-    echo 'Invalid payload';
-    exit;
 }
 
 try {
