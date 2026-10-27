@@ -263,8 +263,8 @@ switch ($action) {
         $sentTo = $channel === 'email' ? 'email address on file' : 'your phone';
         if (!$demo) {
             if ($channel === 'email') {
-                $emailStmt = db()->prepare('SELECT email FROM users WHERE phone = ? LIMIT 1');
-                $emailStmt->execute([$phone]);
+                $emailStmt = db()->prepare('SELECT email FROM users WHERE RIGHT(REGEXP_REPLACE(phone, "[^0-9]", ""), 9) = ? AND role = "customer" LIMIT 1');
+                $emailStmt->execute([phone_key($phone)]);
                 $email = trim((string) ($emailStmt->fetchColumn() ?: ''));
                 if ($email === '') {
                     fail_error('email_missing', 'No email address is on this customer account. Use SMS or add an email in the customer portal first.', 422);
