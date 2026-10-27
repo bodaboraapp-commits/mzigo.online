@@ -6723,24 +6723,24 @@ return '<div class="mz-mobile-card">' +
     var suppressions = data.suppressions || [];
     var events = data.events || [];
     var supRows = suppressions.map(function (s) {
-      return '<tr><td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + esc(s.email) + '">' + esc(s.email) + '</td>' +
+      return '<tr><td title="' + esc(s.email) + '">' + esc(s.email) + '</td>' +
         '<td><span class="mz-badge mz-badge--warn">' + esc(s.event_type) + '</span></td>' +
-        '<td class="mz-hint" style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + esc(s.reason || '') + '">' + esc(s.reason || '—') + '</td>' +
+        '<td class="mz-hint" title="' + esc(s.reason || '') + '">' + esc(s.reason || '—') + '</td>' +
         '<td><button type="button" class="mz-link" data-remove-suppression="' + esc(s.email) + '">Remove</button></td></tr>';
     }).join('');
     var eventRows = events.map(function (e) {
-      return '<tr><td style="white-space:nowrap;">' + esc(fmtDate(e.created_at)) + '</td><td><span class="mz-badge">' + esc(e.event_type) + '</span></td>' +
-        '<td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + esc(e.email) + '">' + esc(e.email) + '</td>' +
-        '<td class="mz-hint" style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + esc(e.reason || '') + '">' + esc(e.reason || '—') + '</td></tr>';
+      return '<tr><td>' + esc(fmtDate(e.created_at)) + '</td><td><span class="mz-badge">' + esc(e.event_type) + '</span></td>' +
+        '<td title="' + esc(e.email) + '">' + esc(e.email) + '</td>' +
+        '<td class="mz-hint" title="' + esc(e.reason || '') + '">' + esc(e.reason || '—') + '</td></tr>';
     }).join('');
     card.innerHTML = '<div class="mz-row" style="margin-bottom:10px;"><div><div class="mz-card__title" style="margin:0;">Email deliverability</div>' +
       '<div class="mz-hint">Hard bounces and complaints automatically suppress an address. Suppressed addresses are skipped by the mailer.</div></div>' +
       '<span class="mz-badge ' + (suppressions.length ? 'mz-badge--warn' : 'mz-badge--ok') + '">' + suppressions.length + ' suppressed</span></div>' +
-      '<div class="mz-saas-grid mz-saas-grid--2">' +
-        '<div><div class="mz-label">Suppressed addresses</div><div class="mz-table-wrap"><table class="mz-table"><thead><tr><th>Email</th><th>Event</th><th>Reason</th><th></th></tr></thead><tbody>' +
-          (supRows || '<tr><td colspan="4" class="mz-hint">No suppressed addresses.</td></tr>') + '</tbody></table></div></div>' +
-        '<div><div class="mz-label">Recent bounce/complaint events</div><div class="mz-table-wrap"><table class="mz-table"><thead><tr><th>When</th><th>Event</th><th>Email</th><th>Reason</th></tr></thead><tbody>' +
-          (eventRows || '<tr><td colspan="4" class="mz-hint">No bounce/complaint events yet.</td></tr>') + '</tbody></table></div></div>' +
+      '<div class="mz-deliverability-grid">' +
+        '<section><div class="mz-label">Suppressed addresses</div><div class="mz-table-wrap"><table class="mz-table mz-deliverability-table mz-deliverability-table--suppressions"><thead><tr><th>Email</th><th>Event</th><th>Reason</th><th></th></tr></thead><tbody>' +
+          (supRows || '<tr><td colspan="4" class="mz-hint">No suppressed addresses.</td></tr>') + '</tbody></table></div></section>' +
+        '<section><div class="mz-label">Recent bounce/complaint events</div><div class="mz-table-wrap"><table class="mz-table mz-deliverability-table mz-deliverability-table--events"><thead><tr><th>When</th><th>Event</th><th>Email</th><th>Reason</th></tr></thead><tbody>' +
+          (eventRows || '<tr><td colspan="4" class="mz-hint">No bounce/complaint events yet.</td></tr>') + '</tbody></table></div></section>' +
       '</div>';
     card.querySelectorAll('[data-remove-suppression]').forEach(function (btn) {
       btn.addEventListener('click', function () {

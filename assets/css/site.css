@@ -1855,3 +1855,19 @@ header .mz-tollfree { display: none; }
 .mz-wa-webhook { font-family: ui-monospace, monospace; font-size: 11px; word-break: break-all; }
 @media (max-width: 1100px) { .mz-wa-layout { grid-template-columns: 1fr; } .mz-wa-list { max-height: 240px; } }
 @media (max-width: 700px) { .mz-wa-form { grid-template-columns: 1fr; } }
+
+/* Email deliverability tables */
+.mz-deliverability-grid { display: grid; grid-template-columns: 1fr; gap: 18px; }
+.mz-deliverability-grid > section { min-width: 0; }
+.mz-deliverability-table { table-layout: fixed; width: 100%; }
+.mz-deliverability-table th, .mz-deliverability-table td { vertical-align: top; overflow-wrap: anywhere; word-break: break-word; }
+.mz-deliverability-table--suppressions th:nth-child(1) { width: 36%; }
+.mz-deliverability-table--suppressions th:nth-child(2) { width: 16%; }
+.mz-deliverability-table--suppressions th:nth-child(4) { width: 82px; }
+.mz-deliverability-table--events th:nth-child(1) { width: 112px; }
+.mz-deliverability-table--events th:nth-child(2) { width: 118px; }
+.mz-deliverability-table--events th:nth-child(3) { width: 34%; }
+@media (max-width: 700px) {
+  .mz-deliverability-table--events th:nth-child(1),
+  .mz-deliverability-table--suppressions th:nth-child(1) { width: auto; }
+}
