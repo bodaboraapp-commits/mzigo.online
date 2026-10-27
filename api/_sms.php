@@ -99,7 +99,7 @@ function sms_send(string $phone, string $body): array
         $twilioTo = '+' . ltrim($to, '+');
         $fields = ['To' => $twilioTo, 'Body' => mb_substr($body, 0, 1600)];
         if ($service !== '') $fields['MessagingServiceSid'] = $service;
-        if ($from !== '') $fields['From'] = '+' . ltrim($from, '+');
+        elseif ($from !== '') $fields['From'] = '+' . ltrim($from, '+');
         $ch = curl_init('https://api.twilio.com/2010-04-01/Accounts/' . rawurlencode($sid) . '/Messages.json');
         curl_setopt_array($ch, [
             CURLOPT_POST => true,
