@@ -421,6 +421,42 @@ function wa_process_queue(int $limit = 20, bool $forceDemo = false): array
     return $results;
 }
 
+function wa_handle_infobip_webhook(array $body): int
+{
+    $sets = [];
+    if (isset($body['results']) && is_array($body['results'])) {
+        $sets[] = $body;
+    } elseif (array_is_list($body)) {
+        foreach ($body as $item) if (is_array($item)) $sets[] = $item;
+    }
+    $count = 0;
+    foreach ($sets as $set) {
+        foreach (($set['results'] ?? []) as $result) {
+            if (!is_array($result)) continue;
+            $waId = (string) ($result['from'] ?? '');
+            if ($waId === '') continue;
+            $message = is_array($result['message'] ?? null) ? $result['message'] : [];
+            $type = strtolower((string) ($message['type'] ?? 'text'));
+            $text = '';
+            if ($type === 'text') {
+                $rawText = $message['text'] ?? '';
+                $text = is_array($rawText) ? (string) ($rawText['text'] ?? '') : (string) $rawText;
+            }
+            if ($text === '') $text = '[Unsupported message type: ' . ($type !== '' ? $type : 'unknown') . ']';
+            $name = (string) ($result['contact']['name'] ?? '');
+            $metaId = (string) ($result['messageId'] ?? '');
+            $contact = wa_contact($waId, $name);
+            $conversation = wa_conversation((int) $contact['id']);
+            $messageId = wa_store_message((int) $conversation['id'], 'inbound', $text, $metaId, 'received');
+            if ($messageId > 0 && !empty(wa_config()['enabled'])) {
+                wa_enqueue($messageId);
+                $count++;
+            }
+        }
+    }
+    return $count;
+}
+
 function wa_handle_webhook(array $body): int
 {
     $count = 0;
