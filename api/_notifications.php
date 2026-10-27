@@ -132,6 +132,13 @@ function channel_provider_catalog(): array
             ],
         ],
 
+        'mail' => [
+            'label' => 'Server mail (PHP mail)',
+            'group' => 'email',
+            'hint' => 'Uses the cPanel/local mail transport. This avoids sending through a remote SMTP connection from the web server and is often more reliable for production OTP delivery.',
+            'fields' => [],
+        ],
+
         'smtp' => [
             'label' => 'SMTP mailbox',
             'group' => 'email',

@@ -166,6 +166,34 @@ function mzigo_mail_send(string $to, string $subject, string $body, ?string $htm
     if ($s['provider'] === 'mailgun') {
         return mzigo_mailgun_send($to, $subject, $body, $html, $s);
     }
+    if ($s['provider'] === 'mail') {
+        $from = trim((string) ($s['from'] ?? ''));
+        if ($from === '' || !filter_var($from, FILTER_VALIDATE_EMAIL)) {
+            return ['sent' => false, 'provider' => 'mail', 'error' => 'Email sender address is invalid.', 'skipped' => false];
+        }
+        $encodedSubject = '=?UTF-8?B?' . base64_encode($subject) . '?=';
+        $headers = [
+            'From: Mzigo.online <' . $from . '>',
+            'Reply-To: ' . $from,
+            'MIME-Version: 1.0',
+        ];
+        if ($html !== null && trim($html) !== '') {
+            $boundary = 'mzigo-' . bin2hex(random_bytes(10));
+            $headers[] = 'Content-Type: multipart/alternative; boundary="' . $boundary . '"';
+            $message = '--' . $boundary . "\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: 8bit\r\n\r\n" . $body .
+                "\r\n--" . $boundary . "\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Transfer-Encoding: 8bit\r\n\r\n" . $html .
+                "\r\n--" . $boundary . '--';
+        } else {
+            $headers[] = 'Content-Type: text/plain; charset=UTF-8';
+            $headers[] = 'Content-Transfer-Encoding: 8bit';
+            $message = $body;
+        }
+        $ok = @mail($to, $encodedSubject, $message, implode("\r\n", $headers), '-f' . $from);
+        mzigo_mail_log(['at' => date('c'), 'provider' => 'mail', 'to' => $to, 'subject' => $subject, 'status' => $ok ? 'sent' : 'failed']);
+        return $ok
+            ? ['sent' => true, 'provider' => 'mail', 'error' => null]
+            : ['sent' => false, 'provider' => 'mail', 'error' => 'PHP mail() transport rejected the message.', 'skipped' => false];
+    }
     if ($s['provider'] === 'log' || ($s['provider'] === 'smtp' && $s['host'] === '')) {
         mzigo_mail_log(['at' => date('c'), 'provider' => 'log', 'to' => $to, 'subject' => $subject, 'body' => $body, 'html' => $html]);
         return ['sent' => true, 'provider' => 'log', 'error' => null];
