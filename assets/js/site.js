@@ -982,15 +982,65 @@
     $$('[data-mz-track-form]').forEach(function (form) {
       var input = form.querySelector('input[type="text"], input:not([type])');
       var submit = form.querySelector('[type="submit"]');
+      if (!input) return;
+      var panel = doc.createElement('div');
+      panel.className = 'mz-suggest mz-track-predict';
+      panel.hidden = true;
+      form.style.position = 'relative';
+      form.appendChild(panel);
+      var timer = null;
+      var requestSeq = 0;
+
+      function hidePanel() { panel.hidden = true; panel.innerHTML = ''; }
       function syncSubmit() {
-        if (submit) submit.disabled = !input || input.value.trim() === '';
+        if (submit) submit.disabled = input.value.trim() === '';
       }
-      if (input) input.addEventListener('input', syncSubmit);
+      function renderPredict(q, res) {
+        var record = (res && res.record) || null;
+        if (!record) {
+          panel.innerHTML = '<div class="mz-option mz-option--empty">No parcel found for <strong>' + esc(q.toUpperCase()) + '</strong> yet.</div>';
+          panel.hidden = false;
+          return;
+        }
+        var ref = record.tracking || record.ref || q;
+        var status = String(record.status || record.payment_status || '').replace(/_/g, ' ').toLowerCase();
+        var route = record.from_city && record.to_city ? record.from_city + ' → ' + record.to_city : (record.dropoff || '');
+        panel.innerHTML = '<button type="button" class="mz-option" data-track-predict-go="' + esc(ref) + '">' +
+          '<span style="min-width:0;"><span class="mz-mono" style="font-weight:700;">' + esc(ref) + '</span>' +
+          '<span style="display:block;font-size:11px;color:var(--mz-muted-fg);">' + esc((record.carrier || 'Mzigo') + (status ? ' · ' + status : '') + (route ? ' · ' + route : '')) + '</span></span>' +
+          '<span class="mz-option__meta">Open</span></button>';
+        panel.hidden = false;
+        var go = panel.querySelector('[data-track-predict-go]');
+        if (go) go.addEventListener('click', function () {
+          window.location.href = '/track-mzigo?num=' + encodeURIComponent(go.getAttribute('data-track-predict-go'));
+        });
+      }
+      function predict() {
+        var q = input.value.trim();
+        if (!/^(TRK|LK|ERD)-[A-Z0-9-]{3,}$/i.test(q)) { hidePanel(); return; }
+        var seq = ++requestSeq;
+        panel.innerHTML = '<div class="mz-option mz-option--empty">Checking ' + esc(q.toUpperCase()) + '…</div>';
+        panel.hidden = false;
+        api('track.php?q=' + encodeURIComponent(q)).then(function (res) {
+          if (seq !== requestSeq || input.value.trim() !== q) return;
+          renderPredict(q, res);
+        }).catch(function () {
+          if (seq !== requestSeq) return;
+          hidePanel();
+        });
+      }
+      input.addEventListener('input', function () {
+        syncSubmit();
+        clearTimeout(timer);
+        timer = setTimeout(predict, 260);
+      });
+      doc.addEventListener('click', function (ev) { if (!form.contains(ev.target)) hidePanel(); });
       syncSubmit();
       form.addEventListener('submit', function (ev) {
         ev.preventDefault();
-        var value = input ? input.value.trim() : '';
-        if (!value) { toast('Enter a tracking number first.', 'error'); if (input) input.focus(); return; }
+        var value = input.value.trim();
+        if (!value) { toast('Enter a tracking number first.', 'error'); input.focus(); return; }
+        hidePanel();
         window.location.href = '/track-mzigo?num=' + encodeURIComponent(value);
       });
     });
