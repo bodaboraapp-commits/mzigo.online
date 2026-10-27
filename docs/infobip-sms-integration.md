@@ -16,7 +16,8 @@
 ## Configure in Admin
 
 1. Create an Infobip account and an SMS sender/sender ID approved for Kenya.
-2. In **Admin → Communications → SMS channel → Edit**:
+2. Ensure the production `.env` has a strong `APP_CONFIG_KEY` (32+ random characters). Channel credentials are encrypted with it; without it, saving the Infobip config returns a configuration error instead of storing plaintext.
+3. In **Admin → Communications → SMS channel → Edit**:
    - Provider: **Infobip (SMS)**
    - Sender: approved sender ID, e.g. `MZIGO`
    - Infobip base URL: `https://xxxxx.api.infobip.com`
