@@ -98,8 +98,17 @@ function sms_send(string $phone, string $body): array
         }
         $twilioTo = '+' . ltrim($to, '+');
         $fields = ['To' => $twilioTo, 'Body' => mb_substr($body, 0, 1600)];
-        if ($service !== '') $fields['MessagingServiceSid'] = $service;
-        elseif ($from !== '') $fields['From'] = '+' . ltrim($from, '+');
+        if ($service !== '') {
+            $fields['MessagingServiceSid'] = $service;
+        } elseif ($from !== '') {
+            if (preg_match('/^\+?[0-9][0-9\s\-()]*$/', $from)) {
+                $fields['From'] = '+' . preg_replace('/\D+/', '', $from);
+            } elseif (preg_match('/^[A-Za-z0-9 ]{1,11}$/', $from)) {
+                $fields['From'] = $from;
+            } else {
+                return ['ok' => false, 'provider' => 'twilio-sms', 'error' => 'Twilio From must be an E.164 number or a registered 1–11 character alphanumeric sender ID.'];
+            }
+        }
         $ch = curl_init('https://api.twilio.com/2010-04-01/Accounts/' . rawurlencode($sid) . '/Messages.json');
         curl_setopt_array($ch, [
             CURLOPT_POST => true,
@@ -117,8 +126,12 @@ function sms_send(string $phone, string $body): array
         $decoded = json_decode((string) $raw, true);
         if ($raw === false || $code < 200 || $code >= 300) {
             $error = $curlError !== '' ? $curlError : (string) ($decoded['message'] ?? ('HTTP ' . $code));
-            sms_log(['at' => date('c'), 'to' => $masked, 'status' => 'failed', 'provider' => 'twilio-sms', 'http' => $code, 'error' => $error]);
-            return ['ok' => false, 'provider' => 'twilio-sms', 'error' => $error];
+            $twilioCode = (int) ($decoded['code'] ?? 0);
+            if ($twilioCode === 21612) {
+                $error .= ' Kenya does not support long codes. Register a Kenyan alphanumeric sender ID in Twilio and attach it to the Messaging Service, or use a Kenya-capable SMS provider.';
+            }
+            sms_log(['at' => date('c'), 'to' => $masked, 'status' => 'failed', 'provider' => 'twilio-sms', 'http' => $code, 'twilio_code' => $twilioCode, 'error' => $error]);
+            return ['ok' => false, 'provider' => 'twilio-sms', 'error' => $error, 'twilio_code' => $twilioCode];
         }
         $status = (string) ($decoded['status'] ?? 'accepted');
         sms_log(['at' => date('c'), 'to' => $masked, 'status' => 'sent', 'provider' => 'twilio-sms', 'message_id' => (string) ($decoded['sid'] ?? ''), 'twilio_status' => $status]);
