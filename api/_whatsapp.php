@@ -426,7 +426,7 @@ function wa_handle_infobip_webhook(array $body): int
     $sets = [];
     if (isset($body['results']) && is_array($body['results'])) {
         $sets[] = $body;
-    } elseif (array_is_list($body)) {
+    } elseif (isset($body[0]) && is_array($body[0])) {
         foreach ($body as $item) if (is_array($item)) $sets[] = $item;
     }
     $count = 0;
