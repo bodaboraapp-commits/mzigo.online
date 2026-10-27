@@ -491,6 +491,7 @@ select.mz-input { appearance: none; background-image: none; cursor: pointer; }
 .mz-card + .mz-card { margin-top: 16px; }
 .mz-card__title { font-size: 18px; font-weight: 600; margin-bottom: 18px; color: var(--mz-hunter); }
 
+.mz-home-row[hidden] { display: none !important; }
 .mz-home-row {
   display: grid;
   gap: 14px;

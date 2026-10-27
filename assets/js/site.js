@@ -895,6 +895,10 @@
       var carrierMount = form.querySelector('[data-mz-mount="carrier"]');
       var fromMount = form.querySelector('[data-mz-mount="from"]');
       var toMount = form.querySelector('[data-mz-mount="to"]');
+      var mainRow = form.querySelector('[data-mz-home-main-row]');
+      var trackRow = form.querySelector('[data-mz-home-track-row]');
+      var trackInput = form.querySelector('[data-mz-home-track-input]');
+      var trackBtn = form.querySelector('[data-mz-home-track-continue]');
       var landmarks = allDestinations().concat(['CBD, Nairobi', 'Westlands, Nairobi', 'Kilimani, Nairobi', 'Karen, Nairobi', 'Industrial Area, Nairobi']);
 
       var carrier = createSelect({
@@ -943,26 +947,48 @@
       });
 
       function update() {
-        var ready = mode === 'errand'
-          ? !!(fromSel.value() && toSel.value())
-          : !!(carrier.value() && fromSel.value() && toSel.value());
+        var ready = mode === 'track'
+          ? !!(trackInput && trackInput.value.trim())
+          : mode === 'errand'
+            ? !!(fromSel.value() && toSel.value())
+            : !!(carrier.value() && fromSel.value() && toSel.value());
         continueBtn.disabled = !ready;
         continueBtn.setAttribute('aria-disabled', String(!ready));
+        if (trackBtn) {
+          trackBtn.disabled = !(trackInput && trackInput.value.trim());
+          trackBtn.setAttribute('aria-disabled', String(trackBtn.disabled));
+        }
+      }
+      function showTrackMode(on) {
+        if (mainRow) mainRow.hidden = on;
+        if (trackRow) trackRow.hidden = !on;
+        if (on && trackInput) trackInput.focus();
       }
 
       function setMode(next) {
         mode = next;
         var titleEl = form.querySelector('[data-mz-home-title]');
         var copyEl = form.querySelector('[data-mz-home-copy]');
-        if (titleEl) titleEl.textContent = next === 'errand' ? 'Book a local errand runner in minutes' : 'Send a parcel across Kenya, without the guesswork';
+        if (titleEl) titleEl.textContent = next === 'errand'
+          ? 'Book a local errand runner in minutes'
+          : next === 'track'
+            ? 'Track a parcel in seconds'
+            : 'Send a parcel across Kenya, without the guesswork';
         if (copyEl) copyEl.textContent = next === 'errand'
           ? 'Upfront pricing, verified runners and live updates from pickup to delivery.'
-          : 'Compare trusted couriers, see your price upfront, pay with M-Pesa and track every scan.';
+          : next === 'track'
+            ? 'Enter a tracking number or Locker ID to see every scan from drop-off to collection.'
+            : 'Compare trusted couriers, see your price upfront, pay with M-Pesa and track every scan.';
         tabBtns.forEach(function (b) {
           var on = b.getAttribute('data-mz-tab') === next;
           b.setAttribute('aria-selected', String(on));
           b.classList.toggle('is-active', on);
         });
+        showTrackMode(next === 'track');
+        if (next === 'track') {
+          update();
+          return;
+        }
         if (next === 'errand') {
           fromSel.setItems(landmarks);
           toSel.setItems(landmarks);
@@ -993,6 +1019,12 @@
       }
       tabBtns.forEach(function (b) {
         b.addEventListener('click', function () { setMode(b.getAttribute('data-mz-tab')); });
+      });
+      if (trackInput) trackInput.addEventListener('input', update);
+      if (trackBtn) trackBtn.addEventListener('click', function () {
+        var value = trackInput ? trackInput.value.trim() : '';
+        if (!value) { toast('Enter a tracking number first.', 'error'); return; }
+        window.location.href = '/track-mzigo?num=' + encodeURIComponent(value);
       });
 
       continueBtn.addEventListener('click', function () {
