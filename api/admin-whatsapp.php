@@ -94,6 +94,16 @@ if ($action === 'test_template') {
     json_out(['ok' => true, 'result' => $result, 'whatsapp' => wa_admin_payload()]);
 }
 
+if ($action === 'send_test_whatsapp') {
+    $phone = wa_normalize_phone((string) ($data['phone'] ?? ''));
+    $body = trim((string) ($data['body'] ?? ''));
+    if ($phone === '') fail('Enter a test phone number.', 422);
+    if ($body === '') $body = 'Mzigo.online: this is a WhatsApp delivery test from your admin console.';
+    $result = wa_send_text($phone, $body, false);
+    audit('admin.whatsapp_test', 'platform', 'whatsapp', ['phone' => $phone, 'ok' => !empty($result['ok']), 'provider' => $result['provider'] ?? '']);
+    json_out(['ok' => true, 'result' => $result]);
+}
+
 if ($action === 'process_queue') {
     $results = wa_process_queue((int) ($data['limit'] ?? 20));
     json_out(['ok' => true, 'processed' => count($results), 'results' => $results, 'whatsapp' => wa_admin_payload()]);

@@ -8595,6 +8595,13 @@ return '<div class="mz-mobile-card">' +
     function threadCard() {
       return '<div class="mz-saas-card" data-wa-thread-card><div class="mz-card__title">Conversation</div><div data-wa-thread><div class="mz-hint">Select a conversation or simulate an inbound message.</div></div></div>';
     }
+    function whatsappTestCard(cfg) {
+      return '<div class="mz-saas-card" style="margin-bottom:16px;"><div class="mz-card__title">Send a live WhatsApp test</div>' +
+        '<p class="mz-hint">Sends through the selected provider (<strong>' + esc(cfg.provider || 'meta') + '</strong>). Use a WhatsApp-verified number.</p>' +
+        '<div class="mz-wa-form"><label class="mz-field"><span class="mz-label">Phone number</span><input class="mz-input" data-wa-test-phone placeholder="+254 712 345 678"></label>' +
+        '<label class="mz-field"><span class="mz-label">Message</span><input class="mz-input" data-wa-test-body value="Mzigo.online WhatsApp delivery test"></label>' +
+        '<div class="mz-field mz-field--full"><button type="button" class="mz-btn mz-btn--sm" data-wa-test-send>Send test WhatsApp</button><span class="mz-hint" data-wa-test-result style="margin-left:10px;"></span></div></div></div>';
+    }
     function simulateCard() {
       return '<div class="mz-saas-card" style="margin-top:16px;"><div class="mz-card__title">Test assistant (demo safe)</div>' +
         '<p class="mz-hint">Simulate a customer message. This always uses demo sending, even when live mode is enabled.</p>' +
@@ -8661,6 +8668,25 @@ return '<div class="mz-mobile-card">' +
           }).catch(function (err) { toast(err.message, 'error'); test.disabled = false; });
       });
     }
+    function bindWhatsAppTest() {
+      var btn = mount.querySelector('[data-wa-test-send]');
+      if (!btn) return;
+      btn.addEventListener('click', function () {
+        var out = mount.querySelector('[data-wa-test-result]');
+        btn.disabled = true;
+        api('admin-whatsapp.php', { method: 'POST', body: {
+          action: 'send_test_whatsapp',
+          phone: (mount.querySelector('[data-wa-test-phone]') || {}).value || '',
+          body: (mount.querySelector('[data-wa-test-body]') || {}).value || ''
+        } }).then(function (res) {
+          var r = res.result || {};
+          var msg = r.ok ? ('Sent via ' + (r.provider || 'provider') + ' (' + (r.message_id || 'accepted') + ')') : ('Failed: ' + (r.error || 'unknown error'));
+          if (out) out.textContent = msg;
+          toast(msg, r.ok ? undefined : 'error');
+          btn.disabled = false;
+        }).catch(function (err) { if (out) out.textContent = err.message; toast(err.message, 'error'); btn.disabled = false; });
+      });
+    }
     function bindList() {
       mount.querySelectorAll('[data-wa-conversation]').forEach(function (btn) {
         btn.addEventListener('click', function () { selected = Number(btn.getAttribute('data-wa-conversation')); render(); openThread(selected); });
@@ -8691,9 +8717,10 @@ return '<div class="mz-mobile-card">' +
         '</div>' +
         configCard(cfg) +
         templatesCard(waData.templates || [], waData.outbound || []) +
+        whatsappTestCard(cfg) +
         '<div class="mz-wa-layout">' + inboxCard(waData) + threadCard() + '</div>' +
         simulateCard();
-      bindConfig(); bindList(); bindTemplates();
+      bindConfig(); bindList(); bindTemplates(); bindWhatsAppTest();
       if (selected && currentThread) renderThread(currentThread);
     }
     function renderThread(res) {
