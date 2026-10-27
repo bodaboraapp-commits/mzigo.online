@@ -6248,12 +6248,13 @@ return '<div class="mz-mobile-card">' +
         var body;
         if (uact === 'suspend') body = { action: 'user_status', user_id: uid, status: 'suspended' };
         else if (uact === 'activate') body = { action: 'user_status', user_id: uid, status: 'active' };
+        else if (uact === 'restore') body = { action: 'restore_user', user_id: uid };
         else if (uact === 'reset') body = { action: 'reset_user_credentials', user_id: uid };
         else body = { action: 'delete_user', user_id: uid };
         userBtn.disabled = true;
         api('admin.php', { method: 'POST', body: body }).then(function (res) {
           if (res.credential) adminUserCredential = res.credential;
-          toast(uact === 'delete' ? 'User deleted.' : 'User updated.');
+          toast(uact === 'delete' ? 'User deleted.' : uact === 'restore' ? 'User restored.' : 'User updated.');
           loadAdmin();
         }).catch(function (err) { toast(err.message, 'error'); userBtn.disabled = false; });
         return;
@@ -6475,19 +6476,25 @@ return '<div class="mz-mobile-card">' +
       var role = roleLabel[u.role] || u.role;
       if (u.member_role) role += ' · ' + u.member_role;
       var statusBadge = u.status === 'active' ? 'mz-badge--ok' : u.status === 'suspended' ? 'mz-badge--warn' : '';
+      var userActions;
+      if (u.role === 'platform_admin') {
+        userActions = '<span class="mz-hint">protected</span>';
+      } else if (u.status === 'deleted') {
+        userActions = '<button type="button" class="mz-link" data-user-action="restore" data-user="' + u.id + '">Restore</button>' +
+          ' · <button type="button" class="mz-link" data-user-action="reset" data-user="' + u.id + '">Reset</button>';
+      } else {
+        userActions = (u.status === 'suspended'
+          ? '<button type="button" class="mz-link" data-user-action="activate" data-user="' + u.id + '">Activate</button>'
+          : '<button type="button" class="mz-link" data-user-action="suspend" data-user="' + u.id + '">Suspend</button>') +
+          ' · <button type="button" class="mz-link" data-user-action="reset" data-user="' + u.id + '">Reset</button>' +
+          ' · <button type="button" class="mz-link" data-user-action="delete" data-user="' + u.id + '">Delete</button>';
+      }
       return '<tr><td><div style="font-weight:600;">' + esc(u.name) + '</div><div style="font-size:11px;color:var(--mz-muted-fg);">' + esc(u.phone || '') + (u.email ? ' · ' + esc(u.email) : '') + '</div></td>' +
         '<td>' + esc(role) + '</td>' +
         '<td>' + esc(u.tenant_name || '—') + '</td>' +
         '<td><span class="mz-badge ' + statusBadge + '">' + esc(u.status) + '</span></td>' +
         '<td style="white-space:nowrap;">' + (u.last_login_at ? esc(fmtDate(u.last_login_at)) : '—') + '</td>' +
-        '<td style="white-space:nowrap;">' +
-          (u.role === 'platform_admin' ? '<span class="mz-hint">protected</span>' :
-            (u.status === 'suspended'
-              ? '<button type="button" class="mz-link" data-user-action="activate" data-user="' + u.id + '">Activate</button>'
-              : '<button type="button" class="mz-link" data-user-action="suspend" data-user="' + u.id + '">Suspend</button>') +
-            ' · <button type="button" class="mz-link" data-user-action="reset" data-user="' + u.id + '">Reset</button>' +
-            ' · <button type="button" class="mz-link" data-user-action="delete" data-user="' + u.id + '">Delete</button>') +
-        '</td></tr>';
+        '<td style="white-space:nowrap;">' + userActions + '</td></tr>';
     });
 
     card.innerHTML = note +
