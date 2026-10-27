@@ -85,7 +85,11 @@ function sms_send(string $phone, string $body): array
     }
 
     $config = $channel['config'];
-    $base = rtrim(trim((string) ($config['base_url'] ?? '')), '/');
+    $base = trim((string) ($config['base_url'] ?? ''));
+    if ($base !== '' && !preg_match('#^https?://#i', $base)) {
+        $base = 'https://' . $base;
+    }
+    $base = rtrim($base, '/');
     $key = trim((string) ($config['api_key'] ?? ''));
     $sender = $channel['sender'];
     if ($base === '' || $key === '' || $sender === '') {
