@@ -511,14 +511,24 @@ function notify_order_creator(array $parcel, string $template, string $subject, 
             if (($result['status'] ?? '') === 'sent') $sent++;
         }
     };
-    if ($creatorId > 0 && $creatorId !== $excludeUserId) {
+    $creator = null;
+    if ($creatorId > 0) {
         $stmt = db()->prepare('SELECT id, name, email, phone, role, status, comm_channel FROM users WHERE id = ? AND status = "active" LIMIT 1');
         $stmt->execute([$creatorId]);
-        $creator = $stmt->fetch();
-        if ($creator) {
-            $seen[$creatorId] = true;
-            $sendTo($creator, $creatorId);
-        }
+        $creator = $stmt->fetch() ?: null;
+    }
+    if (!$creator && (string) ($parcel['sender_phone'] ?? '') !== '') {
+        // Public/walk-in orders have no user_id; match the sender phone to the
+        // merchant/customer account so the order creator still gets alerts.
+        $stmt = db()->prepare('SELECT id, name, email, phone, role, status, comm_channel FROM users
+            WHERE RIGHT(REGEXP_REPLACE(phone, "[^0-9]", ""), 9) = ? AND status = "active" LIMIT 1');
+        $stmt->execute([phone_key((string) $parcel['sender_phone'])]);
+        $creator = $stmt->fetch() ?: null;
+        if ($creator) $creatorId = (int) $creator['id'];
+    }
+    if ($creator && $creatorId > 0 && $creatorId !== $excludeUserId) {
+        $seen[$creatorId] = true;
+        $sendTo($creator, $creatorId);
     }
     if ($tenantId > 0) {
         foreach (claim_tenant_recipients($tenantId) as $owner) {
