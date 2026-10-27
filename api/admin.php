@@ -626,6 +626,23 @@ switch ($action) {
         ]);
         // no break
 
+    case 'update_user_email':
+        $userId = (int) param($data, 'user_id', 1, 20, 'User');
+        $email = strtolower(trim((string) ($data['email'] ?? '')));
+        if ($email === '' || !email_valid($email)) {
+            fail_error('invalid_email', 'Enter a valid email address.', 422);
+        }
+        $stmt = $pdo->prepare('SELECT id FROM users WHERE id = ? LIMIT 1');
+        $stmt->execute([$userId]);
+        if (!$stmt->fetch()) fail_error('not_found', 'User not found.', 404);
+        $dup = $pdo->prepare('SELECT id FROM users WHERE email = ? AND id <> ? LIMIT 1');
+        $dup->execute([$email, $userId]);
+        if ($dup->fetch()) fail_error('email_taken', 'That email address is already in use.', 409);
+        $pdo->prepare('UPDATE users SET email = ?, email_verified_at = NULL WHERE id = ?')->execute([$email, $userId]);
+        audit('admin.user_email_updated', 'user', (string) $userId, ['email' => $email]);
+        json_out(['ok' => true, 'source' => 'mysql', 'users' => admin_users(), 'message' => 'Email updated. The customer can now choose email OTP.']);
+        // no break
+
     case 'user_status':
         $userId = (int) param($data, 'user_id', 1, 20, 'User');
         $status = (string) ($data['status'] ?? '');
