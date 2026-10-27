@@ -3457,15 +3457,17 @@ return '<div class="mz-mobile-card">' +
       ev.preventDefault();
       var btn = cStart.querySelector('[type="submit"]');
       var phone = formValue(cStart, 'phone');
+      var channel = formValue(cStart, 'channel') || 'sms';
       btn.disabled = true;
-      api('auth.php', { method: 'POST', body: { action: 'customer-start', phone: phone } })
+      api('auth.php', { method: 'POST', body: { action: 'customer-start', phone: phone, channel: channel } })
         .then(function (res) {
           customerPhone = res.phone || phone;
           var hint = $('[data-customer-hint]');
+          var where = res.channel === 'email' ? (res.sent_to || 'your email') : 'your phone';
           if (hint) {
             hint.innerHTML = res.demo_code
-              ? 'Demo code: <strong>' + esc(res.demo_code) + '</strong>. In production this code is sent by SMS.'
-              : 'Enter the 4-digit code sent to your phone.';
+              ? 'Demo code: <strong>' + esc(res.demo_code) + '</strong>. In production this code is sent by ' + esc(res.channel === 'email' ? 'email' : 'SMS') + '.'
+              : 'Enter the 4-digit code sent to ' + esc(where) + '.';
           }
           var step1 = $('[data-customer-step="1"]');
           var step2 = $('[data-customer-step="2"]');
@@ -3473,7 +3475,7 @@ return '<div class="mz-mobile-card">' +
           if (step2) step2.hidden = false;
           var codeInput = $('[data-customer-form="login"] [name="code"]');
           if (codeInput) { codeInput.value = ''; codeInput.focus(); }
-          toast(res.demo_code ? 'Code issued for ' + customerPhone + ' — demo code ' + res.demo_code : 'Code sent to ' + customerPhone, 'info');
+          toast(res.demo_code ? 'Code issued for ' + customerPhone + ' — demo code ' + res.demo_code : 'Code sent via ' + (res.channel === 'email' ? 'email' : 'SMS') + ' to ' + where, 'info');
           btn.disabled = false;
         }).catch(function (err) {
           toast(err.message, 'error');
