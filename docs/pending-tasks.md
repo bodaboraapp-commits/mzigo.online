@@ -55,7 +55,7 @@ Full deployment checklist: `docs/PRODUCTION.md`. Security findings: `docs/SECURI
 | ID | Task | Type | Notes |
 |---|---|---|---|
 | PAY-01 | Real M-Pesa customer and subscription payments | Code | STK push, callback validation/replay protection, reconciliation and refunds. Current customer/invoice settlement remains demo/simulated outside claim payout rails. |
-| MSG-01 | SMS/WhatsApp transport + codes | Code | Only email actually sends today. Receiver OTP is email-deliverable only; customer 4-digit codes and freelancer PINs need a real SMS provider before demo mode is disabled. |
+| MSG-01 | SMS/WhatsApp transport + codes | Code/QA | Infobip SMS integration is implemented for customer codes, runner PINs, claim/delivery OTPs and parcel notifications. Production Infobip credentials/sender and live delivery validation are still pending. |
 | PAY-02 | Validate live Daraja payout/recovery credentials | External/QA | B2C shortcode, consumer key/secret, passkey, initiator/security credential, result/timeout URLs. Code paths already support demo/sandbox/live modes. |
 | MAIL-01 | Validate live email provider | External/QA | Add SendGrid/Mailgun keys, test bounce/complaint callbacks and deliverability. SMTP is active locally. |
 | SEO-01 | Enter Search Console/Bing tokens and CWV key | External/Admin | Fields and p75 dashboard are ready in **Admin → SEO**. Property ownership and account access are still needed. |

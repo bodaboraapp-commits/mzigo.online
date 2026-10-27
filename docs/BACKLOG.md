@@ -13,6 +13,8 @@ This file now keeps shipped history only. Nothing below is an active pending ite
 
 ## Recently completed (for roadmap accuracy)
 
+- Infobip SMS integration for customer codes, runner PINs, claim/delivery OTPs and parcel notifications
+
 - WhatsApp Phase 1 (FAQ, tracking, handoff, admin inbox) and Phase 2 (approved outbound parcel templates, consent/opt-in, lifecycle hooks)
 
 - Marketing Campaigns admin menu with consent-based audiences, drafts, scheduling, recipient tracking and unsubscribe links
