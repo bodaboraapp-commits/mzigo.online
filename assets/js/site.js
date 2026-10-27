@@ -6286,6 +6286,25 @@ return '<div class="mz-mobile-card">' +
         var uid = Number(userBtn.getAttribute('data-user'));
         var uact = userBtn.getAttribute('data-user-action');
         if (uact === 'delete' && !window.confirm('Delete this user? They will lose access immediately.')) return;
+        if (uact === 'email') {
+          var currentEmail = userBtn.getAttribute('data-user-email') || '';
+          var newEmail = window.prompt('Email address for this user:', currentEmail);
+          if (newEmail === null) return;
+          newEmail = newEmail.trim();
+          if (!newEmail) { toast('Enter a valid email address.', 'error'); return; }
+          userBtn.disabled = true;
+          api('admin.php', { method: 'POST', body: { action: 'update_user_email', user_id: uid, email: newEmail } })
+            .then(function () { toast('Email saved. Use Verify email when ready.'); loadAdmin(); })
+            .catch(function (err) { toast(err.message, 'error'); userBtn.disabled = false; });
+          return;
+        }
+        if (uact === 'verify-email') {
+          userBtn.disabled = true;
+          api('admin.php', { method: 'POST', body: { action: 'verify_user_email', user_id: uid } })
+            .then(function () { toast('Email marked as verified.'); loadAdmin(); })
+            .catch(function (err) { toast(err.message, 'error'); userBtn.disabled = false; });
+          return;
+        }
         var body;
         if (uact === 'suspend') body = { action: 'user_status', user_id: uid, status: 'suspended' };
         else if (uact === 'activate') body = { action: 'user_status', user_id: uid, status: 'active' };
@@ -6530,7 +6549,15 @@ return '<div class="mz-mobile-card">' +
           ' · <button type="button" class="mz-link" data-user-action="reset" data-user="' + u.id + '">Reset</button>' +
           ' · <button type="button" class="mz-link" data-user-action="delete" data-user="' + u.id + '">Delete</button>';
       }
-      return '<tr><td><div style="font-weight:600;">' + esc(u.name) + '</div><div style="font-size:11px;color:var(--mz-muted-fg);">' + esc(u.phone || '') + (u.email ? ' · ' + esc(u.email) : '') + '</div></td>' +
+      var emailActions = '';
+      if (u.role !== 'platform_admin') {
+        emailActions = (u.email && !u.email_verified_at
+          ? '<button type="button" class="mz-link" data-user-action="verify-email" data-user="' + u.id + '">Verify email</button> · '
+          : '') +
+          '<button type="button" class="mz-link" data-user-action="email" data-user="' + u.id + '" data-user-email="' + esc(u.email || '') + '">' + (u.email ? 'Change email' : 'Add email') + '</button>';
+        userActions += ' · ' + emailActions;
+      }
+      return '<tr><td><div style="font-weight:600;">' + esc(u.name) + '</div><div style="font-size:11px;color:var(--mz-muted-fg);">' + esc(u.phone || '') + (u.email ? ' · ' + esc(u.email) + (u.email_verified_at ? ' <span class="mz-badge mz-badge--ok">verified</span>' : ' <span class="mz-badge mz-badge--warn">unverified</span>') : ' · <span class="mz-hint">no email</span>') + '</div></td>' +
         '<td>' + esc(role) + '</td>' +
         '<td>' + esc(u.tenant_name || '—') + '</td>' +
         '<td><span class="mz-badge ' + statusBadge + '">' + esc(u.status) + '</span></td>' +
