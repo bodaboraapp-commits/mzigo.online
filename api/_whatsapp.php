@@ -10,7 +10,12 @@ function wa_config(): array
     $defaults = [
         'enabled' => false,
         'mode' => 'demo',
+        'provider' => 'meta',
         'graph_version' => 'v23.0',
+        'infobip_base_url' => '',
+        'infobip_api_key' => '',
+        'infobip_sender' => '',
+        'infobip_webhook_secret' => '',
         'phone_number_id' => '',
         'waba_id' => '',
         'access_token' => '',
@@ -43,16 +48,20 @@ function wa_config(): array
 function wa_config_save(array $input): array
 {
     $config = wa_config();
-    foreach (['mode', 'graph_version', 'phone_number_id', 'waba_id', 'business_name', 'handoff_message', 'ai_provider', 'ai_base_url', 'ai_model', 'ai_system_prompt'] as $key) {
+    foreach (['mode', 'provider', 'graph_version', 'phone_number_id', 'waba_id', 'business_name', 'handoff_message',
+              'infobip_base_url', 'infobip_sender', 'ai_provider', 'ai_base_url', 'ai_model', 'ai_system_prompt'] as $key) {
         if (array_key_exists($key, $input)) $config[$key] = trim((string) $input[$key]);
     }
     $config['mode'] = $config['mode'] === 'live' ? 'live' : 'demo';
+    $config['provider'] = in_array($config['provider'], ['meta', 'infobip'], true) ? $config['provider'] : 'meta';
     $config['ai_provider'] = in_array($config['ai_provider'], ['demo', 'openai', 'anthropic'], true) ? $config['ai_provider'] : 'demo';
     if (array_key_exists('enabled', $input)) $config['enabled'] = !empty($input['enabled']);
     if (array_key_exists('auto_reply', $input)) $config['auto_reply'] = !empty($input['auto_reply']);
     if (isset($input['access_token']) && trim((string) $input['access_token']) !== '') $config['access_token'] = trim((string) $input['access_token']);
     if (isset($input['app_secret']) && trim((string) $input['app_secret']) !== '') $config['app_secret'] = trim((string) $input['app_secret']);
     if (isset($input['ai_api_key']) && trim((string) $input['ai_api_key']) !== '') $config['ai_api_key'] = trim((string) $input['ai_api_key']);
+    if (isset($input['infobip_api_key']) && trim((string) $input['infobip_api_key']) !== '') $config['infobip_api_key'] = trim((string) $input['infobip_api_key']);
+    if (isset($input['infobip_webhook_secret']) && trim((string) $input['infobip_webhook_secret']) !== '') $config['infobip_webhook_secret'] = trim((string) $input['infobip_webhook_secret']);
     if (isset($input['verify_token']) && trim((string) $input['verify_token']) !== '') $config['verify_token'] = trim((string) $input['verify_token']);
     if ($config['verify_token'] === '') $config['verify_token'] = 'MZIGO-WA-' . strtoupper(bin2hex(random_bytes(8)));
     db()->prepare('INSERT INTO platform_settings (setting_key, setting_value) VALUES ("whatsapp_config", ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)')
@@ -66,6 +75,12 @@ function wa_public_config(?array $config = null): array
     return [
         'enabled' => !empty($config['enabled']),
         'mode' => $config['mode'],
+        'provider' => $config['provider'],
+        'provider_options' => ['meta', 'infobip'],
+        'infobip_base_url' => $config['infobip_base_url'],
+        'infobip_sender' => $config['infobip_sender'],
+        'infobip_api_key_set' => $config['infobip_api_key'] !== '',
+        'infobip_webhook_secret_set' => $config['infobip_webhook_secret'] !== '',
         'graph_version' => $config['graph_version'],
         'phone_number_id' => $config['phone_number_id'],
         'waba_id' => $config['waba_id'],
