@@ -980,9 +980,15 @@
 
   function initTrackForms() {
     $$('[data-mz-track-form]').forEach(function (form) {
+      var input = form.querySelector('input[type="text"], input:not([type])');
+      var submit = form.querySelector('[type="submit"]');
+      function syncSubmit() {
+        if (submit) submit.disabled = !input || input.value.trim() === '';
+      }
+      if (input) input.addEventListener('input', syncSubmit);
+      syncSubmit();
       form.addEventListener('submit', function (ev) {
         ev.preventDefault();
-        var input = form.querySelector('input[type="text"], input:not([type])');
         var value = input ? input.value.trim() : '';
         if (!value) { toast('Enter a tracking number first.', 'error'); if (input) input.focus(); return; }
         window.location.href = '/track-mzigo?num=' + encodeURIComponent(value);
