@@ -3596,7 +3596,7 @@ return '<div class="mz-mobile-card">' +
       api('auth.php', { method: 'POST', body: { action: phoneRole === 'freelancer' ? 'freelancer-login' : 'customer-login', phone: phoneNumber, code: code, pin: code } })
         .then(function (res) {
           toast(phoneRole === 'freelancer' ? 'Signed in as a freelancer.' : 'Signed in as a customer.');
-          window.location.href = res.redirect || (phoneRole === 'freelancer' ? '/freelancer' : '/customer');
+          window.location.href = safeNext(res.redirect || (phoneRole === 'freelancer' ? '/freelancer' : '/customer'));
         }).catch(function (err) { toast(err.message, 'error'); btn.disabled = false; });
     });
     var phoneBack = $('[data-phone-back]');
