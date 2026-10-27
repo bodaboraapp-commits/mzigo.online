@@ -235,12 +235,12 @@ function receiver_notification_targets(array $user): array
 }
 
 function notification_send(string $channel, array $user, string $subject, string $body, string $template, array $parcel, string $provider = 'log',
-    ?string $relatedType = null, ?string $relatedId = null, array $data = []): array
+    ?string $relatedType = null, ?string $relatedId = null, array $data = [], bool $force = false): array
 {
     $recipient = $channel === 'email' ? (string) ($user['email'] ?? '') : (string) ($user['phone'] ?? '');
     $status = 'sent';
     $error = null;
-    $prefBlocked = $channel === 'email' && $recipient !== ''
+    $prefBlocked = !$force && $channel === 'email' && $recipient !== ''
         && !notification_preference_allows((int) ($user['id'] ?? 0), $template);
     if ($recipient === '') {
         $status = 'skipped';
@@ -462,7 +462,7 @@ function notify_customer_email(array $parcel, string $template, string $subject,
         if ($channel['code'] !== 'email') { continue; }
         if (!$hasEmail) { continue; }
         notification_send('email', $user, $subject, $body, $template, $parcel,
-            (string) ($channel['provider'] ?? 'log'), 'parcel', (string) ($parcel['id'] ?? ''), $data);
+            (string) ($channel['provider'] ?? 'log'), 'parcel', (string) ($parcel['id'] ?? ''), $data, true);
         $sent++;
     }
 
@@ -473,7 +473,7 @@ function notify_customer_email(array $parcel, string $template, string $subject,
         foreach ($owners as $owner) {
             if (empty($owner['email'])) { continue; }
             $copyBody = "Business copy — the customer has no email on file.\n" . $body;
-            notification_send('email', $owner, $subject, $copyBody, $template, $parcel, 'log', 'parcel', (string) ($parcel['id'] ?? ''), $data);
+            notification_send('email', $owner, $subject, $copyBody, $template, $parcel, 'log', 'parcel', (string) ($parcel['id'] ?? ''), $data, true);
             $sent++;
         }
     }
@@ -483,7 +483,7 @@ function notify_customer_email(array $parcel, string $template, string $subject,
     foreach ($targets as $channel) {
         if ($channel['code'] === 'email') { continue; }
         notification_send($channel['code'], $user, $subject, $body, $template, $parcel,
-            (string) ($channel['provider'] ?? 'log'), 'parcel', (string) ($parcel['id'] ?? ''), $data);
+            (string) ($channel['provider'] ?? 'log'), 'parcel', (string) ($parcel['id'] ?? ''), $data, true);
         $sent++;
     }
 
@@ -500,30 +500,32 @@ function notify_order_creator(array $parcel, string $template, string $subject, 
 {
     $creatorId = (int) ($parcel['user_id'] ?? 0);
     $tenantId = (int) ($parcel['tenant_id'] ?? 0);
-    $tried = [];
     $sent = 0;
+    $tried = [];
     $seen = [];
+    $sendTo = function (array $user, int $userId) use ($parcel, $template, $subject, $body, $data, &$sent, &$tried) {
+        $tried[] = $userId;
+        foreach (receiver_notification_targets($user) as $channel) {
+            $result = notification_send($channel['code'], $user, $subject, $body, $template, $parcel,
+                (string) ($channel['provider'] ?? 'log'), 'parcel', (string) ($parcel['id'] ?? ''), $data, true);
+            if (($result['status'] ?? '') === 'sent') $sent++;
+        }
+    };
     if ($creatorId > 0 && $creatorId !== $excludeUserId) {
         $stmt = db()->prepare('SELECT id, name, email, phone, role, status, comm_channel FROM users WHERE id = ? AND status = "active" LIMIT 1');
         $stmt->execute([$creatorId]);
         $creator = $stmt->fetch();
         if ($creator) {
             $seen[$creatorId] = true;
-            $tried[] = $creatorId;
-            if (!empty($creator['email'])) {
-                $result = notification_send('email', $creator, $subject, $body, $template, $parcel, 'log', 'parcel', (string) ($parcel['id'] ?? ''), $data);
-                if (($result['status'] ?? '') === 'sent') $sent++;
-            }
+            $sendTo($creator, $creatorId);
         }
     }
     if ($tenantId > 0) {
         foreach (claim_tenant_recipients($tenantId) as $owner) {
             $ownerId = (int) ($owner['id'] ?? 0);
-            if ($ownerId <= 0 || $ownerId === $excludeUserId || isset($seen[$ownerId]) || empty($owner['email'])) continue;
+            if ($ownerId <= 0 || $ownerId === $excludeUserId || isset($seen[$ownerId])) continue;
             $seen[$ownerId] = true;
-            $tried[] = $ownerId;
-            $result = notification_send('email', $owner, $subject, $body, $template, $parcel, 'log', 'parcel', (string) ($parcel['id'] ?? ''), $data);
-            if (($result['status'] ?? '') === 'sent') $sent++;
+            $sendTo($owner, $ownerId);
         }
     }
     return ['sent' => $sent, 'recipients' => $tried];
@@ -650,7 +652,7 @@ function notify_parcel_created(array $parcel): array
     $attempts = [];
     foreach (receiver_notification_targets($user) as $channel) {
         notification_send($channel['code'], $user, $subject, $body, $template, $parcel,
-            (string) ($channel['provider'] ?? 'log'), 'parcel', $tracking, ['insurance_ref' => $insuranceRef]);
+            (string) ($channel['provider'] ?? 'log'), 'parcel', $tracking, ['insurance_ref' => $insuranceRef], true);
         $attempts[] = $channel['code'];
     }
     try { wa_notify_parcel_event('registered', $parcel); } catch (Throwable $e) { error_log('WhatsApp registered template failed: ' . $e->getMessage()); }
@@ -659,7 +661,7 @@ function notify_parcel_created(array $parcel): array
         'Your order ' . $tracking . ' has been created for ' . ($parcel['receiver_name'] ?? 'the receiver') . '.',
         'Destination: ' . ($parcel['to_city'] ?? '—') . '.',
         'Receiver: ' . ($parcel['receiver_name'] ?? '—') . ' (' . ($parcel['receiver_phone'] ?? '') . ').',
-        'Status: registered. Tracking updates will be emailed to you and the receiver.',
+        'Status: registered. Tracking updates will be sent to you and the receiver by SMS and email.',
         'Track: ' . $trackUrl,
     ]);
     $createdNotify = notify_order_creator($parcel, $template, 'Order created: ' . $tracking, $creatorBody,
@@ -686,7 +688,7 @@ function notify_track_subscribers(array $parcel, string $label, string $note = '
             $user = ['id' => 0, 'name' => 'Receiver', 'email' => (string) ($sub['email'] ?? ''), 'phone' => (string) ($sub['phone'] ?? ''), 'comm_channel' => null];
             foreach (receiver_notification_targets($user) as $channel) {
                 notification_send($channel['code'], $user, $subject, $body, 'parcel_status', $parcel,
-                    (string) ($channel['provider'] ?? 'log'), 'parcel', (string) ($parcel['id'] ?? ''), ['tracking' => $tracking, 'status_label' => $label]);
+                    (string) ($channel['provider'] ?? 'log'), 'parcel', (string) ($parcel['id'] ?? ''), ['tracking' => $tracking, 'status_label' => $label], true);
             }
         }
         db()->prepare('UPDATE track_subscriptions SET last_notified_at = NOW() WHERE tracking = ?')->execute([$tracking]);
