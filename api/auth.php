@@ -255,22 +255,48 @@ switch ($action) {
             $stmt->execute(['Customer ' . substr(phone_key($phone), -4), $phone]);
         }
         $demo = config()['app']['demo_mode'] === true;
+        $channel = strtolower(trim((string) ($data['channel'] ?? 'sms'))) === 'email' ? 'email' : 'sms';
         $code = $demo ? '1234' : str_pad((string) random_int(0, 9999), 4, '0', STR_PAD_LEFT);
         db()->prepare('UPDATE users SET otp_hash = ?, otp_expires_at = DATE_ADD(NOW(), INTERVAL 10 MINUTE) WHERE phone = ?')
             ->execute([password_hash($code, PASSWORD_DEFAULT), $phone]);
-        audit('auth.customer_code_issued', 'user', $phone, ['phone' => $phone]);
+        audit('auth.customer_code_issued', 'user', $phone, ['phone' => $phone, 'channel' => $channel]);
+        $sentTo = $channel === 'email' ? 'email address on file' : 'your phone';
         if (!$demo) {
-            $sms = sms_send_code($phone, $code, 'customer');
-            if (empty($sms['ok'])) {
-                audit('auth.customer_code_sms_failed', 'user', $phone, ['phone' => $phone, 'provider' => $sms['provider'] ?? 'log', 'error' => $sms['error'] ?? '']);
-                fail_error('sms_delivery_failed', 'We could not send the sign-in code. Check your number or contact support.', 502);
+            if ($channel === 'email') {
+                $emailStmt = db()->prepare('SELECT email FROM users WHERE phone = ? LIMIT 1');
+                $emailStmt->execute([$phone]);
+                $email = trim((string) ($emailStmt->fetchColumn() ?: ''));
+                if ($email === '') {
+                    fail_error('email_missing', 'No email address is on this customer account. Use SMS or add an email in the customer portal first.', 422);
+                }
+                $subject = 'Your Mzigo.online sign-in code';
+                $textBody = 'Your Mzigo.online sign-in code is ' . $code . '. It expires in 10 minutes. Never share it.';
+                $html = email_shell('Your Mzigo sign-in code', 'Sign in to Mzigo.online',
+                    '<p style="font-size:15px;color:#26331a;">Your sign-in code is:</p>' .
+                    '<p style="font-size:32px;font-weight:800;letter-spacing:6px;color:#3c5223;margin:16px 0;">' . htmlspecialchars($code, ENT_QUOTES) . '</p>' .
+                    '<p style="font-size:13px;color:#63705a;">It expires in 10 minutes. If you did not request this, you can ignore this email.</p>');
+                $mail = mzigo_mail_send($email, $subject, $textBody, $html);
+                if (empty($mail['sent'])) {
+                    audit('auth.customer_code_email_failed', 'user', $phone, ['phone' => $phone, 'channel' => 'email', 'provider' => $mail['provider'] ?? 'log', 'error' => $mail['error'] ?? '']);
+                    fail_error('email_delivery_failed', 'We could not send the sign-in code by email. Use SMS or contact support.', 502);
+                }
+                $sentTo = preg_replace('/(^.).*(@.*)$/', '$1***$2', $email);
+                audit('auth.customer_code_email', 'user', $phone, ['phone' => $phone, 'channel' => 'email', 'provider' => $mail['provider'] ?? 'smtp']);
+            } else {
+                $sms = sms_send_code($phone, $code, 'customer');
+                if (empty($sms['ok'])) {
+                    audit('auth.customer_code_sms_failed', 'user', $phone, ['phone' => $phone, 'provider' => $sms['provider'] ?? 'log', 'error' => $sms['error'] ?? '']);
+                    fail_error('sms_delivery_failed', 'We could not send the sign-in code. Check your number, choose email, or contact support.', 502);
+                }
+                audit('auth.customer_code_sms', 'user', $phone, ['phone' => $phone, 'provider' => $sms['provider'] ?? 'infobip']);
             }
-            audit('auth.customer_code_sms', 'user', $phone, ['phone' => $phone, 'provider' => $sms['provider'] ?? 'infobip']);
         }
         json_out([
             'ok'        => true,
             'source'    => 'mysql',
             'sent'      => true,
+            'channel'   => $channel,
+            'sent_to'   => $sentTo,
             'demo_code' => $demo ? $code : null,
             'phone'     => $phone,
             'csrf'      => csrf_token(),
