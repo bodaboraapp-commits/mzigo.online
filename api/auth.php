@@ -327,7 +327,7 @@ switch ($action) {
 
     case 'customer-login':
         $phone = require_phone($data);
-        $code = param($data, 'code', 4, 4, 'code');
+        $code = param($data, 'code', 4, 8, 'code');
         rate_limit('customer-login:' . client_ip() . ':' . $phone, 6, 300);
         $customer = find_user_by_phone($phone);
         $isCustomer = $customer !== null && (($customer['role'] ?? '') === 'customer' || user_has_role((int) $customer['id'], 'customer'));
@@ -405,7 +405,7 @@ switch ($action) {
 
     case 'freelancer-login':
         $phone = require_phone($data);
-        $pin = param($data, 'pin', 4, 4, 'PIN');
+        $pin = param($data, 'pin', 4, 8, 'PIN');
         rate_limit('freelancer-login:' . client_ip() . ':' . $phone, 6, 300);
         $freelancer = find_user_by_phone($phone);
         $isFreelancer = $freelancer !== null && (($freelancer['role'] ?? '') === 'freelancer' || user_has_role((int) $freelancer['id'], 'freelancer'));
