@@ -141,9 +141,9 @@ function runner_job_issue_delivery_otp(int $jobId): array
     $provider = (string) ($target['provider'] ?? 'log');
     $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
     $hash = password_hash($code, PASSWORD_DEFAULT);
-    db()->prepare('UPDATE runner_jobs SET delivery_otp_hash = ?, delivery_otp_expires_at = DATE_ADD(NOW(), INTERVAL 30 MINUTE),
-        delivery_otp_attempts = 0, delivery_otp_sent_at = NOW(), delivery_otp_required = 1, delivery_otp_channel = ? WHERE id = ?')
-        ->execute([$hash, $channel, $jobId]);
+    db()->prepare('UPDATE runner_jobs SET delivery_otp_hash = ?, delivery_otp_expires_at = ?,
+        delivery_otp_attempts = 0, delivery_otp_sent_at = ?, delivery_otp_required = 1, delivery_otp_channel = ? WHERE id = ?')
+        ->execute([$hash, date('Y-m-d H:i:s', time() + 1800), date('Y-m-d H:i:s'), $channel, $jobId]);
     $parcel = ['id' => 0, 'tracking' => (string) ($job['ref'] ?? ''), 'receiver_name' => $name,
         'receiver_phone' => $phone, 'sender_name' => (string) ($job['contact_name'] ?? ''),
         'sender_phone' => (string) ($job['contact_phone'] ?? ''), 'tenant_id' => null];

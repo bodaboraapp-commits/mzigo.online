@@ -263,8 +263,8 @@ switch ($action) {
         $demo = config()['app']['demo_mode'] === true;
         $channel = strtolower(trim((string) ($data['channel'] ?? 'sms'))) === 'email' ? 'email' : 'sms';
         $code = $demo ? '1234' : str_pad((string) random_int(0, 9999), 4, '0', STR_PAD_LEFT);
-        db()->prepare('UPDATE users SET otp_hash = ?, otp_expires_at = DATE_ADD(NOW(), INTERVAL 10 MINUTE) WHERE phone = ?')
-            ->execute([password_hash($code, PASSWORD_DEFAULT), $phone]);
+        db()->prepare('UPDATE users SET otp_hash = ?, otp_expires_at = ? WHERE phone = ?')
+            ->execute([password_hash($code, PASSWORD_DEFAULT), date('Y-m-d H:i:s', time() + 600), $phone]);
         audit('auth.customer_code_issued', 'user', $phone, ['phone' => $phone, 'channel' => $channel]);
         $sentTo = $channel === 'email' ? 'email address on file' : 'your phone';
         if (!$demo) {

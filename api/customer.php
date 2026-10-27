@@ -206,8 +206,8 @@ if ($action === 'request_claim_otp') {
     db()->prepare('UPDATE claim_otps SET consumed_at = NOW() WHERE parcel_id = ? AND user_id = ? AND consumed_at IS NULL')
         ->execute([$parcel['id'], (int) $user['id']]);
     db()->prepare('INSERT INTO claim_otps (parcel_id, user_id, phone_key, code_hash, expires_at)
-        VALUES (?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL ? MINUTE))')
-        ->execute([$parcel['id'], (int) $user['id'], $key, password_hash($code, PASSWORD_DEFAULT), CLAIM_OTP_TTL_MINUTES]);
+        VALUES (?, ?, ?, ?, ?)')
+        ->execute([$parcel['id'], (int) $user['id'], $key, password_hash($code, PASSWORD_DEFAULT), date('Y-m-d H:i:s', time() + (CLAIM_OTP_TTL_MINUTES * 60))]);
     $demo = config()['app']['demo_mode'] === true;
     $delivered = false;
     foreach (notification_targets($user) as $channel) {
