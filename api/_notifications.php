@@ -484,6 +484,44 @@ function notify_customer_email(array $parcel, string $template, string $subject,
 }
 
 
+/**
+ * Email the person who created the order (and the workspace owner as a
+ * fallback when the creator has no email). Receiver notifications are handled
+ * separately.
+ */
+function notify_order_creator(array $parcel, string $template, string $subject, string $body, array $data = [], int $excludeUserId = 0): array
+{
+    $creatorId = (int) ($parcel['user_id'] ?? 0);
+    $tenantId = (int) ($parcel['tenant_id'] ?? 0);
+    $tried = [];
+    $sent = 0;
+    $seen = [];
+    if ($creatorId > 0 && $creatorId !== $excludeUserId) {
+        $stmt = db()->prepare('SELECT id, name, email, phone, role, status, comm_channel FROM users WHERE id = ? AND status = "active" LIMIT 1');
+        $stmt->execute([$creatorId]);
+        $creator = $stmt->fetch();
+        if ($creator) {
+            $seen[$creatorId] = true;
+            $tried[] = $creatorId;
+            if (!empty($creator['email'])) {
+                $result = notification_send('email', $creator, $subject, $body, $template, $parcel, 'log', 'parcel', (string) ($parcel['id'] ?? ''), $data);
+                if (($result['status'] ?? '') === 'sent') $sent++;
+            }
+        }
+    }
+    if ($tenantId > 0) {
+        foreach (claim_tenant_recipients($tenantId) as $owner) {
+            $ownerId = (int) ($owner['id'] ?? 0);
+            if ($ownerId <= 0 || $ownerId === $excludeUserId || isset($seen[$ownerId]) || empty($owner['email'])) continue;
+            $seen[$ownerId] = true;
+            $tried[] = $ownerId;
+            $result = notification_send('email', $owner, $subject, $body, $template, $parcel, 'log', 'parcel', (string) ($parcel['id'] ?? ''), $data);
+            if (($result['status'] ?? '') === 'sent') $sent++;
+        }
+    }
+    return ['sent' => $sent, 'recipients' => $tried];
+}
+
 function notify_customer_payment(array $parcel, string $reference): array
 {
     $tracking = (string) ($parcel['tracking'] ?? '');
@@ -516,6 +554,16 @@ function notify_customer_status(array $parcel, string $template, string $label, 
         'tracking' => $tracking, 'status_label' => $label, 'note' => $note,
         'amount' => (int) ($parcel['fee_total'] ?? 0),
     ]);
+    $receiver = notification_customer_for((string) ($parcel['receiver_phone'] ?? ''), (string) ($parcel['receiver_name'] ?? 'Customer'));
+    $creatorBody = implode("\n", array_filter([
+        'Hi ' . ($parcel['sender_name'] ?? 'there') . ',',
+        'Order ' . $tracking . ' for ' . ($parcel['receiver_name'] ?? 'the receiver') . ' is now: ' . $label . '.',
+        $note,
+        'Track: ' . rtrim((string) (config()['app']['base_url'] ?? ''), '/') . '/track-mzigo?num=' . rawurlencode($tracking),
+    ]));
+    notify_order_creator($parcel, $template, 'Order ' . $tracking . ' · ' . $label, $creatorBody,
+        ['tracking' => $tracking, 'status_label' => $label, 'note' => $note],
+        (int) ($receiver['user']['id'] ?? 0));
     try { wa_notify_from_status($parcel, $template); } catch (Throwable $e) { error_log('WhatsApp status template failed: ' . $e->getMessage()); }
     return $result;
 }
@@ -599,6 +647,16 @@ function notify_parcel_created(array $parcel): array
         $attempts[] = $channel['code'];
     }
     try { wa_notify_parcel_event('registered', $parcel); } catch (Throwable $e) { error_log('WhatsApp registered template failed: ' . $e->getMessage()); }
+    $creatorBody = implode("\n", [
+        'Hi ' . ($parcel['sender_name'] ?? 'there') . ',',
+        'Your order ' . $tracking . ' has been created for ' . ($parcel['receiver_name'] ?? 'the receiver') . '.',
+        'Destination: ' . ($parcel['to_city'] ?? '—') . '.',
+        'Receiver: ' . ($parcel['receiver_name'] ?? '—') . ' (' . ($parcel['receiver_phone'] ?? '') . ').',
+        'Status: registered. Tracking updates will be emailed to you and the receiver.',
+        'Track: ' . $trackUrl,
+    ]);
+    $createdNotify = notify_order_creator($parcel, $template, 'Order created: ' . $tracking, $creatorBody,
+        ['insurance_ref' => $insuranceRef], (int) ($user['id'] ?? 0));
     audit('notification.parcel_created', 'parcel', (string) ($parcel['id'] ?? ''), [
         'tracking' => $tracking, 'new_account' => $customer['created'], 'channels' => $attempts,
     ]);
