@@ -48,7 +48,11 @@ function db(): PDO
         // Keep MySQL NOW()/DATETIME values in the same zone as PHP (Africa/Nairobi).
         // cPanel MariaDB often runs in UTC while PHP is set to +03:00, which made
         // 10-minute OTPs look expired immediately.
-        $pdo->exec("SET time_zone = '+03:00'");
+        try {
+            $pdo->exec("SET time_zone = '+03:00'");
+        } catch (Throwable $tzError) {
+            error_log('Mzigo.online DB timezone alignment skipped: ' . $tzError->getMessage());
+        }
     } catch (PDOException $e) {
         error_log('Mzigo.online DB connection failed: ' . $e->getMessage());
         json_out(['ok' => false, 'error' => ['code' => 'db_unavailable', 'message' => 'Database unavailable.']], 500);
