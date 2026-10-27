@@ -55,8 +55,11 @@ function freelancer_user_for(string $phone): array
 {
     $existing = find_user_by_phone($phone);
     if ($existing !== null) {
-        if ($existing['role'] !== 'freelancer') {
-            fail_error('account_type_mismatch', 'That phone number belongs to a business or admin account. Use the normal sign-in.', 409);
+        if (($existing['role'] ?? '') === 'platform_admin') {
+            fail_error('account_type_mismatch', 'Use the admin console for this account.', 409);
+        }
+        if (($existing['role'] ?? '') !== 'freelancer') {
+            user_grant_role((int) $existing['id'], 'freelancer');
         }
         return $existing;
     }
@@ -244,11 +247,14 @@ switch ($action) {
         $phone = require_phone($data);
         rate_limit('customer-start:' . client_ip() . ':' . $phone, 10, 300);
         $existing = find_user_by_phone($phone);
-        if ($existing !== null && $existing['role'] !== 'customer') {
-            fail_error('account_type_mismatch', 'That phone number belongs to another account type. Use the appropriate sign-in.', 409);
-        }
         if ($existing !== null && ($existing['status'] ?? 'active') !== 'active') {
             fail_error('account_suspended', 'This account is suspended. Contact Mzigo.online support.', 403);
+        }
+        if ($existing !== null && ($existing['role'] ?? '') === 'platform_admin') {
+            fail_error('account_type_mismatch', 'Use the admin console for this account.', 409);
+        }
+        if ($existing !== null && ($existing['role'] ?? '') !== 'customer') {
+            user_grant_role((int) $existing['id'], 'customer');
         }
         if ($existing === null) {
             $stmt = db()->prepare('INSERT INTO users (name, phone, role) VALUES (?, ?, "customer")');
@@ -263,7 +269,7 @@ switch ($action) {
         $sentTo = $channel === 'email' ? 'email address on file' : 'your phone';
         if (!$demo) {
             if ($channel === 'email') {
-                $emailStmt = db()->prepare('SELECT email FROM users WHERE RIGHT(REGEXP_REPLACE(phone, "[^0-9]", ""), 9) = ? AND role = "customer" LIMIT 1');
+                $emailStmt = db()->prepare('SELECT email FROM users WHERE RIGHT(REGEXP_REPLACE(phone, "[^0-9]", ""), 9) = ? LIMIT 1');
                 $emailStmt->execute([phone_key($phone)]);
                 $email = trim((string) ($emailStmt->fetchColumn() ?: ''));
                 if ($email === '') {
@@ -309,8 +315,9 @@ switch ($action) {
         $code = param($data, 'code', 4, 4, 'code');
         rate_limit('customer-login:' . client_ip() . ':' . $phone, 6, 300);
         $customer = find_user_by_phone($phone);
-        if ($customer === null || $customer['role'] !== 'customer') {
-            fail_error('invalid_credentials', 'No customer account matches that phone number.', 401);
+        $isCustomer = $customer !== null && (($customer['role'] ?? '') === 'customer' || user_has_role((int) $customer['id'], 'customer'));
+        if (!$isCustomer) {
+            fail_error('invalid_credentials', 'No customer account matches that phone number. Choose Freelancer or Business if that is your account type.', 401);
         }
         if (($customer['status'] ?? 'active') !== 'active') {
             fail_error('account_suspended', 'This account is suspended. Contact Mzigo.online support.', 403);
@@ -325,7 +332,7 @@ switch ($action) {
             fail_error('invalid_credentials', 'That code is not correct or has expired.', 401);
         }
         db()->prepare('UPDATE users SET otp_hash = NULL, otp_expires_at = NULL WHERE id = ?')->execute([$customer['id']]);
-        set_session_user((int) $customer['id'], null);
+        set_session_user((int) $customer['id'], null, 'customer');
         growth_attribute_referral((int) $customer['id'], 'customer', (string) ($_COOKIE['mz_ref'] ?? ($data['referral_code'] ?? '')), (string) ($_COOKIE['mz_ref_src'] ?? ''));
         audit('auth.customer_login', 'user', (string) $customer['id'], ['phone' => $phone]);
         $context = auth_context();
@@ -366,8 +373,9 @@ switch ($action) {
         $pin = param($data, 'pin', 4, 4, 'PIN');
         rate_limit('freelancer-login:' . client_ip() . ':' . $phone, 6, 300);
         $freelancer = find_user_by_phone($phone);
-        if ($freelancer === null || $freelancer['role'] !== 'freelancer') {
-            fail_error('invalid_credentials', 'No freelancer account matches that phone number.', 401);
+        $isFreelancer = $freelancer !== null && (($freelancer['role'] ?? '') === 'freelancer' || user_has_role((int) $freelancer['id'], 'freelancer'));
+        if (!$isFreelancer) {
+            fail_error('invalid_credentials', 'No freelancer account matches that phone number. Choose Customer or Business if that is your account type.', 401);
         }
         if (($freelancer['status'] ?? 'active') !== 'active') {
             fail_error('account_suspended', 'This account is suspended. Contact Mzigo.online support.', 403);
@@ -379,7 +387,7 @@ switch ($action) {
             audit('auth.freelancer_login_failed', 'user', (string) $freelancer['id'], ['phone' => $phone]);
             fail_error('invalid_credentials', 'That PIN is not correct.', 401);
         }
-        set_session_user((int) $freelancer['id'], null);
+        set_session_user((int) $freelancer['id'], null, 'freelancer');
         growth_attribute_referral((int) $freelancer['id'], 'runner', (string) ($_COOKIE['mz_ref'] ?? ($data['referral_code'] ?? '')), (string) ($_COOKIE['mz_ref_src'] ?? ''));
         audit('auth.freelancer_login', 'user', (string) $freelancer['id'], ['phone' => $phone]);
         $context = auth_context();
@@ -395,7 +403,7 @@ switch ($action) {
             db()->prepare('DELETE FROM sessions WHERE id = ?')->execute([$sessionId]);
             audit('auth.session_ended', 'session', substr($sessionId, 0, 16), ['ip' => client_ip()]);
         }
-        unset($_SESSION['user_id'], $_SESSION['tenant_id']);
+        unset($_SESSION['user_id'], $_SESSION['tenant_id'], $_SESSION['active_role']);
         session_regenerate_id(true);
         json_out(['ok' => true, 'source' => 'mysql', 'csrf' => csrf_token()]);
         // no break
