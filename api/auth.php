@@ -262,10 +262,21 @@ switch ($action) {
         }
         $demo = config()['app']['demo_mode'] === true;
         $channel = strtolower(trim((string) ($data['channel'] ?? 'sms'))) === 'email' ? 'email' : 'sms';
+        $useVerify = !$demo && $channel === 'sms' && sms_twilio_verify_config() !== null;
         $code = $demo ? '1234' : str_pad((string) random_int(0, 9999), 4, '0', STR_PAD_LEFT);
-        db()->prepare('UPDATE users SET otp_hash = ?, otp_expires_at = ? WHERE phone = ?')
-            ->execute([password_hash($code, PASSWORD_DEFAULT), date('Y-m-d H:i:s', time() + 600), $phone]);
-        audit('auth.customer_code_issued', 'user', $phone, ['phone' => $phone, 'channel' => $channel]);
+        if ($useVerify) {
+            $verifyStart = sms_twilio_verify_start($phone);
+            if (empty($verifyStart['ok'])) {
+                audit('auth.customer_code_verify_failed', 'user', $phone, ['phone' => $phone, 'provider' => 'twilio-verify', 'error' => $verifyStart['error'] ?? '']);
+                fail_error('sms_delivery_failed', 'We could not send the sign-in code: ' . ($verifyStart['error'] ?? 'Twilio Verify failed'), 502);
+            }
+            db()->prepare('UPDATE users SET otp_hash = "twilio-verify", otp_expires_at = ? WHERE phone = ?')
+                ->execute([date('Y-m-d H:i:s', time() + 600), $phone]);
+        } else {
+            db()->prepare('UPDATE users SET otp_hash = ?, otp_expires_at = ? WHERE phone = ?')
+                ->execute([password_hash($code, PASSWORD_DEFAULT), date('Y-m-d H:i:s', time() + 600), $phone]);
+        }
+        audit('auth.customer_code_issued', 'user', $phone, ['phone' => $phone, 'channel' => $channel, 'verify' => $useVerify]);
         $sentTo = $channel === 'email' ? 'email address on file' : 'your phone';
         if (!$demo) {
             if ($channel === 'email') {
@@ -290,12 +301,16 @@ switch ($action) {
                 $sentTo = preg_replace('/(^.).*(@.*)$/', '$1***$2', $email);
                 audit('auth.customer_code_email', 'user', $phone, ['phone' => $phone, 'channel' => 'email', 'provider' => $mail['provider'] ?? 'smtp']);
             } else {
-                $sms = sms_send_code($phone, $code, 'customer');
-                if (empty($sms['ok'])) {
-                    audit('auth.customer_code_sms_failed', 'user', $phone, ['phone' => $phone, 'provider' => $sms['provider'] ?? 'log', 'error' => $sms['error'] ?? '']);
-                    fail_error('sms_delivery_failed', 'We could not send the sign-in code. Check your number, choose email, or contact support.', 502);
+                if ($useVerify) {
+                    audit('auth.customer_code_verify', 'user', $phone, ['phone' => $phone, 'provider' => 'twilio-verify']);
+                } else {
+                    $sms = sms_send_code($phone, $code, 'customer');
+                    if (empty($sms['ok'])) {
+                        audit('auth.customer_code_sms_failed', 'user', $phone, ['phone' => $phone, 'provider' => $sms['provider'] ?? 'log', 'error' => $sms['error'] ?? '']);
+                        fail_error('sms_delivery_failed', 'We could not send the sign-in code. Check your number, choose email, or contact support.', 502);
+                    }
+                    audit('auth.customer_code_sms', 'user', $phone, ['phone' => $phone, 'provider' => $sms['provider'] ?? 'infobip']);
                 }
-                audit('auth.customer_code_sms', 'user', $phone, ['phone' => $phone, 'provider' => $sms['provider'] ?? 'infobip']);
             }
         }
         json_out([
@@ -327,7 +342,13 @@ switch ($action) {
         $otp = $stmt->fetch();
         $otpHash = (string) ($otp['otp_hash'] ?? '');
         $expires = (string) ($otp['otp_expires_at'] ?? '');
-        if ($otpHash === '' || $expires === '' || strtotime($expires) < time() || !password_verify($code, $otpHash)) {
+        if ($otpHash === 'twilio-verify') {
+            $verifyCheck = sms_twilio_verify_check($phone, $code);
+            if (empty($verifyCheck['ok'])) {
+                audit('auth.customer_login_failed', 'user', $phone, ['phone' => $phone, 'provider' => 'twilio-verify']);
+                fail_error('invalid_credentials', 'That code is not correct or has expired.', 401);
+            }
+        } elseif ($otpHash === '' || $expires === '' || strtotime($expires) < time() || !password_verify($code, $otpHash)) {
             audit('auth.customer_login_failed', 'user', $phone, ['phone' => $phone]);
             fail_error('invalid_credentials', 'That code is not correct or has expired.', 401);
         }
@@ -346,16 +367,30 @@ switch ($action) {
         $freelancer = freelancer_user_for($phone);
         $pin = freelancer_pin();
         $demo = config()['app']['demo_mode'] === true;
-        db()->prepare('UPDATE users SET pin_hash = ? WHERE id = ?')
-            ->execute([password_hash($pin, PASSWORD_DEFAULT), $freelancer['id']]);
-        audit('auth.freelancer_pin_issued', 'user', (string) $freelancer['id'], ['phone' => $phone]);
-        if (!$demo) {
-            $sms = sms_send_code($phone, $pin, 'runner');
-            if (empty($sms['ok'])) {
-                audit('auth.freelancer_pin_sms_failed', 'user', (string) $freelancer['id'], ['phone' => $phone, 'provider' => $sms['provider'] ?? 'log', 'error' => $sms['error'] ?? '']);
-                fail_error('sms_delivery_failed', 'We could not send the runner PIN. Check the number or contact support.', 502);
+        $useVerify = !$demo && sms_twilio_verify_config() !== null;
+        if ($useVerify) {
+            $verifyStart = sms_twilio_verify_start($phone);
+            if (empty($verifyStart['ok'])) {
+                audit('auth.freelancer_pin_verify_failed', 'user', (string) $freelancer['id'], ['phone' => $phone, 'provider' => 'twilio-verify', 'error' => $verifyStart['error'] ?? '']);
+                fail_error('sms_delivery_failed', 'We could not send the runner code: ' . ($verifyStart['error'] ?? 'Twilio Verify failed'), 502);
             }
-            audit('auth.freelancer_pin_sms', 'user', (string) $freelancer['id'], ['phone' => $phone, 'provider' => $sms['provider'] ?? 'infobip']);
+            db()->prepare('UPDATE users SET pin_hash = "twilio-verify" WHERE id = ?')->execute([$freelancer['id']]);
+        } else {
+            db()->prepare('UPDATE users SET pin_hash = ? WHERE id = ?')
+                ->execute([password_hash($pin, PASSWORD_DEFAULT), $freelancer['id']]);
+        }
+        audit('auth.freelancer_pin_issued', 'user', (string) $freelancer['id'], ['phone' => $phone, 'verify' => $useVerify]);
+        if (!$demo) {
+            if ($useVerify) {
+                audit('auth.freelancer_pin_verify', 'user', (string) $freelancer['id'], ['phone' => $phone, 'provider' => 'twilio-verify']);
+            } else {
+                $sms = sms_send_code($phone, $pin, 'runner');
+                if (empty($sms['ok'])) {
+                    audit('auth.freelancer_pin_sms_failed', 'user', (string) $freelancer['id'], ['phone' => $phone, 'provider' => $sms['provider'] ?? 'log', 'error' => $sms['error'] ?? '']);
+                    fail_error('sms_delivery_failed', 'We could not send the runner PIN. Check the number or contact support.', 502);
+                }
+                audit('auth.freelancer_pin_sms', 'user', (string) $freelancer['id'], ['phone' => $phone, 'provider' => $sms['provider'] ?? 'infobip']);
+            }
         }
         json_out([
             'ok'        => true,
@@ -383,7 +418,13 @@ switch ($action) {
         $stmt = db()->prepare('SELECT pin_hash FROM users WHERE id = ? LIMIT 1');
         $stmt->execute([$freelancer['id']]);
         $pinHash = (string) $stmt->fetchColumn();
-        if ($pinHash === '' || !password_verify($pin, $pinHash)) {
+        if ($pinHash === 'twilio-verify') {
+            $verifyCheck = sms_twilio_verify_check($phone, $pin);
+            if (empty($verifyCheck['ok'])) {
+                audit('auth.freelancer_login_failed', 'user', (string) $freelancer['id'], ['phone' => $phone, 'provider' => 'twilio-verify']);
+                fail_error('invalid_credentials', 'That PIN is not correct or has expired.', 401);
+            }
+        } elseif ($pinHash === '' || !password_verify($pin, $pinHash)) {
             audit('auth.freelancer_login_failed', 'user', (string) $freelancer['id'], ['phone' => $phone]);
             fail_error('invalid_credentials', 'That PIN is not correct.', 401);
         }
