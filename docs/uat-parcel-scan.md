@@ -61,7 +61,7 @@ Verify the partner scan-point flow end to end before go-live: admin point/token 
 |---|---|---|---|
 | C01 | Happy path | Tracking `TRK-UAT-0001` → Drop off → Record scan | Status `CREATED → AT_ORIGIN_POINT`; success result |
 | C02 | Wrong carrier | Parcel with different `carrier_slug` → drop off | `wrong_carrier` (403) |
-| C03 | Wrong workspace | Workspace-scoped point + other tenant parcel | `wrong_workspace` (403) |
+| C03 | Drop-off workspace exemption | Workspace-scoped point + other tenant parcel, drop-off action | Drop-off is accepted; workspace restriction applies only from handover onward |
 | C04 | Already dropped off | Repeat drop-off on same parcel | `invalid_status_change` (422) |
 | C05 | Unknown tracking | `TRK-NOPE-0000` | `parcel_not_found` (404) |
 
@@ -101,19 +101,23 @@ Verify the partner scan-point flow end to end before go-live: admin point/token 
 
 | ID | Test | Steps | Expected |
 |---|---|---|---|
-| H01 | Manual entry normalises | Enter lowercase tracking | API accepts and normalises to uppercase |
-| H02 | Camera QR | Scan a valid parcel QR | Tracking prefilled; scan can be recorded |
-| H03 | Camera denied | Deny camera permission | Manual entry remains available; no crash |
+| H01 | Task required first | Open scanner without choosing an action | Scan button is disabled; choose a task to enable it |
+| H02 | Manual entry normalises | Enter lowercase tracking | API accepts and normalises to uppercase |
+| H03 | Camera QR | Scan a valid parcel QR | Camera stays open until a valid Mzigo label is detected or Cancel is tapped; tracking then prefills |
+| H04 | Invalid QR | Show a non-Mzigo QR repeatedly | Camera stays open and shows a hint; no premature close |
+| H05 | Manual entry disabled | Admin disables manual entry for the point | Manual field is hidden; scan-only flow is enforced |
+| H06 | Camera denied | Deny camera permission | Error shown; manual entry remains available when enabled |
 
 ## I. Scanner UX
 
 | ID | Test | Steps | Expected |
 |---|---|---|---|
-| I01 | Recent scans | Perform several scans | Recent list updates on that device |
-| I02 | Clear recent | Clear | List empties |
-| I03 | Offline indicator | Disconnect network | UI shows Offline; scan attempts fail gracefully (no silent success) |
+| I01 | Recent scans | Perform several scans, then open the gear/Settings panel | Recent list updates on that device inside Settings |
+| I02 | Clear recent | Clear in Settings | List empties |
+| I03 | Offline queue | Disconnect network, record a scan | Scan is queued locally with a visible queue count; reconnect and confirm it syncs |
 | I04 | Install PWA | Use install prompt | App installs and opens to `/scan` |
-| I05 | Change point | Change token | Disconnects and returns to token screen |
+| I05 | Change point | Change token from Settings | Disconnects and returns to token screen |
+| I06 | Admin action wording | Rename/reorder scan actions in Admin â†’ Scan points, reload scanner | Scanner shows the configured order and wording |
 
 ## J. Notifications, webhooks and audit
 
@@ -136,7 +140,7 @@ Verify the partner scan-point flow end to end before go-live: admin point/token 
 - All critical cases `C01`, `D01`, `E01`, `F01` pass.
 - Statuses follow the exact sequence with no skipped or duplicate transitions.
 - Idempotency (`G01`–`G03`) passes.
-- Wrong-carrier / wrong-workspace isolation (`C02`, `C03`) passes.
+- Wrong-carrier and post-handover wrong-workspace isolation (`C02`, `D03`, early `E`/`F` cases) passes; drop-off remains exempt.
 - Collection never succeeds without payment and correct code (`F02`, `F03`).
 - Notifications/webhooks/audit recorded (J).
 - No unhandled 500s; failures return structured JSON.
