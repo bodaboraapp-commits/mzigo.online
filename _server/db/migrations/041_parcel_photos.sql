@@ -1,4 +1,4 @@
--- Mzigo.online — migration 041: product and package photos captured at order creation.
+-- Mzigo.online â€” migration 041: product and package photos captured at order creation.
 CREATE TABLE IF NOT EXISTS parcel_photos (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   parcel_id CHAR(36) NOT NULL,
@@ -14,4 +14,5 @@ CREATE TABLE IF NOT EXISTS parcel_photos (
   UNIQUE KEY uniq_parcel_photo_kind (parcel_id, kind),
   KEY idx_parcel_photos_parcel (parcel_id),
   CONSTRAINT fk_parcel_photos_parcel FOREIGN KEY (parcel_id) REFERENCES parcels(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
