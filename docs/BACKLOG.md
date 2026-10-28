@@ -1,6 +1,6 @@
 # Pending tasks & development backlog
 
-Snapshot: 2026-10-26  
+Snapshot: 2026-10-28  
 Environment: local/demo (`http://localhost:8090`) with live MariaDB and the SMTP email channel active.
 
 There are **no queued Team tasks, scheduled reminders or active goals**. The only background job is the Apache preview server.
@@ -9,9 +9,16 @@ There are **no queued Team tasks, scheduled reminders or active goals**. The onl
 
 `docs/ENGINEERING_V1_READINESS.md`
 
-This file now keeps shipped history only. Nothing below is an active pending item unless it also appears in the engineering doc.
+This file now keeps shipped history only. Open MVP and launch blockers are tracked in `docs/ENGINEERING_V1_READINESS.md` and the current status/verification checklist in `docs/MVP_STATUS.md`.
 
 ## Recently completed (for roadmap accuracy)
+
+- Scanner PWA task-first flow, offline queue, torch, jsQR fallback, settings recent scans, admin-defined action order/wording and per-point manual-entry control
+- Workspace enforcement for handover/arrival/collection scans (drop-off stays open)
+- Product/package photo capture on order creation; admin photo links; public confirmation gallery removed
+- Admin insurance charge mode (percentage/fixed) and platform holding/platform fee configuration
+- Email OTP login, merchant multi-role access, deleted-user restore and production DB updater fix
+- M-Pesa default payment option; customer + creator payment receipts over SMS/email
 
 - Infobip SMS integration for customer codes, runner PINs, claim/delivery OTPs and parcel notifications
 
