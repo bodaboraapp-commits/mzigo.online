@@ -353,6 +353,7 @@ if ($method === 'GET') {
         'seo' => cms_seo_settings(),
         'web_vitals' => cms_web_vitals_summary(),
         'pricing_mode' => pricing_mode(),
+        'fee_config' => fee_config(),
         'payout_config' => payout_config(),
         'runner_launch_config' => runner_launch_config(),
         'pending_runner_payouts' => db()->query("SELECT p.*, u.name AS runner_name, u.phone AS runner_phone FROM runner_payouts p JOIN users u ON u.id = p.runner_id WHERE p.status = 'pending' ORDER BY p.requested_at ASC LIMIT 50")->fetchAll(),
@@ -1554,6 +1555,12 @@ switch ($action) {
         $clean = payout_config_save($data);
         audit('admin.payout_config_saved', 'platform', 'payout_config', ['mode' => $clean['mode'], 'schedule' => $clean['schedule']]);
         json_out(['ok' => true, 'payout_config' => $clean]);
+    }
+
+    case 'save_fee_config': {
+        $clean = fee_config_save($data);
+        audit('admin.fee_config_saved', 'platform', 'fee_config', $clean);
+        json_out(['ok' => true, 'fee_config' => $clean]);
     }
 
     case 'save_promise_config': {

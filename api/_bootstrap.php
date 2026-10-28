@@ -688,9 +688,10 @@ function quote_for(string $size, int $valueKes): array
         'Extra Large' => 420, 'Extra Extra Large' => 520, 'Extra Extra Extra Large' => 650,
     ];
     $base = (int) (round((($sizeBase[$size] ?? 250) + 180) / 10) * 10);
-    $holding = 30;
+    $fees = fee_config();
+    $holding = (int) $fees['holding_fee_kes'];
     $insurance = insurance_charge_for_value($valueKes);
-    $platform = 80;
+    $platform = (int) $fees['platform_fee_kes'];
     $total = (int) (ceil(($base + $holding + $insurance + $platform) / 10) * 10);
     return ['base' => $base, 'holding' => $holding, 'insurance' => $insurance, 'platform' => $platform, 'total' => $total];
 }
@@ -917,3 +918,5 @@ function catalog(): array
 require_once __DIR__ . '/_parcel_photos.php';
 
 require_once __DIR__ . '/_insurance.php';
+
+require_once __DIR__ . '/_fees.php';

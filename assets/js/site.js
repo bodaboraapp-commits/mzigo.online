@@ -92,6 +92,7 @@
     user: null, tenant: null, branding: null, tenants: [], role: null, usage: null, csrf: '', showDemoAccounts: true,
     partners: [], packageSizes: [], paymentMethods: [],
     insurancePricing: { mode: 'percentage', percent: 1.5, fixed: 30, minimum: 30 },
+    feeConfig: { holding_fee_kes: 30, platform_fee_kes: 80 },
     packages: [], errands: [], senders: [], demos: [],
     pricingMode: 'paid',
     ready: false, source: 'offline', database: 'mzigo_online'
@@ -177,6 +178,7 @@
       APP.packageSizes = b.packageSizes || [];
       APP.paymentMethods = b.paymentMethods || [];
       APP.insurancePricing = b.insurancePricing || APP.insurancePricing;
+      APP.feeConfig = b.feeConfig || APP.feeConfig;
       APP.packages = b.packages || [];
       APP.errands = b.errands || [];
       APP.senders = b.senders || [];
@@ -571,12 +573,13 @@
   function quote(cfg) {
     var sizeBase = SIZE_BASE[cfg.size] || 250;
     var base = Math.round((sizeBase + 180) / 10) * 10;
-    var holding = 30;
+    var feeCfg = APP.feeConfig || { holding_fee_kes: 30, platform_fee_kes: 80 };
+    var holding = Number(feeCfg.holding_fee_kes) || 0;
     var ip = APP.insurancePricing || { mode: 'percentage', percent: 1.5, fixed: 30, minimum: 30 };
     var insurance = ip.mode === 'fixed'
       ? Math.max(0, Math.round(Number(ip.fixed) || 0))
       : Math.max(Number(ip.minimum) || 0, Math.round(((cfg.value || 0) * (Number(ip.percent) || 0)) / 100));
-    var platform = 80;
+    var platform = Number(feeCfg.platform_fee_kes) || 0;
     var total = Math.ceil((base + holding + insurance + platform) / 10) * 10;
     return { base: base, holding: holding, insurance: insurance, platform: platform, total: total };
   }
@@ -8395,6 +8398,40 @@ return '<div class="mz-mobile-card">' +
     load();
   }
 
+  function renderAdminFeeSettings(card, data) {
+    if (!card) return;
+    var cfg = data.fee_config || {};
+    var input = function (label, key, value, hint) {
+      return '<label class="mz-field"><span class="mz-label">' + label + '</span>' +
+        '<input class="mz-input" type="number" min="0" step="1" data-fee-field="' + key + '" value="' + esc(value || 0) + '">' +
+        (hint ? '<span class="mz-hint">' + hint + '</span>' : '') + '</label>';
+    };
+    card.innerHTML = '<div class="mz-card__title">Platform fees</div>' +
+      '<p class="mz-hint">These fixed amounts are used in every new quote unless a workspace rate card overrides them.</p>' +
+      '<div class="mz-form-grid">' +
+        input('Holding fee (KES)', 'holding_fee_kes', cfg.holding_fee_kes, 'Storage/handling component per parcel.') +
+        input('Platform fee (KES)', 'platform_fee_kes', cfg.platform_fee_kes, 'Mzigo platform charge per parcel.') +
+      '</div>' +
+      '<div class="mz-row" style="justify-content:flex-start;margin-top:8px;">' +
+        '<button class="mz-btn mz-btn--sm" type="button" data-fee-save>Save platform fees</button>' +
+      '</div>';
+    card.querySelector('[data-fee-save]').addEventListener('click', function (ev) {
+      ev.currentTarget.disabled = true;
+      api('admin.php', { method: 'POST', body: {
+        action: 'save_fee_config',
+        holding_fee_kes: Number(card.querySelector('[data-fee-field="holding_fee_kes"]').value || 0),
+        platform_fee_kes: Number(card.querySelector('[data-fee-field="platform_fee_kes"]').value || 0)
+      } }).then(function (res) {
+        toast('Platform fees saved.');
+        if (res.fee_config) {
+          APP.feeConfig = res.fee_config;
+          EVENTS.emit('fees:updated', res.fee_config);
+        }
+        loadAdmin();
+      }).catch(function (err) { toast(err.message, 'error'); ev.currentTarget.disabled = false; });
+    });
+  }
+
   function renderAdminPayoutSettings(card, data) {
     if (!card) return;
     var cfg = data.payout_config || {};
@@ -9643,6 +9680,7 @@ return '<div class="mz-mobile-card">' +
           '</section>' +
           '<section class="mz-admin-section" data-admin-section="settings" hidden>' +
             adminSectionHead('Settings', 'Payouts, runner areas/KYC, pricing and platform configuration.') +
+            '<div class="mz-saas-card" data-admin-fee-settings style="margin-bottom:16px;"></div>' +
             '<div class="mz-saas-card" data-admin-payout-settings style="margin-bottom:16px;"></div>' +
             '<div class="mz-saas-card" data-admin-runner-config style="margin-bottom:16px;"></div>' +
             '<div class="mz-saas-card" data-admin-claim-rails style="margin-bottom:16px;"></div>' +
@@ -9748,6 +9786,7 @@ return '<div class="mz-mobile-card">' +
     initAdminKyc(host);
     initAdminInsurance(host);
     initAdminRunnerJobs(host);
+    renderAdminFeeSettings(host.querySelector('[data-admin-fee-settings]'), data);
     renderAdminPayoutSettings(host.querySelector('[data-admin-payout-settings]'), data);
     renderAdminRunnerConfig(host.querySelector('[data-admin-runner-config]'), data);
     bindAdminActions(host);
