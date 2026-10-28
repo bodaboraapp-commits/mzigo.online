@@ -7044,6 +7044,7 @@ return '<div class="mz-mobile-card">' +
         '<td style="white-space:nowrap;"><button type="button" class="mz-link" data-point-edit="' + p.id + '">Edit</button> · ' +
           '<button type="button" class="mz-link" data-point-regenerate="' + p.id + '">New token</button> · ' +
           '<button type="button" class="mz-link" data-point-toggle="' + p.id + '">' + (Number(p.is_active) ? 'Disable' : 'Enable') + '</button> · ' +
+          '<button type="button" class="mz-link" data-point-manual="' + p.id + '">Manual: ' + (Number(p.manual_entry_enabled) === 1 ? 'On' : 'Off') + '</button> · ' +
           '<button type="button" class="mz-link" data-point-delete="' + p.id + '">Delete</button></td></tr>';
     }).join('');
     card.innerHTML = tokenBanner +
@@ -7063,6 +7064,7 @@ return '<div class="mz-mobile-card">' +
         '<label class="mz-field"><span class="mz-label">Point type</span><select class="mz-input" name="point_type">' +
           ['dropoff','handover','arrival','collection','multi'].map(function (t) { return '<option value="' + t + '"' + (t === 'multi' ? ' selected' : '') + '>' + t + '</option>'; }).join('') + '</select></label></div>' +
         '<label class="mz-field"><span class="mz-label">Location</span><input class="mz-input" name="location" placeholder="Chania office, Nairobi"></label>' +
+        '<label class="mz-check"><input type="checkbox" name="manual_entry_enabled" checked> Allow manual tracking entry on the scanner</label>' +
         '<button class="mz-btn" type="submit">Create point & generate token</button></form>';
     var dismiss = card.querySelector('[data-dismiss-point-token]');
     if (dismiss) dismiss.addEventListener('click', function () { pendingPointToken = ''; loadAdmin(); });
@@ -7077,6 +7079,10 @@ return '<div class="mz-mobile-card">' +
       api('admin.php', { method: 'POST', body: { action: 'toggle_partner_point', point_id: Number(btn.getAttribute('data-point-toggle')) } })
         .then(function (res) { toast(res.message || 'Point updated.'); loadAdmin(); }).catch(function (err) { toast(err.message, 'error'); });
     }); });
+    card.querySelectorAll('[data-point-manual]').forEach(function (btn) { btn.addEventListener('click', function () {
+      api('admin.php', { method: 'POST', body: { action: 'toggle_point_manual_entry', point_id: Number(btn.getAttribute('data-point-manual')) } })
+        .then(function (res) { toast(res.message || 'Manual entry updated.'); loadAdmin(); }).catch(function (err) { toast(err.message, 'error'); });
+    }); });
     card.querySelectorAll('[data-point-delete]').forEach(function (btn) { btn.addEventListener('click', function () {
       if (!window.confirm('Delete this scan point? Its token will stop working.')) return;
       api('admin.php', { method: 'POST', body: { action: 'delete_partner_point', point_id: Number(btn.getAttribute('data-point-delete')) } })
@@ -7089,7 +7095,8 @@ return '<div class="mz-mobile-card">' +
       api('admin.php', { method: 'POST', body: {
         action: 'create_partner_point', name: formValue(create, 'name'), code: formValue(create, 'code'),
         tenant_id: formValue(create, 'tenant_id'), partner_slug: formValue(create, 'partner_slug'),
-        point_type: formValue(create, 'point_type'), location: formValue(create, 'location')
+        point_type: formValue(create, 'point_type'), location: formValue(create, 'location'),
+        manual_entry_enabled: create.querySelector('[name="manual_entry_enabled"]').checked ? 1 : 0
       } }).then(function (res) { pendingPointToken = res.point_token || ''; toast(res.message || 'Point created.'); loadAdmin(); })
         .catch(function (err) { toast(err.message, 'error'); btn.disabled = false; });
     });
@@ -7106,10 +7113,12 @@ return '<div class="mz-mobile-card">' +
         ['dropoff','handover','arrival','collection','multi'].map(function (t) { return '<option value="' + t + '"' + (t === point.point_type ? ' selected' : '') + '>' + t + '</option>'; }).join('') + '</select></label></div>' +
         '<div class="mz-form-2col"><label class="mz-field"><span class="mz-label">Workspace</span><select class="mz-input" name="tenant_id"><option value="">All workspaces</option>' +
           pointTenants.map(function (t) { return '<option value="' + t.id + '"' + (Number(point.tenant_id) === Number(t.id) ? ' selected' : '') + '>' + esc(t.name) + '</option>'; }).join('') + '</select></label>' +
-        '<label class="mz-field"><span class="mz-label">Location</span><input class="mz-input" name="location" value="' + esc(point.location || '') + '"></label></div>',
+        '<label class="mz-field"><span class="mz-label">Location</span><input class="mz-input" name="location" value="' + esc(point.location || '') + '"></label></div>' +
+        '<label class="mz-check"><input type="checkbox" name="manual_entry_enabled"' + (Number(point.manual_entry_enabled) === 1 ? ' checked' : '') + '> Allow manual tracking entry on the scanner</label>',
       onSubmit: function (form) {
         return api('admin.php', { method: 'POST', body: { action: 'update_partner_point', point_id: point.id,
-          tenant_id: formValue(form, 'tenant_id'), name: formValue(form, 'name'), point_type: formValue(form, 'point_type'), location: formValue(form, 'location') } })
+          tenant_id: formValue(form, 'tenant_id'), name: formValue(form, 'name'), point_type: formValue(form, 'point_type'), location: formValue(form, 'location'),
+          manual_entry_enabled: form.querySelector('[name="manual_entry_enabled"]').checked ? 1 : 0 } })
           .then(function (res) { toast(res.message || 'Point updated.'); loadAdmin(); });
       }
     });
