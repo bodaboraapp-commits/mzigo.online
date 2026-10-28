@@ -559,6 +559,18 @@ function notify_customer_payment(array $parcel, string $reference): array
         'tracking' => $tracking, 'amount' => (int) ($parcel['fee_total'] ?? 0),
         'reference' => $reference, 'collect_code' => (string) ($parcel['collect_code'] ?? ''),
     ]);
+    $creatorBody = implode("\n", [
+        'Hi ' . ($parcel['sender_name'] ?? 'there') . ',',
+        'Payment received for order ' . $tracking . '.',
+        'Amount: KES ' . (int) ($parcel['fee_total'] ?? 0),
+        'Receipt: ' . $reference,
+        'The customer/receiver has paid the delivery fee.',
+    ]);
+    $receiver = notification_customer_for((string) ($parcel['receiver_phone'] ?? ''), (string) ($parcel['receiver_name'] ?? 'Customer'));
+    notify_order_creator($parcel, 'payment_receipt', 'Payment received for ' . $tracking, $creatorBody, [
+        'tracking' => $tracking, 'amount' => (int) ($parcel['fee_total'] ?? 0),
+        'reference' => $reference, 'collect_code' => (string) ($parcel['collect_code'] ?? ''),
+    ], (int) ($receiver['user']['id'] ?? 0));
     try { wa_notify_parcel_event('payment_received', $parcel); } catch (Throwable $e) { error_log('WhatsApp payment template failed: ' . $e->getMessage()); }
     return $result;
 }
