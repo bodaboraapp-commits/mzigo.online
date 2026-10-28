@@ -255,6 +255,31 @@ function notification_send(string $channel, array $user, string $subject, string
         $status = 'skipped';
         $error = 'Email notifications are disabled in the customer preferences.';
     } elseif ($channel === 'email') {
+        $simpleTemplates = ['payment_receipt', 'parcel_created', 'parcel_created_new_customer',
+            'parcel_status', 'parcel_ready', 'parcel_cancelled', 'parcel_returned'];
+        if (in_array($template, $simpleTemplates, true)) {
+            // These transactional alerts use the same straightforward shell as
+            // OTP mail, which is the path confirmed to reach customer inboxes.
+            $html = email_shell($subject, $subject,
+                '<p style="font-size:15px;line-height:1.65;color:#26331a;">' .
+                nl2br(htmlspecialchars($body, ENT_QUOTES, 'UTF-8')) . '</p>');
+            $mail = mzigo_mail_send($recipient, $subject, $body, $html);
+            $provider = (string) $mail['provider'];
+            $status = $mail['sent'] ? 'sent' : (($mail['skipped'] ?? false) ? 'skipped' : 'failed');
+            $error = $mail['error'];
+            $stmt = db()->prepare(
+                'INSERT INTO notifications (channel, recipient_user_id, recipient, subject, body, template,
+                  related_type, related_id, status, provider, error, created_at, sent_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())'
+            );
+            $stmt->execute([
+                $channel, (int) $user['id'], $recipient !== '' ? $recipient : null, $subject, $body, $template,
+                $relatedType !== null ? $relatedType : 'parcel',
+                $relatedId !== null ? $relatedId : (string) ($parcel['id'] ?? ''),
+                $status, $provider, $error,
+            ]);
+            return ['status' => $status, 'provider' => $provider, 'error' => $error];
+        }
         $override = email_template_override($template);
         $overrideHtml = null;
         if ($override) {
