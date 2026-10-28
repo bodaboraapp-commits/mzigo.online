@@ -1897,3 +1897,9 @@ header .mz-tollfree { display: none; }
 
 /* Prevent the bundled hero from flashing before CMS branding resolves. */
 img[data-mz-hero-placeholder] { opacity: 0; }
+
+.mz-parcel-photos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; max-width: 520px; margin: 0 auto 18px; }
+.mz-parcel-photos figure { margin: 0; border: 1px solid var(--mz-border); border-radius: 12px; overflow: hidden; background: #fff; }
+.mz-parcel-photos img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+.mz-parcel-photos figcaption { padding: 6px 8px; font-size: 11px; font-weight: 700; color: var(--mz-muted-fg); text-align: center; }
+@media (max-width: 420px) { .mz-parcel-photos { grid-template-columns: 1fr; } }

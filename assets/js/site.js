@@ -2963,6 +2963,14 @@ return '<div class="mz-mobile-card">' +
           : 'Your parcel has a Locker ID and QR label. Drop it off at the courier office to start tracking.') + '</p>' +
         '<div class="mz-qr">' + qrSVG(qrPayload) + '</div>' +
         '<div style="font-size:11px;color:var(--mz-muted-fg);margin:8px 0 18px;">Scan to open the tracking page</div>' +
+        (function () {
+          var photos = item.photos || {};
+          if (!photos.product && !photos.package) return '';
+          return '<div class="mz-parcel-photos">' +
+            (photos.product ? '<figure><img loading="lazy" src="' + esc(photos.product) + '" alt="Product photo"><figcaption>Product</figcaption></figure>' : '') +
+            (photos.package ? '<figure><img loading="lazy" src="' + esc(photos.package) + '" alt="Package photo"><figcaption>Package</figcaption></figure>' : '') +
+          '</div>';
+        })() +
         '<div style="text-align:left;max-width:520px;margin:0 auto;">' +
           '<dl style="margin:0;">' + rows +
             '<div class="mz-kv"><dt>Courier</dt><dd>' + esc(item.carrier || 'Mzigo.online') + '</dd></div>' +
@@ -3120,6 +3128,8 @@ return '<div class="mz-mobile-card">' +
       size: step3.querySelector('[data-mz-size]'),
       instructions: step3.querySelector('[data-mz-instructions]'),
       payment: step3.querySelector('[data-mz-payment]'),
+      productPhoto: step3.querySelector('[data-mz-product-photo]'),
+      packagePhoto: step3.querySelector('[data-mz-package-photo]'),
       estimate: step3.querySelector('[data-mz-estimate]')
     };
     function refreshEstimate() {
@@ -3186,6 +3196,31 @@ return '<div class="mz-mobile-card">' +
     var edit3 = step3.querySelector('[data-mz-edit]');
     if (edit3) edit3.addEventListener('click', function () { go(1); });
 
+    function uploadParcelPhoto(parcelId, kind, file) {
+      var fd = new FormData();
+      fd.append('parcel_id', parcelId);
+      fd.append('kind', kind);
+      fd.append('file', file);
+      return fetch('/api/parcel-photo-upload.php', {
+        method: 'POST', credentials: 'same-origin',
+        headers: APP.csrf ? { 'X-CSRF-Token': APP.csrf } : {},
+        body: fd
+      }).then(function (res) {
+        return res.json().catch(function () { return { ok: false }; }).then(function (data) {
+          if (!res.ok || data.ok === false) {
+            throw new Error((data && data.error && data.error.message) || 'Photo upload failed.');
+          }
+          return data;
+        });
+      });
+    }
+    function validatePhoto(file, label) {
+      if (!file) return '';
+      if (file.size > 5 * 1024 * 1024) return label + ' must be 5MB or smaller.';
+      if (!/^image\/(jpeg|png|webp)$/i.test(file.type || '')) return label + ' must be a JPG, PNG or WebP photo.';
+      return '';
+    }
+
     var submit = step3.querySelector('[data-mz-submit]');
     if (submit) submit.addEventListener('click', function () {
       var description = (s3.description && s3.description.value || '').trim();
@@ -3196,6 +3231,10 @@ return '<div class="mz-mobile-card">' +
       if (!(value > 0)) { toast('Declare the parcel value in KES.', 'error'); s3.value && s3.value.focus(); return; }
       if (!size) { toast('Select the package size.', 'error'); s3.size && s3.size.focus(); return; }
       if (!payment) { toast('Select the preferred payment method.', 'error'); s3.payment && s3.payment.focus(); return; }
+      var productFile = s3.productPhoto && s3.productPhoto.files ? s3.productPhoto.files[0] : null;
+      var packageFile = s3.packagePhoto && s3.packagePhoto.files ? s3.packagePhoto.files[0] : null;
+      var photoError = validatePhoto(productFile, 'Product photo') || validatePhoto(packageFile, 'Package photo');
+      if (photoError) { toast(photoError, 'error'); return; }
       var partner = APP.partners.filter(function (p) { return p.name === sendState.carrier; })[0];
       var payload = {
         carrier_slug: partner ? partner.slug : '',
@@ -3220,7 +3259,24 @@ return '<div class="mz-mobile-card">' +
         stepper.innerHTML = '';
         var sub = $('[data-mz-wizard-sub]');
         if (sub) sub.textContent = 'Registered';
-        toast('Parcel ' + parcel.tracking + ' saved to MySQL.');
+        var pendingUploads = [];
+        if (productFile) pendingUploads.push(uploadParcelPhoto(parcel.id, 'product', productFile));
+        if (packageFile) pendingUploads.push(uploadParcelPhoto(parcel.id, 'package', packageFile));
+        if (pendingUploads.length) {
+          toast('Order saved. Uploading photos…', 'info');
+          Promise.all(pendingUploads).then(function (results) {
+            parcel.photos = parcel.photos || {};
+            results.forEach(function (result) {
+              if (result.photos) parcel.photos = Object.assign({}, parcel.photos, result.photos);
+            });
+            renderReceipt(mount, parcel, 'parcel');
+            toast('Order photos uploaded.');
+          }).catch(function (err) {
+            toast('Order saved, but photo upload failed: ' + err.message, 'error');
+          });
+        } else {
+          toast('Parcel ' + parcel.tracking + ' saved to MySQL.');
+        }
       }).catch(function (err) {
         if (err.code === 'plan_limit') showUpgradeNotice(err);
         toast(err.message, 'error');
