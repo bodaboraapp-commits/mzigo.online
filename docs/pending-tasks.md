@@ -2,7 +2,7 @@
 
 **Updated:** 28 October 2026  
 **Scope:** remaining product engineering, integrations, launch hardening and decisions.  
-**Environment:** local/demo at `http://localhost:8090`, live MariaDB, SMTP email active.
+**Environment:** local/demo at `http://localhost:8090`, live MariaDB, SMTP email configured; live inbox delivery still unconfirmed.
 
 > **Canonical V1 register:** role-by-role production gaps are now in `docs/ENGINEERING_V1_READINESS.md`. Open devlist items were migrated there. This file remains a historical operational list.
 

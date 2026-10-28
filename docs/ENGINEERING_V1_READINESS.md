@@ -30,10 +30,10 @@ The current app cannot complete steps 3–4 without demo mode, and cannot sign i
 |---|---|
 | Public | Send wizard, route/carrier quotes, tracking, labels/QR, contact, blog/help/location pages, referral page |
 | Merchant | Signup/login, password reset, 2FA, email verification, workspace, team invites, parcels/orders, labels, CSV, claims/evidence/threads, billing documents, API keys, webhooks, branding, rate cards, KYC upload |
-| Customer | Phone-code sign-in (demo), parcel portal, demo payment, collection code, claims with OTP, notification inbox, preferences, CSAT |
+| Customer | Email OTP sign-in, parcel portal, demo payment, collection code, claims with OTP, notification inbox, preferences, CSAT |
 | Runner | Onboarding, KYC, availability, job feed/filtering, accept/pickup/deliver, proof photo + OTP, cancel, ratings, incentives, referral, earnings, payout request (demo/live code path) |
-| Partner | Scanner PWA, scan-point tokens, intake/handover/arrival/collection, idempotent scan ingestion, admin scan-point CRUD |
-| Admin | Customer overview, analytics, workspaces, invoices, transactions, claims, runner jobs, KYC, insurance config, messages, communications, sessions, users, scan points, coupons, CMS/SEO, audit |
+| Partner | Scanner PWA with offline queue, token auth, intake/handover/arrival/collection, idempotent ingestion, admin point/manual-entry/action-wording controls |
+| Admin | Customer overview, analytics, workspaces, invoices, transactions, claims, runner jobs, KYC, insurance pricing, platform fees, messages, communications, sessions, users, scan points/action wording, coupons, CMS/SEO, audit |
 | Claims | Eligibility rules, evidence, dual approval, 48h hold, customer reports, blacklist, recovery rails |
 | Security | CSRF, rate limits, session revocation, 2FA available, upload scanning seam, audit log, security suite |
 | Infra | Migrations, Docker/Apache/nginx deployment docs, health endpoint, cron jobs |
@@ -274,7 +274,7 @@ These were open in `docs/BACKLOG.md` / `docs/pending-tasks.md` and are now track
 | Platform admin | Internal only | Broad access, no enforced 2FA, demo data must be removed. |
 | Claims/insurance | Claims demo/manual | Real insurer/claim payout integration not contracted. |
 
-**Overall V1:** No-Go until AUTH-01, PAY-01, MSG-01, PRD-01..09 and the insurance/commercial decision are resolved. A closed internal pilot is possible with demo mode and manual operations, but not a public production launch.
+**Overall V1:** No-Go until AUTH-01, PAY-01, MSG-01, MAIL-01, PRD-01..11 and the insurance/commercial decision are resolved. A closed internal pilot is possible with demo mode and manual operations, but not a public production launch.
 
 ---
 

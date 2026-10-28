@@ -1,7 +1,7 @@
 # Pending tasks & development backlog
 
 Snapshot: 2026-10-28  
-Environment: local/demo (`http://localhost:8090`) with live MariaDB and the SMTP email channel active.
+Environment: local/demo (`http://localhost:8090`) with live MariaDB and the SMTP email channel configured, with live inbox delivery still unconfirmed.
 
 There are **no queued Team tasks, scheduled reminders or active goals**. The only background job is the Apache preview server.
 

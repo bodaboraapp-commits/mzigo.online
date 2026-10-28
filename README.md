@@ -12,6 +12,12 @@ front-end (parcel registration, QR labels, tracking).
 > remove demo workspaces before exposing this to real customers â€” see
 > `docs/PRODUCTION.md`.
 
+## Build status
+
+The MVP workflow (send -> scan -> notify -> pay -> collect) runs in demo/manual mode. Public production launch is still gated by live M-Pesa settlement, reliable email/SMS delivery, production migrations and launch hardening.
+
+See `docs/MVP_STATUS.md` for the capability matrix, verification checklist and pending work, and `docs/ENGINEERING_V1_READINESS.md` for the canonical V1 register.
+
 ---
 
 ## Demo accounts
@@ -39,11 +45,12 @@ the workspace) â€” the M-Pesa integration seam is documented in
 | **Freelancer** | **phone number + system-generated 4-digit PIN** | `/freelancer` account: assigned jobs, earnings, PIN reset |
 | **Customer** | **phone number + system-generated 4-digit code** | `/customer`: incoming parcels, pay-at-collection, collection code |
 
-Freelancer sign-up and sign-in share one flow: enter a phone number, the system
-creates the freelancer account (if new) and issues a 4-digit PIN, then verify the
-PIN. Customers enter the phone number the seller used as the delivery phone, then
-verify a 4-digit code. In this demo both codes are always **1234**; production
-generates random codes and delivers them by SMS (see `docs/PRODUCTION.md`).
+Freelancer sign-up and sign-in share one flow: enter a phone number, then verify
+the one-time PIN/code. Customers enter the phone number the seller used as the
+delivery phone, then verify the one-time code. Customer and freelancer login now
+uses the **email OTP** path by default; SMS login is hidden until live delivery is
+verified. Seeded demo accounts use the documented demo PIN/code. Production codes
+must be delivered through a verified channel.
 Freelancers and customers are redirected away from merchant/admin pages and
 cannot call merchant APIs. Customers see only parcels addressed to their phone,
 and the collection code is revealed only after the delivery fee is paid.
@@ -115,6 +122,7 @@ and the collection code is revealed only after the delivery fee is paid.
 | `/admin` | Platform console (platform admin only) |
 | `/freelancer` | Freelancer dashboard: account, PIN reset, assigned jobs |
 | `/customer` | Customer portal: incoming parcels, pay at collection, collection code |
+| `/scan` | Partner scanner PWA: task selection, QR scanning, offline queue |
 | `/send-mzigo`, `/send-errand` | 3-step parcel / errand wizards |
 | `/track-mzigo` | Public tracking (tracking number, Locker ID, errand ref) |
 | `/partners` | Courier catalog with route filters |
