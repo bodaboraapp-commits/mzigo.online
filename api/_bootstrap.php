@@ -778,6 +778,7 @@ function parcel_api(array $row): array
         'csat_rating' => isset($row['csat_rating']) && $row['csat_rating'] !== null ? (int) $row['csat_rating'] : null,
         'csat_comment' => $row['csat_comment'] ?? null,
         'scans'         => scans_for('parcel', (string) $row['id']),
+        'photos'        => parcel_photo_urls((string) $row['id']),
     ];
 }
 
@@ -912,3 +913,5 @@ function catalog(): array
         'paymentMethods' => MZ_PAYMENT_METHODS,
     ];
 }
+
+require_once __DIR__ . '/_parcel_photos.php';
