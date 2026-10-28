@@ -1033,7 +1033,7 @@ switch ($action) {
             if ($tenantCheck->fetchColumn() === false) { fail_error('invalid_workspace', 'Choose a valid workspace.', 422); }
         }
         $token = admin_point_token();
-        $manualEntry = !empty($data['manual_entry_enabled']) ? 1 : 0;
+        $manualEntry = !isset($data['manual_entry_enabled']) || !empty($data['manual_entry_enabled']) ? 1 : 0;
         try {
             $pdo->prepare('INSERT INTO partner_points (tenant_id, partner_slug, name, code, point_type, location, access_token_prefix, access_token_hash, is_active, manual_entry_enabled)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?)')
@@ -1063,7 +1063,7 @@ switch ($action) {
             $tenantCheck->execute([$workspaceId]);
             if ($tenantCheck->fetchColumn() === false) { fail_error('invalid_workspace', 'Choose a valid workspace.', 422); }
         }
-        $manualEntry = !empty($data['manual_entry_enabled']) ? 1 : 0;
+        $manualEntry = !isset($data['manual_entry_enabled']) || !empty($data['manual_entry_enabled']) ? 1 : 0;
         $stmt = $pdo->prepare('UPDATE partner_points SET tenant_id = ?, name = ?, point_type = ?, location = ?, manual_entry_enabled = ? WHERE id = ?');
         $stmt->execute([$workspaceId, $name, $pointType, $location !== '' ? $location : null, $manualEntry, $pointId]);
         audit('admin.point_updated', 'partner_point', (string) $pointId, ['name' => $name]);
