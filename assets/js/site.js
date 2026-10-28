@@ -3206,8 +3206,13 @@ return '<div class="mz-mobile-card">' +
         headers: APP.csrf ? { 'X-CSRF-Token': APP.csrf } : {},
         body: fd
       }).then(function (res) {
-        return res.json().catch(function () { return { ok: false }; }).then(function (data) {
-          if (!res.ok || data.ok === false) {
+        return res.text().then(function (raw) {
+          var data = null;
+          try { data = JSON.parse(raw); } catch (e) {
+            var start = raw.indexOf('{');
+            if (start >= 0) { try { data = JSON.parse(raw.slice(start)); } catch (e2) { data = null; } }
+          }
+          if (!res.ok || !data || data.ok === false) {
             throw new Error((data && data.error && data.error.message) || 'Photo upload failed.');
           }
           return data;

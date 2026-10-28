@@ -224,9 +224,10 @@ function admin_claim_blacklist(): array
 /** Read-only report of parcels not associated with a workspace. */
 function admin_unassigned_parcels(): array
 {
-    $rows = db()->query('SELECT id, tracking, locker, carrier, from_city, to_city, sender_name, sender_phone,
-            receiver_name, receiver_phone, size, value_kes, fee_total, status, payment_status, registered_at
-        FROM parcels WHERE tenant_id IS NULL ORDER BY registered_at DESC LIMIT 100')->fetchAll();
+    $rows = db()->query('SELECT p.id, p.tracking, p.locker, p.carrier, p.from_city, p.to_city, p.sender_name, p.sender_phone,
+            p.receiver_name, p.receiver_phone, p.size, p.value_kes, p.fee_total, p.status, p.payment_status, p.registered_at,
+            (SELECT COUNT(*) FROM parcel_photos pp WHERE pp.parcel_id = p.id) AS photo_count
+        FROM parcels p WHERE p.tenant_id IS NULL ORDER BY p.registered_at DESC LIMIT 100')->fetchAll();
     foreach ($rows as &$row) {
         $row['insurance_ref'] = insurance_reference_for_parcel($row);
         $row['public_url'] = '/track-mzigo?num=' . rawurlencode((string) $row['tracking']);
