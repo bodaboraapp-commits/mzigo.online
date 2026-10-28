@@ -8,8 +8,11 @@ Migration `039_multi_role_access.sql` adds `user_roles`, storing secondary acces
 
 Login options on `/login`:
 
-- **Phone** tab: choose **Customer** or **Freelancer**, enter the phone number, then verify the code/PIN.
-- Existing Customer and Freelancer tabs remain available.
+- **Business**: merchant email/phone + password (unchanged)
+- **Customer** tab: enter the phone number, then verify the email OTP
+- **Freelancer** tab: enter the phone number, then verify the email OTP
+
+There is no separate Phone tab. The selected Business/Customer/Freelancer tab determines the session role.
 
 The server:
 
@@ -51,7 +54,7 @@ A merchant phone can sign in as a freelancer. A runner profile is created/used f
 ## Deploy
 
 1. Deploy the latest Git commit in cPanel.
-2. Run the web updater to apply migration `039_multi_role_access.sql`:
+2. Deploy the latest DB updater and run the web updater to apply migration `039_multi_role_access.sql`:
 
 ```text
 https://mzigo.online/api/db-update.php

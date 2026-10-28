@@ -15,6 +15,7 @@ This page lets a platform admin apply only migrations that are not yet recorded 
   - pending migration files
 - **Apply pending migrations** — runs only pending SQL files and records each version/checksum
 - **Download SQL** — downloads the pending migration SQL for manual import through phpMyAdmin
+- Strips hardcoded `USE <database>;` statements before applying/downloading, so the same migration works against the hosting database name (for example `tokeqvlx_mzigo_online`) instead of a local `mzigo_online` database
 - Requires a logged-in platform admin session
 - POST is protected by CSRF
 
@@ -50,6 +51,16 @@ Then log in as `platform_admin` and open:
 ```text
 https://mzigo.online/api/db-update.php
 ```
+
+Pending MVP migrations:
+
+```text
+039_multi_role_access.sql   -> user_roles
+040_scan_manual_entry.sql   -> partner_points.manual_entry_enabled
+041_parcel_photos.sql       -> parcel_photos
+```
+
+Verify all three before testing multi-role login, scan manual entry or order photos.
 
 ## What is not changed
 

@@ -1,16 +1,16 @@
 # Email OTP login and admin email management
 
-**Status:** customer and freelancer email OTP implemented 27 October 2026. Admin add/verify email added 27 October 2026.
+**Status:** customer and freelancer email OTP implemented 27 October 2026. SMS login is temporarily hidden; email OTP is the active login channel (28 October 2026).
 
 ## Login channels
 
 On `/login`:
 
-- **Freelancer** tab — choose **SMS** or **Email**
-- **Customer** tab — choose **SMS** or **Email**
-- **Phone** tab — choose Customer/Freelancer and the delivery channel
+- **Business** — email/phone + password
+- **Freelancer** — phone number + email OTP, with SMS available only when re-enabled
+- **Customer** — phone number + email OTP, with SMS available only when re-enabled
 
-The login identifier remains the phone number. The selected channel controls where the 4+ digit code is sent.
+There is no separate Phone tab. The login identifier remains the phone number; the channel controls where the one-time code is sent. The SMS option is currently hidden from the login UI until live SMS delivery is verified.
 
 ### Freelancer email
 
@@ -66,7 +66,9 @@ Email OTP itself does not require the verified badge: receiving the code at the 
 
 A real email provider must be configured in **Admin → Communications → Email**.
 
-If the channel is still `log`, email OTP returns a clear delivery error instead of pretending to send. Production currently needs SMTP/SendGrid/Mailgun credentials.
+If the channel is still `log`, email OTP returns a clear delivery error instead of pretending to send. Production currently needs a verified SMTP/SendGrid/Mailgun delivery path.
+
+**Known issue (28 Oct 2026):** OTP email reportedly reaches the inbox, but order/payment notification emails accepted by SMTP have not reliably reached Gmail. Verify the cPanel queue and provider deliverability separately from the OTP path; both use `mzigo_mail_send` but different HTML content and recipients.
 
 ## Twilio Verify
 
