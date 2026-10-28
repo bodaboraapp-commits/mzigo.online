@@ -12,7 +12,7 @@
   <link rel="icon" href="/assets/img/favicon-64.png" type="image/png">
   <link rel="apple-touch-icon" href="/assets/img/scan-icon-192.png">
   <link rel="manifest" href="/assets/scan-manifest.webmanifest">
-  <link rel="stylesheet" href="/assets/css/scan.css?v=20261028a">
+  <link rel="stylesheet" href="/assets/css/scan.css?v=20261028b">
 </head>
 <body>
   <header class="scan-head">
@@ -60,13 +60,14 @@
           <label class="scan-label" for="tracking">Tracking number</label>
           <div class="scan-input-row">
             <input id="tracking" class="scan-input scan-mono" placeholder="TRK-XXXXXXXX" autocomplete="off" autocapitalize="characters" required>
-            <button type="button" id="qrBtn" class="scan-btn scan-btn--scan" title="Scan QR code">▣</button>
+            <button type="button" id="qrBtn" class="scan-btn scan-btn--scan" title="Scan QR code" disabled aria-disabled="true">▣</button>
           </div>
         </div>
 
         <div class="scan-field">
           <span class="scan-label">Scan action</span>
           <div id="actionGrid" class="scan-actions"></div>
+          <p class="scan-hint" id="actionHint">Choose a scan action first to enable the scanner.</p>
         </div>
 
         <div id="collectWrap" class="scan-field" hidden>
@@ -100,6 +101,6 @@
     </div>
   </div>
 
-  <script src="/assets/js/scan.js?v=20261028a" defer></script>
+  <script src="/assets/js/scan.js?v=20261028b" defer></script>
 </body>
 </html>

@@ -64,19 +64,34 @@
       var pair = labels[a] || [a, ''];
       return '<button type="button" class="scan-action" data-scan-action="' + esc(a) + '"><strong>' + esc(pair[0]) + '</strong><span>' + esc(pair[1]) + '</span></button>';
     }).join('');
-    selectedAction = actions.length === 1 ? actions[0] : '';
+    selectedAction = '';
     Array.prototype.forEach.call(document.querySelectorAll('[data-scan-action]'), function (btn) {
-      if (btn.getAttribute('data-scan-action') === selectedAction) btn.classList.add('is-selected');
       btn.addEventListener('click', function () {
         selectedAction = btn.getAttribute('data-scan-action');
         Array.prototype.forEach.call(document.querySelectorAll('[data-scan-action]'), function (b) { b.classList.remove('is-selected'); });
         btn.classList.add('is-selected');
         toggleCollection();
+        syncActionState();
       });
     });
     toggleCollection();
+    syncActionState();
     $('#setup').hidden = true;
     $('#app').hidden = false;
+  }
+  function syncActionState() {
+    var enabled = !!selectedAction;
+    var qrBtn = $('#qrBtn');
+    if (qrBtn) {
+      qrBtn.disabled = !enabled;
+      qrBtn.setAttribute('aria-disabled', String(!enabled));
+    }
+    var hint = $('#actionHint');
+    if (hint) {
+      hint.textContent = enabled
+        ? 'Tap the scan button to open the camera. The camera stays open until a valid Mzigo label is detected or you press Cancel.'
+        : 'Choose a scan action first to enable the scanner.';
+    }
   }
   function toggleCollection() {
     $('#collectWrap').hidden = selectedAction !== 'collection';
@@ -152,6 +167,10 @@
   }
   function openQr() {
     if (qrOpening || qrStream) return;
+    if (!selectedAction) {
+      toastError('#scanError', 'Choose a scan action first.');
+      return;
+    }
     if (!('BarcodeDetector' in window) || !navigator.mediaDevices) {
       window.alert('This browser does not support QR scanning. Type the tracking number instead.');
       return;
@@ -172,19 +191,29 @@
       setQrHint('Point the camera at the parcel QR/Locker label.');
       var detector = new window.BarcodeDetector({ formats: ['qr_code', 'code_128', 'code_39'] });
       function tick() {
-        if (!qrStream) return;
+        if (!qrStream || seq !== qrRequestSeq) return;
         detector.detect(video).then(function (codes) {
-          if (codes && codes.length) {
-            var raw = codes[0].rawValue || '';
-            var match = raw.match(/TRK-[A-Z0-9]+/i);
-            $('#tracking').value = (match ? match[0] : raw).toUpperCase();
+          if (!qrStream || seq !== qrRequestSeq) return;
+          var raw = codes && codes.length ? String(codes[0].rawValue || '') : '';
+          var match = raw.match(/(?:TRK|LK|ERD)-[A-Z0-9-]{3,}/i);
+          if (match) {
+            $('#tracking').value = match[0].toUpperCase();
+            if (navigator.vibrate) navigator.vibrate(80);
             closeQr();
+            $('#tracking').focus();
           } else {
+            if (raw !== '') setQrHint('Not a Mzigo label — keep the camera on a valid QR/Locker label.');
             qrRaf = requestAnimationFrame(tick);
           }
-        }).catch(function () { closeQr(); });
+        }).catch(function () {
+          if (!qrStream || seq !== qrRequestSeq) return;
+          setQrHint('Camera scanning… hold the label steady.');
+          setTimeout(function () {
+            if (qrStream && seq === qrRequestSeq) qrRaf = requestAnimationFrame(tick);
+          }, 350);
+        });
       }
-      qrRaf = requestAnimationFrame(tick);
+      tick();
     }).catch(function () {
       closeQr();
       window.alert('Camera permission was denied. Type the tracking number instead.');
