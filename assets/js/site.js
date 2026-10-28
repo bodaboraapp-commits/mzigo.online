@@ -2968,14 +2968,6 @@ return '<div class="mz-mobile-card">' +
           : 'Your parcel has a Locker ID and QR label. Drop it off at the courier office to start tracking.') + '</p>' +
         '<div class="mz-qr">' + qrSVG(qrPayload) + '</div>' +
         '<div style="font-size:11px;color:var(--mz-muted-fg);margin:8px 0 18px;">Scan to open the tracking page</div>' +
-        (function () {
-          var photos = item.photos || {};
-          if (!photos.product && !photos.package) return '';
-          return '<div class="mz-parcel-photos">' +
-            (photos.product ? '<figure><img loading="lazy" src="' + esc(photos.product) + '" alt="Product photo"><figcaption>Product</figcaption></figure>' : '') +
-            (photos.package ? '<figure><img loading="lazy" src="' + esc(photos.package) + '" alt="Package photo"><figcaption>Package</figcaption></figure>' : '') +
-          '</div>';
-        })() +
         '<div style="text-align:left;max-width:520px;margin:0 auto;">' +
           '<dl style="margin:0;">' + rows +
             '<div class="mz-kv"><dt>Courier</dt><dd>' + esc(item.carrier || 'Mzigo.online') + '</dd></div>' +
