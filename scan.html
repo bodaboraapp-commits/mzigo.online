@@ -12,7 +12,7 @@
   <link rel="icon" href="/assets/img/favicon-64.png" type="image/png">
   <link rel="apple-touch-icon" href="/assets/img/scan-icon-192.png">
   <link rel="manifest" href="/assets/scan-manifest.webmanifest">
-  <link rel="stylesheet" href="/assets/css/scan.css?v=20261028b">
+  <link rel="stylesheet" href="/assets/css/scan.css?v=20261028c">
 </head>
 <body>
   <header class="scan-head">
@@ -23,7 +23,7 @@
     <div class="scan-head__right">
       <span id="netState" class="scan-pill scan-pill--ok">Online</span>
       <button type="button" id="installBtn" class="scan-icon-btn" hidden title="Install scanner">↓</button>
-      <button type="button" id="changeToken" class="scan-icon-btn" title="Change point token">⚙</button>
+      <button type="button" id="settingsBtn" class="scan-icon-btn" title="Settings and recent scans">⚙</button>
     </div>
   </header>
 
@@ -57,18 +57,21 @@
 
       <form id="scanForm" class="scan-card scan-form">
         <div class="scan-field">
-          <label class="scan-label" for="tracking">Tracking number</label>
-          <div class="scan-input-row">
-            <input id="tracking" class="scan-input scan-mono" placeholder="TRK-XXXXXXXX" autocomplete="off" autocapitalize="characters" required>
-            <button type="button" id="qrBtn" class="scan-btn scan-btn--scan" title="Scan QR code" disabled aria-disabled="true">▣</button>
-          </div>
-        </div>
-
-        <div class="scan-field">
-          <span class="scan-label">Scan action</span>
+          <span class="scan-label">1. Scan action</span>
           <div id="actionGrid" class="scan-actions"></div>
           <p class="scan-hint" id="actionHint">Choose a scan action first to enable the scanner.</p>
         </div>
+
+        <div class="scan-field">
+          <span class="scan-label">2. Scan parcel label</span>
+          <button type="button" id="qrBtn" class="scan-btn scan-btn--scan scan-btn--large" title="Scan QR code" disabled aria-disabled="true">▣ Scan parcel label</button>
+        </div>
+
+        <div class="scan-field" id="manualEntryWrap">
+          <label class="scan-label" for="tracking">Or enter tracking number</label>
+          <input id="tracking" class="scan-input scan-mono" placeholder="TRK-XXXXXXXX" autocomplete="off" autocapitalize="characters">
+        </div>
+        <div id="scanValue" class="scan-value" hidden></div>
 
         <div id="collectWrap" class="scan-field" hidden>
           <label class="scan-label" for="collectCode">Customer collection code</label>
@@ -77,18 +80,13 @@
         </div>
 
         <div class="scan-field">
-          <label class="scan-label" for="noteInput">Note (optional)</label>
+          <label class="scan-label" for="noteInput">3. Note (optional)</label>
           <input id="noteInput" class="scan-input" placeholder="e.g. package condition, bay number" maxlength="255">
         </div>
 
         <button id="submitScan" class="scan-btn scan-btn--primary scan-btn--large" type="submit">Record scan</button>
         <div id="scanError" class="scan-error" hidden></div>
       </form>
-
-      <div class="scan-card">
-        <div class="scan-row"><div class="scan-card-title">Recent scans on this phone</div><button id="clearRecent" type="button" class="scan-link">Clear</button></div>
-        <div id="recentList" class="scan-recent"><p class="scan-hint">No scans yet on this device.</p></div>
-      </div>
     </section>
   </main>
 
@@ -101,6 +99,15 @@
     </div>
   </div>
 
-  <script src="/assets/js/scan.js?v=20261028b" defer></script>
+  <div id="settingsOverlay" class="scan-qr-overlay" hidden>
+    <div class="scan-settings-box">
+      <div class="scan-row"><strong>Scanner settings</strong><button type="button" id="settingsClose" class="scan-link">Close</button></div>
+      <div class="scan-row" style="margin-top:16px;"><div class="scan-card-title">Recent scans on this phone</div><button id="clearRecent" type="button" class="scan-link">Clear</button></div>
+      <div id="recentList" class="scan-recent"><p class="scan-hint">No scans yet on this device.</p></div>
+      <button type="button" id="changeToken" class="scan-btn scan-btn--outline" style="width:100%;margin-top:16px;">Disconnect point / change token</button>
+    </div>
+  </div>
+
+  <script src="/assets/js/scan.js?v=20261028c" defer></script>
 </body>
 </html>
