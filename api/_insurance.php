@@ -23,6 +23,10 @@ function insurance_config(): array
         'timeout_seconds' => 15,
         'require_policy' => false,
         'terms_url' => '/terms#risk-and-cover',
+        'charge_mode' => 'percentage',
+        'charge_percent' => 1.5,
+        'charge_fixed_kes' => 30,
+        'minimum_charge_kes' => 30,
     ];
     $raw = platform_setting('insurance_config', '');
     if ($raw !== '') {
@@ -44,6 +48,19 @@ function insurance_config_save(array $input): array
     }
     if (isset($input['timeout_seconds'])) $clean['timeout_seconds'] = max(3, min(60, (int) $input['timeout_seconds']));
     if (array_key_exists('require_policy', $input)) $clean['require_policy'] = !empty($input['require_policy']);
+    if (array_key_exists('charge_mode', $input)) {
+        $clean['charge_mode'] = in_array((string) $input['charge_mode'], ['percentage', 'fixed'], true)
+            ? (string) $input['charge_mode'] : 'percentage';
+    }
+    if (array_key_exists('charge_percent', $input)) {
+        $clean['charge_percent'] = max(0.0, min(100.0, (float) $input['charge_percent']));
+    }
+    if (array_key_exists('charge_fixed_kes', $input)) {
+        $clean['charge_fixed_kes'] = max(0, min(1000000, (int) $input['charge_fixed_kes']));
+    }
+    if (array_key_exists('minimum_charge_kes', $input)) {
+        $clean['minimum_charge_kes'] = max(0, min(1000000, (int) $input['minimum_charge_kes']));
+    }
     // Blank secrets keep the existing value so the form can be saved without re-entering credentials.
     if (isset($input['api_key']) && trim((string) $input['api_key']) !== '') $clean['api_key'] = trim((string) $input['api_key']);
     if (isset($input['api_secret']) && trim((string) $input['api_secret']) !== '') $clean['api_secret'] = trim((string) $input['api_secret']);
@@ -69,6 +86,36 @@ function insurance_public_config(?array $config = null): array
         'timeout_seconds' => (int) $config['timeout_seconds'],
         'require_policy' => !empty($config['require_policy']),
         'terms_url' => $config['terms_url'],
+        'charge_mode' => (string) ($config['charge_mode'] ?? 'percentage'),
+        'charge_percent' => (float) ($config['charge_percent'] ?? 1.5),
+        'charge_fixed_kes' => (int) ($config['charge_fixed_kes'] ?? 30),
+        'minimum_charge_kes' => (int) ($config['minimum_charge_kes'] ?? 30),
+    ];
+}
+
+
+
+function insurance_charge_for_value(int $valueKes, ?array $config = null): int
+{
+    $config = $config ?? insurance_config();
+    $mode = (string) ($config['charge_mode'] ?? 'percentage');
+    if ($mode === 'fixed') {
+        return max(0, (int) round((float) ($config['charge_fixed_kes'] ?? 0)));
+    }
+    $percent = max(0.0, min(100.0, (float) ($config['charge_percent'] ?? 1.5)));
+    $minimum = max(0, (int) ($config['minimum_charge_kes'] ?? 0));
+    return max($minimum, (int) round($valueKes * $percent / 100));
+}
+
+function insurance_pricing_public(?array $config = null): array
+{
+    $config = $config ?? insurance_config();
+    return [
+        'mode' => in_array((string) ($config['charge_mode'] ?? 'percentage'), ['percentage', 'fixed'], true)
+            ? (string) $config['charge_mode'] : 'percentage',
+        'percent' => (float) ($config['charge_percent'] ?? 1.5),
+        'fixed' => (int) ($config['charge_fixed_kes'] ?? 30),
+        'minimum' => (int) ($config['minimum_charge_kes'] ?? 30),
     ];
 }
 

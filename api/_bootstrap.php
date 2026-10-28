@@ -689,7 +689,7 @@ function quote_for(string $size, int $valueKes): array
     ];
     $base = (int) (round((($sizeBase[$size] ?? 250) + 180) / 10) * 10);
     $holding = 30;
-    $insurance = max(30, (int) (round(($valueKes * 0.015) / 10) * 10));
+    $insurance = insurance_charge_for_value($valueKes);
     $platform = 80;
     $total = (int) (ceil(($base + $holding + $insurance + $platform) / 10) * 10);
     return ['base' => $base, 'holding' => $holding, 'insurance' => $insurance, 'platform' => $platform, 'total' => $total];
@@ -915,3 +915,5 @@ function catalog(): array
 }
 
 require_once __DIR__ . '/_parcel_photos.php';
+
+require_once __DIR__ . '/_insurance.php';

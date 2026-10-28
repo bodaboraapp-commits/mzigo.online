@@ -43,6 +43,7 @@ json_out([
     'partners'       => $cat['partners'],
     'packageSizes'   => $cat['packageSizes'],
     'paymentMethods' => $cat['paymentMethods'],
+    'insurancePricing' => insurance_pricing_public(),
     'packages'       => parcels_for_scope(),
     'errands'        => errands_for_scope(),
     'senders'        => senders_for_scope(),
