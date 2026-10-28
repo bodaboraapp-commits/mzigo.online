@@ -76,8 +76,22 @@
     });
     toggleCollection();
     syncActionState();
+    syncManualEntry();
     $('#setup').hidden = true;
     $('#app').hidden = false;
+  }
+  function syncManualEntry() {
+    var enabled = !point || point.manual_entry_enabled === undefined
+      ? true
+      : Number(point.manual_entry_enabled) === 1;
+    var wrap = $('#manualEntryWrap');
+    var input = $('#tracking');
+    var value = $('#scanValue');
+    var qr = $('#qrBtn');
+    if (wrap) wrap.hidden = !enabled;
+    if (input) input.required = enabled;
+    if (value) value.hidden = enabled;
+    if (qr) qr.classList.toggle('scan-btn--wide', !enabled);
   }
   function syncActionState() {
     var enabled = !!selectedAction;
@@ -172,7 +186,9 @@
       return;
     }
     if (!('BarcodeDetector' in window) || !navigator.mediaDevices) {
-      window.alert('This browser does not support QR scanning. Type the tracking number instead.');
+      window.alert(point && Number(point.manual_entry_enabled) === 0
+        ? 'This point is scan-only, but this browser does not support QR scanning. Use a supported Android device.'
+        : 'This browser does not support QR scanning. Type the tracking number instead.');
       return;
     }
     qrOpening = true;
@@ -197,10 +213,13 @@
           var raw = codes && codes.length ? String(codes[0].rawValue || '') : '';
           var match = raw.match(/(?:TRK|LK|ERD)-[A-Z0-9-]{3,}/i);
           if (match) {
-            $('#tracking').value = match[0].toUpperCase();
+            var scanned = match[0].toUpperCase();
+            $('#tracking').value = scanned;
+            var scanValue = $('#scanValue');
+            if (scanValue) scanValue.textContent = 'Scanned: ' + scanned;
             if (navigator.vibrate) navigator.vibrate(80);
             closeQr();
-            $('#tracking').focus();
+            if (!$('#manualEntryWrap').hidden) $('#tracking').focus();
           } else {
             if (raw !== '') setQrHint('Not a Mzigo label — keep the camera on a valid QR/Locker label.');
             qrRaf = requestAnimationFrame(tick);
@@ -254,10 +273,16 @@
     $('#scanForm').addEventListener('submit', submitScan);
     $('#qrBtn').addEventListener('click', openQr);
     $('#qrClose').addEventListener('click', closeQr);
+    $('#settingsBtn').addEventListener('click', function () { renderRecent(); $('#settingsOverlay').hidden = false; });
+    $('#settingsClose').addEventListener('click', function () { $('#settingsOverlay').hidden = true; });
+    $('#settingsOverlay').addEventListener('click', function (ev) {
+      if (ev.target === $('#settingsOverlay')) $('#settingsOverlay').hidden = true;
+    });
     $('#clearRecent').addEventListener('click', function () { localStorage.removeItem(RECENT_KEY); renderRecent(); });
     $('#changeToken').addEventListener('click', function () {
       if (!window.confirm('Disconnect this point token from this phone?')) return;
       setToken(''); point = null; pendingKey = '';
+      $('#settingsOverlay').hidden = true;
       $('#app').hidden = true; $('#setup').hidden = false;
       $('#tokenInput').value = '';
       $('#setupError').hidden = true;
