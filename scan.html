@@ -12,7 +12,7 @@
   <link rel="icon" href="/assets/img/favicon-64.png" type="image/png">
   <link rel="apple-touch-icon" href="/assets/img/scan-icon-192.png">
   <link rel="manifest" href="/assets/scan-manifest.webmanifest">
-  <link rel="stylesheet" href="/assets/css/scan.css?v=20261028c">
+  <link rel="stylesheet" href="/assets/css/scan.css?v=20261028d">
 </head>
 <body>
   <header class="scan-head">
@@ -96,6 +96,7 @@
       <div class="scan-row"><strong>Scan parcel QR</strong><button type="button" id="qrClose" class="scan-link">Cancel</button></div>
       <video id="qrPreview" playsinline></video>
       <p class="scan-hint" id="qrHint">Point the camera at the parcel QR/Locker label.</p>
+      <button type="button" id="qrTorch" class="scan-btn scan-btn--outline" style="width:100%;margin-top:10px;" hidden>Turn torch on</button>
     </div>
   </div>
 
@@ -103,11 +104,13 @@
     <div class="scan-settings-box">
       <div class="scan-row"><strong>Scanner settings</strong><button type="button" id="settingsClose" class="scan-link">Close</button></div>
       <div class="scan-row" style="margin-top:16px;"><div class="scan-card-title">Recent scans on this phone</div><button id="clearRecent" type="button" class="scan-link">Clear</button></div>
+      <div id="queueStatus" class="scan-hint"></div>
       <div id="recentList" class="scan-recent"><p class="scan-hint">No scans yet on this device.</p></div>
       <button type="button" id="changeToken" class="scan-btn scan-btn--outline" style="width:100%;margin-top:16px;">Disconnect point / change token</button>
     </div>
   </div>
 
-  <script src="/assets/js/scan.js?v=20261028c" defer></script>
+  <script src="/assets/js/jsQR.min.js?v=20261028d" defer></script>
+  <script src="/assets/js/scan.js?v=20261028d" defer></script>
 </body>
 </html>
