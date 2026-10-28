@@ -162,10 +162,12 @@
         res.tracking + ' · ' + esc(res.status) + (res.idempotent ? ' · already recorded' : '');
       saveRecent({ tracking: res.tracking, action: selectedAction, label: res.label, at: new Date().toLocaleTimeString() });
       $('#tracking').value = '';
+      var scanValue = $('#scanValue');
+      if (scanValue) scanValue.textContent = '';
       $('#collectCode').value = '';
       $('#noteInput').value = '';
       $('#submitScan').disabled = false;
-      $('#tracking').focus();
+      if ($('#manualEntryWrap') && !$('#manualEntryWrap').hidden) $('#tracking').focus();
     }).catch(function (err) {
       toastError('#scanError', err.message);
       $('#submitScan').disabled = false;
