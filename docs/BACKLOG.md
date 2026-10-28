@@ -20,7 +20,7 @@ This file now keeps shipped history only. Open MVP and launch blockers are track
 - Email OTP login, merchant multi-role access, deleted-user restore and production DB updater fix
 - M-Pesa default payment option; customer + creator payment receipts over SMS/email
 
-- Infobip SMS integration for customer codes, runner PINs, claim/delivery OTPs and parcel notifications
+- SMS integrations (Infobip, then Twilio) for parcel notifications and OTP seams; live delivery limits/credentials remain pending
 
 - WhatsApp Phase 1 (FAQ, tracking, handoff, admin inbox) and Phase 2 (approved outbound parcel templates, consent/opt-in, lifecycle hooks)
 
