@@ -307,7 +307,7 @@
             torchOn = !torchOn;
             track.applyConstraints({ advanced: [{ torch: torchOn }] }).then(function () {
               torch.textContent = torchOn ? 'Turn torch off' : 'Turn torch on';
-            }).catch(function () { torcastOn = false; });
+            }).catch(function () { torchOn = false; });
           };
         } else if (torch) {
           torch.hidden = true;
