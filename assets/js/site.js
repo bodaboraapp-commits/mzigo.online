@@ -7053,6 +7053,18 @@ return '<div class="mz-mobile-card">' +
       '<a class="mz-btn mz-btn--outline" href="/scan" target="_blank" rel="noopener">Open scanner</a></div>' +
       '<div class="mz-table-wrap"><table class="mz-table"><thead><tr><th>Point</th><th>Carrier</th><th>Type</th><th>Location / last scan</th><th>Status</th><th></th></tr></thead><tbody>' +
         (rows || '<tr><td colspan="6" class="mz-hint">No scan points yet.</td></tr>') + '</tbody></table></div>' +
+      '<div class="mz-card__title" style="margin:20px 0 4px;">Scanner action wording</div>' +
+      '<p class="mz-hint" style="margin:0 0 10px;">Control the order and text shown on the scanner. The action keys stay fixed because they drive parcel status changes.</p>' +
+      '<form data-scan-actions>' +
+        '<div class="mz-table-wrap"><table class="mz-table"><thead><tr><th style="width:80px;">Order</th><th>App label</th><th>Sub-label</th></tr></thead><tbody>' +
+          (data.scan_actions || []).map(function (a) {
+            return '<tr data-scan-action-row="' + esc(a.key) + '"><td><input class="mz-input" type="number" min="1" max="99" name="order" value="' + esc(a.order) + '" style="width:72px;" aria-label="Order for ' + esc(a.label) + '"></td>' +
+              '<td><input class="mz-input" name="label" maxlength="40" value="' + esc(a.label) + '" aria-label="Label"></td>' +
+              '<td><input class="mz-input" name="description" maxlength="80" value="' + esc(a.description) + '" aria-label="Sub-label"></td></tr>';
+          }).join('') +
+        '</tbody></table></div>' +
+        '<button class="mz-btn mz-btn--outline" type="submit" style="margin-top:10px;">Save action wording</button>' +
+      '</form>' +
       '<div class="mz-card__title" style="margin:20px 0 10px;">Add scan point</div>' +
       '<form class="mz-stack" data-point-create>' +
         '<div class="mz-form-2col"><label class="mz-field"><span class="mz-label">Point name *</span><input class="mz-input" name="name" placeholder="Chania Nairobi office" required></label>' +
@@ -7066,6 +7078,23 @@ return '<div class="mz-mobile-card">' +
         '<label class="mz-field"><span class="mz-label">Location</span><input class="mz-input" name="location" placeholder="Chania office, Nairobi"></label>' +
         '<label class="mz-check"><input type="checkbox" name="manual_entry_enabled" checked> Allow manual tracking entry on the scanner</label>' +
         '<button class="mz-btn" type="submit">Create point & generate token</button></form>';
+    var actionForm = card.querySelector('[data-scan-actions]');
+    if (actionForm) actionForm.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var actions = Array.prototype.map.call(card.querySelectorAll('[data-scan-action-row]'), function (row) {
+        return {
+          key: row.getAttribute('data-scan-action-row'),
+          order: Number(row.querySelector('[name="order"]').value || 0),
+          label: row.querySelector('[name="label"]').value.trim(),
+          description: row.querySelector('[name="description"]').value.trim()
+        };
+      });
+      var btn = actionForm.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      api('admin.php', { method: 'POST', body: { action: 'save_scan_actions', actions: actions } })
+        .then(function (res) { toast(res.message || 'Scan action wording updated.'); loadAdmin(); })
+        .catch(function (err) { toast(err.message, 'error'); btn.disabled = false; });
+    });
     var dismiss = card.querySelector('[data-dismiss-point-token]');
     if (dismiss) dismiss.addEventListener('click', function () { pendingPointToken = ''; loadAdmin(); });
     card.querySelectorAll('[data-point-edit]').forEach(function (btn) { btn.addEventListener('click', function () { openPointEditor(points.filter(function (p) { return String(p.id) === btn.getAttribute('data-point-edit'); })[0], pointTenants); }); });
