@@ -10,6 +10,7 @@
   var qrStream = null;
   var qrRaf = 0;
   var qrOpening = false;
+  var qrRequestSeq = 0;
 
   function $(sel) { return document.querySelector(sel); }
   function esc(value) {
@@ -156,11 +157,13 @@
       return;
     }
     qrOpening = true;
+    var seq = ++qrRequestSeq;
     var btn = $('#qrBtn');
     if (btn) { btn.disabled = true; btn.setAttribute('aria-busy', 'true'); }
     $('#qrOverlay').hidden = false;
     setQrHint('Starting camera…');
     navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }).then(function (stream) {
+      if (seq !== qrRequestSeq) { stream.getTracks().forEach(function (t) { t.stop(); }); return; }
       qrStream = stream;
       var video = $('#qrPreview');
       video.srcObject = stream;
@@ -191,6 +194,7 @@
     });
   }
   function closeQr() {
+    qrRequestSeq++;
     cancelAnimationFrame(qrRaf);
     qrRaf = 0;
     if (qrStream) { qrStream.getTracks().forEach(function (t) { t.stop(); }); qrStream = null; }
