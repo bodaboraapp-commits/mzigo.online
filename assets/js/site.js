@@ -8425,7 +8425,6 @@ return '<div class="mz-mobile-card">' +
         toast('Platform fees saved.');
         if (res.fee_config) {
           APP.feeConfig = res.fee_config;
-          EVENTS.emit('fees:updated', res.fee_config);
         }
         loadAdmin();
       }).catch(function (err) { toast(err.message, 'error'); ev.currentTarget.disabled = false; });
