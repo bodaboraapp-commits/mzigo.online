@@ -55,7 +55,7 @@ function parcel_photo_urls(string $parcelId): array
         $stmt->execute([$parcelId]);
         foreach ($stmt->fetchAll() as $row) {
             $kind = (string) $row['kind'];
-            if (!isset($urls[$kind])) {
+            if (!array_key_exists($kind, $urls)) {
                 continue;
             }
             $urls[$kind] = '/api/parcel-photo.php?parcel_id=' . rawurlencode($parcelId)
