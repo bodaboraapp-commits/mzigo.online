@@ -1,8 +1,10 @@
 # Twilio SMS integration
 
-**Status:** implemented 27 October 2026. The active SMS channel is currently Twilio (`twilio-sms`).
+**Status:** implemented 27 October 2026. Twilio (`twilio-sms`) is the active SMS channel. **28 October 2026 update:** login SMS is hidden; parcel SMS notifications are configured but the trial account hits the **50 daily messages** limit. The 21612 section below is retained as integration history.
 
-## Current production issue: 21612
+## Historical issue: 21612 (US long code → Kenya)
+
+> The current observed failure is the Twilio trial daily-message cap. Other successful SMS rows exist, so this section documents the original sender/route constraint rather than the present blocker.
 
 Current sender:
 
@@ -28,7 +30,7 @@ Twilio's Kenya SMS guidelines state:
 
 So the Twilio Messages API cannot send ordinary SMS to Kenya from the US long code.
 
-## Recommended fix for login OTP: Twilio Verify
+## Login OTP: Twilio Verify (currently hidden in the UI)
 
 Twilio Verify uses Twilio's own generic sender and is designed for OTP delivery. It avoids using the account's long code.
 
@@ -92,10 +94,13 @@ If the Verify Service SID is not configured, the app falls back to the previous 
 
 ## Ordinary SMS notifications
 
-Twilio Verify only covers login OTP. Parcel/job SMS notifications still use the Messages API and the account's sender. Those will continue to fail for Kenya until:
+Twilio Verify only covers login OTP. Parcel/job SMS notifications use the Messages API and the account's sender. Current production evidence:
 
-- a Kenya alphanumeric sender is registered and attached to the Messaging Service, or
-- the app is switched to a Kenya-capable SMS provider.
+- some parcel SMS rows were delivered;
+- later rows fail with the trial daily-message cap (50/day);
+- WhatsApp remains inactive pending sender/template approval.
+
+Resolve the daily cap or switch to a Kenya-capable provider. Login SMS remains hidden until delivery is verified.
 
 ## Immediate alternatives
 

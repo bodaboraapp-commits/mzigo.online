@@ -1,6 +1,6 @@
 # Real Insurer Integration
 
-Implemented 26 October 2026.
+Implemented 26 October 2026. Insurance fee controls added 28 October 2026.
 
 ## Decision
 
@@ -23,10 +23,23 @@ A platform-generated `INS-…` hash is **not** a real policy. The platform now i
 - Insurance product code
 - JSON path for the policy number in the response (e.g. `policy_number` or `data.policy_number`)
 - Timeout seconds
+- **Charge type:** percentage of declared value or fixed amount per order
+- Insurance percentage (%)
+- Fixed charge per order (KES)
+- Minimum percentage charge (KES)
 - Block registration if policy cannot be issued
 - Insurance terms path
 - **Test connection**, **Save insurance config**, **Retry pending policies**
 - Policy status table: tracking, declared value, policy number, status, provider, issue date
+
+## Fee calculation
+
+The insurance fee exposed in quotes and passed to the insurer is controlled in **Admin → Insurance**:
+
+- **Percentage mode:** declared value × configured percentage, with the configured minimum applied.
+- **Fixed mode:** the configured fixed amount on every order.
+
+Defaults: percentage mode, 1.5%, minimum KES 30. Workspace rate cards with an explicit `insurance_pct` still override the platform fee for that workspace.
 
 ## API contract used
 
