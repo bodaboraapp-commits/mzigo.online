@@ -7493,12 +7493,13 @@ return '<div class="mz-mobile-card">' +
         '<td>' + esc(p.receiver_name || '') + '<div style="font-size:10px;color:var(--mz-muted-fg);">' + esc(p.receiver_phone || '') + '</div></td>' +
         '<td>' + esc(p.size || '—') + '</td>' +
         '<td>' + money(p.value_kes || 0) + '</td>' +
+        '<td>' + (Number(p.photo_count) ? '<a class="mz-link" target="_blank" rel="noopener" href="/api/parcel-photo.php?parcel_id=' + encodeURIComponent(p.id) + '&kind=product">Product</a> · <a class="mz-link" target="_blank" rel="noopener" href="/api/parcel-photo.php?parcel_id=' + encodeURIComponent(p.id) + '&kind=package">Package</a>' : '—') + '</td>' +
         '<td><span class="mz-badge">' + esc(p.status || '') + '</span></td>' +
         '<td style="white-space:nowrap;">' + esc(fmtDate(p.registered_at)) + '</td></tr>';
     }).join('');
     card.innerHTML = '<div class="mz-row"><div><div class="mz-card__title" style="margin:0;">Unassigned parcels</div>' +
       '<p class="mz-hint" style="margin:4px 0 0;">' + rows.length + ' parcel(s) with no workspace. Read-only; tracking remains public.</p></div></div>' +
-      '<div class="mz-table-wrap" style="margin-top:12px;"><table class="mz-table"><thead><tr><th>Tracking</th><th>Route</th><th>Courier</th><th>Sender</th><th>Receiver</th><th>Size</th><th>Value</th><th>Status</th><th>Registered</th></tr></thead><tbody>' + html + '</tbody></table></div>';
+      '<div class="mz-table-wrap" style="margin-top:12px;"><table class="mz-table"><thead><tr><th>Tracking</th><th>Route</th><th>Courier</th><th>Sender</th><th>Receiver</th><th>Size</th><th>Value</th><th>Photos</th><th>Status</th><th>Registered</th></tr></thead><tbody>' + html + '</tbody></table></div>';
   }
 
   function renderAdminClaimAnalytics(card, a) {
