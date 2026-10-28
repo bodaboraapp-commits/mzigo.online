@@ -1,6 +1,6 @@
 # Engineering — V1 Production Readiness & Role Workflow Audit
 
-**Date:** 26 October 2026  
+**Date:** 28 October 2026  
 **Decision:** **No-Go for full V1 production** in the current state. The app is feature-rich, but the core customer → payment → collection loop and runner/customer authentication are not production-ready.  
 **Purpose:** role-by-role workflow gaps, launch classification, and the canonical pending engineering register moved out of the dev backlog.
 
@@ -38,6 +38,18 @@ The current app cannot complete steps 3–4 without demo mode, and cannot sign i
 | Security | CSRF, rate limits, session revocation, 2FA available, upload scanning seam, audit log, security suite |
 | Infra | Migrations, Docker/Apache/nginx deployment docs, health endpoint, cron jobs |
 
+### 2.1 Shipped since the 26 October audit
+
+- Scanner PWA: task-first flow, persistent camera until a valid scan, offline queue, torch, `jsQR` fallback and Settings-based recent scans.
+- Admin scan controls: per-point manual-entry toggle, configurable action order/labels/sub-labels and workspace enforcement for handover/arrival/collection (drop-off remains open).
+- Order creation: optional product and package photos, stored in `parcel_photos` and exposed to admin; hidden from the public confirmation page.
+- Insurance pricing: admin can choose percentage-of-declared-value or fixed charge per order, plus minimum percentage charge.
+- Platform fees: admin-controlled holding and platform fee amounts used in server quotes and the public fee estimate.
+- Payments/orders: M-Pesa is the default payment option; customer and creator payment receipts are attempted over SMS and email.
+- Auth/account: email OTP for customers and freelancers; SMS login option hidden; original Business/Freelancer/Customer login tabs; merchant multi-role grants; deleted-user restore.
+- Database: web updater strips hardcoded `USE` statements; new migrations 039 (multi-role), 040 (scan manual entry) and 041 (parcel photos).
+- Transactional notification email paths now use the lightweight OTP-style mail shell instead of the heavier template renderer.
+
 ---
 
 ## 3. Role-by-role workflow gaps
@@ -60,10 +72,10 @@ The current app cannot complete steps 3–4 without demo mode, and cannot sign i
 
 | ID | Missing workflow | Impact | V1 class |
 |---|---|---|---|
-| CST-01 | Production code is now sent through the Infobip SMS channel; it still needs live credentials and end-to-end delivery validation. | Receivers cannot access parcels until SMS is verified. | **Pending credentials/QA** |
+| CST-01 | Customer email OTP is active and reportedly reaching inboxes; SMS login is hidden. Verify production email OTP, expiry and lockout end-to-end, and decide whether SMS becomes a fallback. | Customers cannot access parcels if their email OTP fails. | **Pending QA/decision** |
 | CST-02 | **Delivery-fee payment is demo only.** `customer.php` returns `DEMO-MPESA-…` and marks the parcel paid without a real STK push/callback. | Receivers cannot actually pay; collection code cannot be released. | **V1 blocker** |
 | CST-03 | No failed payment/retry/refund state, no STK pending/timeout UI. | Payment support gaps. | Pending |
-| CST-04 | No SMS fallback for notification/receipts; email is optional. | Some receivers receive nothing. | **V1 blocker via notifications** |
+| CST-04 | Receipts/notifications attempt SMS + email, but live email and SMS delivery are not reliable: SMTP-accepted mail is not reaching Gmail, and Twilio trial hits a 50/day cap. | Some receivers receive nothing. | **V1 blocker via notifications** |
 | CST-05 | No profile/phone change/account recovery, no reschedule/redelivery request. | Support workaround; post-V1. | Post-V1 |
 | CST-06 | Claims/CSAT are ready, but insurance claims depend on a real insurer. | Claim promise depends on SND-04. | Launch-gated |
 
@@ -88,9 +100,9 @@ The current app cannot complete steps 3–4 without demo mode, and cannot sign i
 
 | ID | Missing workflow | Impact | V1 class |
 |---|---|---|---|
-| RUN-01 | Production runner PIN is now sent through the Infobip SMS channel; live delivery still needs validation. | Runners cannot access jobs until SMS is verified. | **Pending credentials/QA** |
+| RUN-01 | Runner PIN dispatch exists through the SMS channel, but SMS login is hidden and Twilio trial limits delivery. Validate a reliable runner auth path. | Runners cannot access jobs until auth delivery is verified. | **Pending credentials/QA** |
 | RUN-02 | **Live payout callback is missing.** B2C initiation stores status `processing`, but there is no Daraja result callback endpoint to mark paid/failed/reconcile. | Runners may never be marked paid; money state uncertain. | **V1 blocker for live payouts** (manual payout acceptable only with sign-off) |
-| RUN-03 | SMS/WhatsApp job notifications are not live. | Runners miss jobs. | **V1 blocker via notifications** |
+| RUN-03 | SMS job notifications are implemented but limited by Twilio's daily cap; WhatsApp remains inactive pending sender/templates. | Runners miss jobs. | **Pending provider limit/QA** |
 | RUN-04 | No earnings statement/tax export or payout receipt download. | Runner support/accounting. | Pending |
 | RUN-05 | No runner location/navigation, shift scheduling, vehicle document verification or background-check vendor. | Operational quality gap. | Post-V1 / policy |
 | RUN-06 | Payout schedule semantics (weekly/manual release) still a decision. | Ops policy. | Decision pending |
@@ -103,7 +115,7 @@ The current app cannot complete steps 3–4 without demo mode, and cannot sign i
 | ID | Missing workflow | Impact | V1 class |
 |---|---|---|---|
 | PTR-01 | **No partner accounts/roles.** Scanner access is a stored bearer token; there is no operator identity, permission model or per-user audit. | Shared-device abuse and weak accountability. | Pending for pilot; **V1 blocker if many partners** |
-| PTR-02 | **No offline scan queue.** The UI shows Offline but scans require a live request; there is no queued sync. | Partner operations fail on unstable connectivity. | Pending/manual workaround |
+| PTR-02 | **Resolved in the PWA:** scans are stored locally when offline and retried when connectivity returns. Device QA on low-end phones is still pending. | Partner operations can survive unstable connectivity. | Shipped; device QA pending |
 | PTR-03 | No partner dashboard: volume, scan history, exceptions, settlement or performance. | Partners cannot self-serve; admin does everything. | Post-V1 |
 | PTR-04 | Scanner cannot record damage/loss/refusal/exception with evidence beyond standard scans. | Claims rely on manual support. | Pending |
 | PTR-05 | No partner onboarding contract/KYC/settlement workflow. | Commercial/legal risk. | Manual for pilot |
@@ -152,10 +164,11 @@ The current app cannot complete steps 3–4 without demo mode, and cannot sign i
 | PRD-08 | Audit alerting/SIEM for auth/admin/export/webhook failures | No incident detection. | Pending |
 | PRD-09 | Independent penetration test + remediation | Required before public launch. | Pending |
 | PRD-10 | Load/soak test public tracking, intake, scanner ingestion and API limits | Unknown capacity. | Pending |
+| PRD-11 | Apply pending migrations `039`, `040`, `041` in production and verify tables/columns | Multi-role access, scan manual entry and parcel photos fail until applied. | **Pending deploy/DB** |
 | PAY-01 | Real M-Pesa customer/invoice payments: STK/callback/replay protection/reconciliation/refunds | Core collection loop is demo only. | **V1 blocker** |
-| MSG-01 | Infobip SMS transport is implemented for codes, PINs, OTPs and parcel notifications. Production Infobip credentials/sender and live validation are still pending; WhatsApp delivery remains separate. | Auth/notifications can now be configured, but live credentials are still required. | **Pending credentials/QA** |
+| MSG-01 | Twilio SMS is configured for parcel notifications; trial account hit the 50 daily-message cap. Login SMS is hidden. WhatsApp remains blocked on sender/template approval. | SMS cannot be relied on for auth/notifications until the provider limit and credentials are resolved. | **Blocked/external** |
 | PAY-02 | Live Daraja payout/recovery credentials + payout result callback/reconciliation | Live payouts may stay `processing`. | **V1 blocker for live payouts** |
-| MAIL-01 | Live email provider validation (SMTP/SendGrid/Mailgun), bounce/complaint callbacks, SPF/DKIM/DMARC | Invites/receipts/reset reliability. | Pending |
+| MAIL-01 | Live email delivery remains unconfirmed: SMTP accepts order/payment notifications but they have not reached Gmail; Mail-Tester delivery also failed. OTP email reportedly reaches the inbox. Check cPanel queue/Track Delivery, then fix SMTP or add a verified relay; add bounce/complaint callbacks. | Invites/receipts/reset/order notifications are unreliable. | **Blocked/ops** |
 | LEG-01 | Legal sign-off on runner/referral/insurance terms, privacy, DSR/retention | Compliance risk. | Pending |
 | SEO-01 | GSC/Bing tokens, CWV key, Search Console access | Marketing/analytics gap. | External input |
 | SOC-01 | Official social URLs/handles | Footer/social trust gap. | External input |
@@ -182,16 +195,16 @@ These were open in `docs/BACKLOG.md` / `docs/pending-tasks.md` and are now track
 - PRD-08 audit alerting
 - PRD-09 penetration test
 - PAY-01 real customer/invoice payments
-- MSG-01 SMS/WhatsApp code and notification delivery
+- MSG-01 SMS/WhatsApp code and notification delivery (Twilio daily cap; WhatsApp sender/templates pending)
 - PAY-02 live payout callback/reconciliation
-- AUTH-01 **implement actual customer-code and runner-PIN dispatch** (currently generated only; see CST-01/RUN-01)
+- AUTH-01 **verify live auth delivery**: email OTP active; SMS login hidden and Twilio-limited (see CST-01/RUN-01)
 - INS-01 real insurer or remove/gate public insurance
 - LEG-01 legal sign-off + DSR/retention
 - ADM-10 demo data/accounts cleanup
 
 ### P1 — required for a safe pilot / operational completeness
 - PTR-01 partner identity/permissions
-- PTR-02 offline scan queue
+- PTR-02 offline scan queue — **shipped**, device QA pending
 - PTR-03 partner performance/settlement
 - PTR-04 exception capture
 - PTR-05 partner onboarding/KYC/contracts
@@ -238,10 +251,10 @@ These were open in `docs/BACKLOG.md` / `docs/pending-tasks.md` and are now track
 
 ## 6. V1 critical path
 
-1. **Fix auth delivery** — send customer codes and runner PINs through SMS/WhatsApp (or a verified email fallback for pilot), add delivery retry/observability.
+1. **Fix auth and notification delivery** — keep email OTP verified; decide SMS provider/limit or email-only fallback; fix the SMTP queue/deliverability for order and payment emails; add retry/observability.
 2. **Implement real delivery-fee payment** — STK push, callback validation, status state machine, reconciliation, collection-code release only on confirmed payment.
 3. **Decide insurance/commercial scope** — real insurer contract or remove/gate insurance messaging; decide free vs paid V1.
-4. **Complete production hardening** — env, demo cleanup, 2FA/access, HTTPS/WAF, secrets/backups, health monitoring, cron.
+4. **Apply migrations and complete production hardening** — deploy 039/040/041 through the web updater, verify scan/photo/multi-role tables, then close env/demo-account/2FA/HTTPS/WAF/secrets/backups/health/cron items.
 5. **Validate live payouts** — payout result callback, reconciliation, manual fallback.
 6. **Pilot partner process** — token/operator policy, offline workaround or queue, settlement.
 7. **Legal/compliance** — terms, privacy/DSR, insurance disclosures, social/SEO inputs.
@@ -274,3 +287,4 @@ These were open in `docs/BACKLOG.md` / `docs/pending-tasks.md` and are now track
 - `docs/insurance-integration.md` — insurer config and contract needs
 - `docs/legal-launch-signoff.md` — legal/social/GSC checklist
 - `docs/admin-filters-layout-proposal.md` — approved filter design pending implementation
+- `docs/MVP_STATUS.md` — current MVP capability matrix, verification checklist and pending work (28 Oct 2026)
