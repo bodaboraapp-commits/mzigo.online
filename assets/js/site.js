@@ -91,6 +91,7 @@
   var APP = {
     user: null, tenant: null, branding: null, tenants: [], role: null, usage: null, csrf: '', showDemoAccounts: true,
     partners: [], packageSizes: [], paymentMethods: [],
+    insurancePricing: { mode: 'percentage', percent: 1.5, fixed: 30, minimum: 30 },
     packages: [], errands: [], senders: [], demos: [],
     pricingMode: 'paid',
     ready: false, source: 'offline', database: 'mzigo_online'
@@ -175,6 +176,7 @@
       APP.partners = b.partners || [];
       APP.packageSizes = b.packageSizes || [];
       APP.paymentMethods = b.paymentMethods || [];
+      APP.insurancePricing = b.insurancePricing || APP.insurancePricing;
       APP.packages = b.packages || [];
       APP.errands = b.errands || [];
       APP.senders = b.senders || [];
@@ -570,7 +572,10 @@
     var sizeBase = SIZE_BASE[cfg.size] || 250;
     var base = Math.round((sizeBase + 180) / 10) * 10;
     var holding = 30;
-    var insurance = Math.max(30, Math.round(((cfg.value || 0) * 0.015) / 10) * 10);
+    var ip = APP.insurancePricing || { mode: 'percentage', percent: 1.5, fixed: 30, minimum: 30 };
+    var insurance = ip.mode === 'fixed'
+      ? Math.max(0, Math.round(Number(ip.fixed) || 0))
+      : Math.max(Number(ip.minimum) || 0, Math.round(((cfg.value || 0) * (Number(ip.percent) || 0)) / 100));
     var platform = 80;
     var total = Math.ceil((base + holding + insurance + platform) / 10) * 10;
     return { base: base, holding: holding, insurance: insurance, platform: platform, total: total };
@@ -8266,6 +8271,11 @@ return '<div class="mz-mobile-card">' +
               field(cfg, 'policy_number_path', 'Policy number JSON path', 'text', 'policy_number or data.policy_number') +
               field(cfg, 'timeout_seconds', 'Timeout (seconds)', 'number', '15') +
               field(cfg, 'terms_url', 'Insurance terms path', 'text', '/terms#risk-and-cover') +
+              '<label class="mz-field"><span class="mz-label">Charge type</span><select class="mz-input" data-insurance-field="charge_mode"><option value="percentage"' + (cfg.charge_mode === 'percentage' ? ' selected' : '') + '>Percentage of declared value</option><option value="fixed"' + (cfg.charge_mode === 'fixed' ? ' selected' : '') + '>Fixed amount per order</option></select></label>' +
+              field(cfg, 'charge_percent', 'Insurance percentage (%)', 'number', '1.5') +
+              field(cfg, 'charge_fixed_kes', 'Fixed charge per order (KES)', 'number', '30') +
+              field(cfg, 'minimum_charge_kes', 'Minimum percentage charge (KES)', 'number', '30') +
+              '<p class="mz-hint" style="grid-column:1/-1;margin:0;">Percentage mode charges the declared-value percentage, with the minimum applied. Fixed mode charges the same amount on every order. Workspace rate cards can still override insurance.</p>' +
               '<label class="mz-field" style="grid-column:1/-1;"><span class="mz-label"><input type="checkbox" data-insurance-field="require_policy"' + (cfg.require_policy ? ' checked' : '') + '> Block registration if the insurer cannot issue a policy</span><span class="mz-hint">Recommended for live mode: never tell a sender they are covered when no policy exists.</span></label>' +
             '</div>' +
             '<div class="mz-row" style="gap:8px;justify-content:flex-start;flex-wrap:wrap;margin-top:8px;">' +
