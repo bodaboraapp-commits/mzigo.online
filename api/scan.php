@@ -112,7 +112,11 @@ try {
         $pdo->rollBack();
         fail_error('wrong_carrier', 'This parcel does not belong to your carrier.', 403);
     }
-    if ($point['tenant_id'] !== null && (int) $point['tenant_id'] !== (int) ($parcel['tenant_id'] ?? 0)) {
+    // Workspace ownership matters once the parcel has left the origin office.
+    // Drop-off and office handover stay open to the receiving point.
+    $restrictWorkspace = in_array($action, ['arrival', 'collection'], true);
+    if ($restrictWorkspace && $point['tenant_id'] !== null
+        && (int) $point['tenant_id'] !== (int) ($parcel['tenant_id'] ?? 0)) {
         $pdo->rollBack();
         fail_error('wrong_workspace', 'This parcel does not belong to this point workspace.', 403);
     }

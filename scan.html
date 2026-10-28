@@ -12,7 +12,7 @@
   <link rel="icon" href="/assets/img/favicon-64.png" type="image/png">
   <link rel="apple-touch-icon" href="/assets/img/scan-icon-192.png">
   <link rel="manifest" href="/assets/scan-manifest.webmanifest">
-  <link rel="stylesheet" href="/assets/css/scan.css">
+  <link rel="stylesheet" href="/assets/css/scan.css?v=20261028a">
 </head>
 <body>
   <header class="scan-head">
@@ -96,10 +96,10 @@
     <div class="scan-qr-box">
       <div class="scan-row"><strong>Scan parcel QR</strong><button type="button" id="qrClose" class="scan-link">Cancel</button></div>
       <video id="qrPreview" playsinline></video>
-      <p class="scan-hint">Point the camera at the parcel QR/Locker label.</p>
+      <p class="scan-hint" id="qrHint">Point the camera at the parcel QR/Locker label.</p>
     </div>
   </div>
 
-  <script src="/assets/js/scan.js" defer></script>
+  <script src="/assets/js/scan.js?v=20261028a" defer></script>
 </body>
 </html>

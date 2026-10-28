@@ -9,6 +9,7 @@
   var pendingKey = '';
   var qrStream = null;
   var qrRaf = 0;
+  var qrOpening = false;
 
   function $(sel) { return document.querySelector(sel); }
   function esc(value) {
@@ -140,17 +141,32 @@
       $('#submitScan').disabled = false;
     });
   }
+  function setQrHint(text) {
+    var hint = $('#qrHint');
+    if (hint) hint.textContent = text;
+  }
+  function resetQrButton() {
+    var btn = $('#qrBtn');
+    if (btn) { btn.disabled = false; btn.setAttribute('aria-busy', 'false'); }
+  }
   function openQr() {
+    if (qrOpening || qrStream) return;
     if (!('BarcodeDetector' in window) || !navigator.mediaDevices) {
       window.alert('This browser does not support QR scanning. Type the tracking number instead.');
       return;
     }
+    qrOpening = true;
+    var btn = $('#qrBtn');
+    if (btn) { btn.disabled = true; btn.setAttribute('aria-busy', 'true'); }
+    $('#qrOverlay').hidden = false;
+    setQrHint('Starting camera…');
     navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }).then(function (stream) {
       qrStream = stream;
-      $('#qrOverlay').hidden = false;
       var video = $('#qrPreview');
       video.srcObject = stream;
-      video.play();
+      var playResult = video.play();
+      if (playResult && playResult.catch) playResult.catch(function () {});
+      setQrHint('Point the camera at the parcel QR/Locker label.');
       var detector = new window.BarcodeDetector({ formats: ['qr_code', 'code_128', 'code_39'] });
       function tick() {
         if (!qrStream) return;
@@ -166,13 +182,23 @@
         }).catch(function () { closeQr(); });
       }
       qrRaf = requestAnimationFrame(tick);
-    }).catch(function () { window.alert('Camera permission was denied. Type the tracking number instead.'); });
+    }).catch(function () {
+      closeQr();
+      window.alert('Camera permission was denied. Type the tracking number instead.');
+    }).finally(function () {
+      qrOpening = false;
+      resetQrButton();
+    });
   }
   function closeQr() {
     cancelAnimationFrame(qrRaf);
+    qrRaf = 0;
     if (qrStream) { qrStream.getTracks().forEach(function (t) { t.stop(); }); qrStream = null; }
     $('#qrOverlay').hidden = true;
-    $('#qrPreview').srcObject = null;
+    var preview = $('#qrPreview');
+    if (preview) preview.srcObject = null;
+    qrOpening = false;
+    resetQrButton();
   }
   function updateNet() {
     var el = $('#netState');

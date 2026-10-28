@@ -80,3 +80,4 @@ h1 { font-size: 22px; line-height: 1.15; margin: 4px 0 6px; color: var(--green);
 @media (max-width: 360px) {
   .scan-actions { grid-template-columns: 1fr; }
 }
+.scan-btn, .scan-action, .scan-link, .scan-icon-btn { touch-action: manipulation; }
