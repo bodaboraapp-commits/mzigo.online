@@ -300,7 +300,7 @@ function admin_transactions(): array
 }
 function admin_partner_points(): array
 {
-    $sql = 'SELECT pp.id, pp.tenant_id, pp.partner_slug, pp.name, pp.code, pp.point_type, pp.location, pp.is_active,
+    $sql = 'SELECT pp.id, pp.tenant_id, pp.partner_slug, pp.name, pp.code, pp.point_type, pp.location, pp.is_active, pp.manual_entry_enabled,
                    pp.last_scan_at, pp.created_at, p.name AS carrier_name, t.name AS workspace_name
             FROM partner_points pp LEFT JOIN partners p ON p.slug = pp.partner_slug
             LEFT JOIN tenants t ON t.id = pp.tenant_id
@@ -1033,10 +1033,11 @@ switch ($action) {
             if ($tenantCheck->fetchColumn() === false) { fail_error('invalid_workspace', 'Choose a valid workspace.', 422); }
         }
         $token = admin_point_token();
+        $manualEntry = !empty($data['manual_entry_enabled']) ? 1 : 0;
         try {
-            $pdo->prepare('INSERT INTO partner_points (tenant_id, partner_slug, name, code, point_type, location, access_token_prefix, access_token_hash, is_active)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)')
-                ->execute([$workspaceId, $carrierSlug, $name, $code, $pointType, $location !== '' ? $location : null, $token['prefix'], $token['hash']]);
+            $pdo->prepare('INSERT INTO partner_points (tenant_id, partner_slug, name, code, point_type, location, access_token_prefix, access_token_hash, is_active, manual_entry_enabled)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?)')
+                ->execute([$workspaceId, $carrierSlug, $name, $code, $pointType, $location !== '' ? $location : null, $token['prefix'], $token['hash'], $manualEntry]);
         } catch (PDOException $e) {
             if ((string) $e->getCode() === '23000') { fail_error('duplicate_point_code', 'That point code is already in use.', 409); }
             throw $e;
@@ -1062,8 +1063,9 @@ switch ($action) {
             $tenantCheck->execute([$workspaceId]);
             if ($tenantCheck->fetchColumn() === false) { fail_error('invalid_workspace', 'Choose a valid workspace.', 422); }
         }
-        $stmt = $pdo->prepare('UPDATE partner_points SET tenant_id = ?, name = ?, point_type = ?, location = ? WHERE id = ?');
-        $stmt->execute([$workspaceId, $name, $pointType, $location !== '' ? $location : null, $pointId]);
+        $manualEntry = !empty($data['manual_entry_enabled']) ? 1 : 0;
+        $stmt = $pdo->prepare('UPDATE partner_points SET tenant_id = ?, name = ?, point_type = ?, location = ?, manual_entry_enabled = ? WHERE id = ?');
+        $stmt->execute([$workspaceId, $name, $pointType, $location !== '' ? $location : null, $manualEntry, $pointId]);
         audit('admin.point_updated', 'partner_point', (string) $pointId, ['name' => $name]);
         json_out(['ok' => true, 'source' => 'mysql', 'partner_points' => admin_partner_points(),
             'message' => 'Scan point updated.']);
@@ -1080,6 +1082,19 @@ switch ($action) {
         audit('admin.point_toggled', 'partner_point', (string) $pointId, ['active' => $newActive]);
         json_out(['ok' => true, 'source' => 'mysql', 'partner_points' => admin_partner_points(),
             'message' => $newActive ? 'Point activated.' : 'Point disabled.']);
+        // no break
+
+    case 'toggle_point_manual_entry':
+        $pointId = (int) param($data, 'point_id', 1, 20, 'Point');
+        $stmt = $pdo->prepare('SELECT manual_entry_enabled FROM partner_points WHERE id = ? LIMIT 1');
+        $stmt->execute([$pointId]);
+        $current = $stmt->fetchColumn();
+        if ($current === false) { fail_error('not_found', 'Point not found.', 404); }
+        $newValue = ((int) $current) === 1 ? 0 : 1;
+        $pdo->prepare('UPDATE partner_points SET manual_entry_enabled = ? WHERE id = ?')->execute([$newValue, $pointId]);
+        audit('admin.point_manual_entry_toggled', 'partner_point', (string) $pointId, ['enabled' => $newValue]);
+        json_out(['ok' => true, 'source' => 'mysql', 'partner_points' => admin_partner_points(),
+            'message' => $newValue ? 'Manual tracking entry enabled.' : 'Manual tracking entry disabled.']);
         // no break
 
     case 'regenerate_point_token':

@@ -41,6 +41,7 @@ function scan_point_short(array $point): array
         'id' => (int) $point['id'], 'name' => $point['name'], 'code' => $point['code'],
         'partner_slug' => $point['partner_slug'], 'point_type' => $point['point_type'],
         'location' => $point['location'], 'last_scan_at' => $point['last_scan_at'],
+        'manual_entry_enabled' => isset($point['manual_entry_enabled']) ? (int) $point['manual_entry_enabled'] : 1,
         'allowed_actions' => scan_point_actions($point),
     ];
 }
