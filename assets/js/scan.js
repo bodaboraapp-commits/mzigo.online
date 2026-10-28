@@ -65,15 +65,20 @@
     $('#pointType').textContent = point.point_type;
     var labels = actionLabels();
     var lastAction = localStorage.getItem(LAST_ACTION_KEY) || '';
-    var actions = (point.allowed_actions || []).slice().sort(function (a, b) {
-      if (a === lastAction) return -1;
-      if (b === lastAction) return 1;
+    var configured = point.actions && point.actions.length
+      ? point.actions.slice()
+      : (point.allowed_actions || []).map(function (key) {
+          var pair = labels[key] || [key, ''];
+          return { key: key, label: pair[0], description: pair[1] };
+        });
+    configured.sort(function (a, b) {
+      if (a.key === lastAction) return -1;
+      if (b.key === lastAction) return 1;
       return 0;
     });
-    $('#actionGrid').innerHTML = actions.map(function (a) {
-      var pair = labels[a] || [a, ''];
-      return '<button type="button" class="scan-action" data-scan-action="' + esc(a) + '"><strong>' + esc(pair[0]) + '</strong><span>' + esc(pair[1]) + '</span>' +
-        (a === lastAction ? '<em>Recent</em>' : '') + '</button>';
+    $('#actionGrid').innerHTML = configured.map(function (a) {
+      return '<button type="button" class="scan-action" data-scan-action="' + esc(a.key) + '"><strong>' + esc(a.label) + '</strong><span>' + esc(a.description || '') + '</span>' +
+        (a.key === lastAction ? '<em>Recent</em>' : '') + '</button>';
     }).join('');
     selectedAction = '';
     Array.prototype.forEach.call(document.querySelectorAll('[data-scan-action]'), function (btn) {

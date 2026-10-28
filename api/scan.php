@@ -10,6 +10,7 @@ declare(strict_types=1);
 require __DIR__ . '/_bootstrap.php';
 require __DIR__ . '/_notifications.php';
 require __DIR__ . '/_webhooks.php';
+require __DIR__ . '/_scan_actions.php';
 
 const SCAN_POINT_ACTIONS = ['dropoff', 'handover', 'arrival', 'collection'];
 
@@ -37,12 +38,24 @@ function scan_point_actions(array $point): array
 
 function scan_point_short(array $point): array
 {
+    $allowed = scan_point_actions($point);
+    $actions = [];
+    foreach (scan_action_config() as $action) {
+        if (in_array($action['key'], $allowed, true)) {
+            $actions[] = [
+                'key' => $action['key'],
+                'label' => $action['label'],
+                'description' => $action['description'],
+            ];
+        }
+    }
     return [
         'id' => (int) $point['id'], 'name' => $point['name'], 'code' => $point['code'],
         'partner_slug' => $point['partner_slug'], 'point_type' => $point['point_type'],
         'location' => $point['location'], 'last_scan_at' => $point['last_scan_at'],
         'manual_entry_enabled' => isset($point['manual_entry_enabled']) ? (int) $point['manual_entry_enabled'] : 1,
-        'allowed_actions' => scan_point_actions($point),
+        'actions' => $actions,
+        'allowed_actions' => $allowed,
     ];
 }
 

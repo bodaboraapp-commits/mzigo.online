@@ -18,6 +18,7 @@
 declare(strict_types=1);
 require __DIR__ . '/_bootstrap.php';
 require __DIR__ . '/_notifications.php';
+require __DIR__ . '/_scan_actions.php';
 require_once __DIR__ . '/_newsletter.php';
 require __DIR__ . '/_webhooks.php';
 require __DIR__ . '/_claims.php';
@@ -341,6 +342,7 @@ if ($method === 'GET') {
         'api_usage' => platform_api_usage(),
         'unassigned_parcels' => admin_unassigned_parcels(),
         'partner_points' => admin_partner_points(),
+        'scan_actions' => scan_action_config(),
         'claim_rails' => claim_rails_admin_view(),
         'point_carriers' => admin_point_carriers(),
         'email_deliverability' => email_deliverability_data(),
@@ -1008,6 +1010,14 @@ switch ($action) {
         $result = claim_recovery_request($claim, $admin, $amount, $note);
         json_out(['ok' => $result['ok'], 'source' => 'mysql', 'recovery' => $result,
             'claims' => admin_claims(), 'message' => $result['message'] ?? ($result['error'] ?? 'Recovery requested.')]);
+        // no break
+
+    case 'save_scan_actions':
+        $items = isset($data['actions']) && is_array($data['actions']) ? $data['actions'] : [];
+        $saved = scan_action_save($items);
+        audit('admin.scan_actions_updated', 'platform', 'scan_actions', ['actions' => $saved]);
+        json_out(['ok' => true, 'source' => 'mysql', 'scan_actions' => $saved,
+            'message' => 'Scan action wording and order updated.']);
         // no break
 
     case 'create_partner_point':
