@@ -5,7 +5,8 @@
  * POST /api/events.php  { event, path, label, location, audience, meta }
  *
  * Fire-and-forget from the browser (sendBeacon/fetch keepalive). Rate limited;
- * stores an anonymous IP hash only, plus the signed-in user id when present.
+ * stores the visitor IP for admin review, Cloudflare geo country/city when
+ * available, an IP hash, and the signed-in user id when present.
  */
 declare(strict_types=1);
 require __DIR__ . '/_bootstrap.php';
@@ -40,12 +41,23 @@ if (isset($data['meta']) && is_array($data['meta'])) {
         $meta = substr($meta, 0, 2000);
     }
 }
-$ipHash = hash('sha256', client_ip() . '|' . (string) (config()['security']['app_key'] ?? 'mzigo'));
+
+// Prefer the real visitor address when the request passes through Cloudflare.
+$ip = (string) client_ip();
+$cfIp = trim((string) ($_SERVER['HTTP_CF_CONNECTING_IP'] ?? ''));
+if ($cfIp !== '' && filter_var($cfIp, FILTER_VALIDATE_IP)) {
+    $ip = $cfIp;
+}
+$geoCountry = strtoupper(trim((string) ($_SERVER['HTTP_CF_IPCOUNTRY'] ?? '')));
+$geoCountry = preg_match('/^[A-Z]{2}$/', $geoCountry) ? $geoCountry : null;
+$geoCity = mb_substr(trim((string) ($_SERVER['HTTP_CF_IPCITY'] ?? '')), 0, 80);
+$geoCity = $geoCity !== '' ? $geoCity : null;
+$ipHash = hash('sha256', $ip . '|' . (string) (config()['security']['app_key'] ?? 'mzigo'));
 
 try {
     $stmt = db()->prepare(
-        'INSERT INTO analytics_events (event, user_id, path, label, location, audience, meta, ip_hash, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())'
+        'INSERT INTO analytics_events (event, user_id, path, label, location, audience, meta, ip, geo_country, geo_city, ip_hash, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())'
     );
     $stmt->execute([
         $event,
@@ -55,6 +67,9 @@ try {
         $location,
         $audience,
         $meta,
+        $ip !== '' ? $ip : null,
+        $geoCountry,
+        $geoCity,
         $ipHash,
     ]);
 } catch (Throwable $e) {

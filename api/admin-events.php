@@ -12,7 +12,7 @@ $counts = db()->query(
       GROUP BY event ORDER BY c DESC"
 )->fetchAll();
 $recent = db()->query(
-    "SELECT event, label, path, location, audience, created_at
+    "SELECT event, label, path, location, audience, ip, geo_country, geo_city, created_at
        FROM analytics_events
       WHERE event = 'cta_click'
       ORDER BY id DESC LIMIT 25"
@@ -30,6 +30,9 @@ json_out([
         'path' => (string) ($r['path'] ?? ''),
         'location' => (string) ($r['location'] ?? ''),
         'audience' => (string) ($r['audience'] ?? ''),
+        'ip' => (string) ($r['ip'] ?? ''),
+        'geo_country' => (string) ($r['geo_country'] ?? ''),
+        'geo_city' => (string) ($r['geo_city'] ?? ''),
         'created_at' => $r['created_at'],
     ], $recent),
 ]);
