@@ -50,6 +50,13 @@ Table `mpesa_payments` records:
 - M-Pesa receipt and callback raw result
 - coupon/credit adjustments and a linked transaction ID
 
+## Charged amount
+
+- **Sandbox environment:** every STK request is for **KES 1** so testing does not charge the real delivery fee.
+- **Production environment:** the STK request uses the **dynamic payable order amount** after coupon and credit adjustments.
+
+The customer portal shows a sandbox notice when KES 1 testing is active.
+
 ## Flow
 
 1. Customer chooses **Pay with M-Pesa**.

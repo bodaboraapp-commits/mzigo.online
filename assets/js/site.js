@@ -4684,6 +4684,7 @@ return '<div class="mz-mobile-card">' +
   function openCustomerCheckout(host, tracking, fee, payment) {
     payment = payment || APP.mpesaPayment || { mode: 'demo', ready: false };
     var live = payment.mode === 'live';
+    var sandbox = live && payment.environment === 'sandbox';
     var couponCode = '';
     var dialog = openDialog({
       title: 'Pay ' + money(fee) + ' at collection',
@@ -4691,7 +4692,8 @@ return '<div class="mz-mobile-card">' +
       submitLabel: live ? 'Send M-Pesa request' : 'Pay ' + money(fee),
       body:
         '<div class="mz-alert" style="margin-bottom:12px;">' + (live
-          ? 'An M-Pesa prompt will be sent to your registered phone. Enter your PIN to confirm the delivery fee.'
+          ? 'An M-Pesa prompt will be sent to your registered phone. Enter your PIN to confirm the delivery fee.' +
+            (sandbox ? ' Sandbox testing charges KES 1; production charges the full order amount.' : '')
           : 'Pay the delivery fee to receive your collection code. In demo mode no real money moves.') + '</div>' +
         '<div class="mz-form-grid"><label class="mz-field"><span class="mz-label">Coupon code (optional)</span>' +
           '<input class="mz-input" name="coupon_code" placeholder="e.g. MZIGO100"></label>' +

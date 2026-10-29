@@ -425,7 +425,8 @@ if (($mpesaCfg['mode'] ?? 'demo') === 'live' && !mpesa_stk_ready($mpesaCfg)) {
     fail_error('mpesa_not_configured', 'M-Pesa payments are not configured. Contact support.', 503);
 }
 if (($mpesaCfg['mode'] ?? 'demo') === 'live' && $payableKes > 0) {
-    $stk = mpesa_stk_push($mpesaCfg, (string) ($user['phone'] ?? ''), $payableKes,
+    $chargeKes = mpesa_stk_charge_amount($mpesaCfg, $payableKes);
+    $stk = mpesa_stk_push($mpesaCfg, (string) ($user['phone'] ?? ''), $chargeKes,
         (string) $row['tracking'], 'Mzigo delivery fee ' . $row['tracking']);
     if (!$stk['ok']) {
         if ($creditUsed > 0) {
@@ -436,10 +437,10 @@ if (($mpesaCfg['mode'] ?? 'demo') === 'live' && $payableKes > 0) {
     db()->prepare('INSERT INTO mpesa_payments (parcel_id, user_id, checkout_request_id, merchant_request_id, phone, amount_kes, account_ref, status, coupon_id, coupon_code, discount_kes, credit_used_kes, created_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, "pending", ?, ?, ?, ?, NOW())')
         ->execute([$row['id'], (int) $user['id'], $stk['checkout_request_id'], $stk['merchant_request_id'] ?? '',
-            (string) ($user['phone'] ?? ''), $payableKes, (string) $row['tracking'],
+            (string) ($user['phone'] ?? ''), $chargeKes, (string) $row['tracking'],
             $coupon['id'] ?? null, $coupon['code'] ?? null, $discountKes, $creditUsed]);
     audit('customer.mpesa_stk_requested', 'parcel', (string) $row['id'], [
-        'tracking' => $row['tracking'], 'amount_kes' => $payableKes, 'checkout_request_id' => $stk['checkout_request_id'],
+        'tracking' => $row['tracking'], 'amount_kes' => $chargeKes, 'payable_kes' => $payableKes, 'checkout_request_id' => $stk['checkout_request_id'],
     ], $row['tenant_id'] ? (int) $row['tenant_id'] : null);
     json_out([
         'ok' => true, 'pending' => true,

@@ -136,6 +136,18 @@ function mpesa_stk_password(array $cfg, string $timestamp): string
     return base64_encode((string) $cfg['shortcode'] . (string) $cfg['passkey'] . $timestamp);
 }
 
+
+/**
+ * Sandbox testing charges KES 1; production charges the actual payable amount.
+ */
+function mpesa_stk_charge_amount(array $cfg, int $payableKes): int
+{
+    if (($cfg['environment'] ?? 'sandbox') !== 'production') {
+        return 1;
+    }
+    return max(1, $payableKes);
+}
+
 function mpesa_stk_push(array $cfg, string $phone, int $amountKes, string $accountRef, string $description): array
 {
     if (!mpesa_stk_ready($cfg)) {
