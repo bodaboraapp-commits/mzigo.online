@@ -209,10 +209,13 @@ function mpesa_stk_push(array $cfg, string $phone, int $amountKes, string $accou
         $detail = is_array($body)
             ? (string) ($body['errorMessage'] ?? $body['ResponseDescription'] ?? '')
             : mb_substr(trim(strip_tags((string) $raw)), 0, 180);
+        $requestId = is_array($body) ? (string) ($body['requestId'] ?? '') : '';
         $last = [
             'ok' => false,
-            'error' => 'Daraja STK request failed (HTTP ' . $code . ')' . ($detail !== '' ? ': ' . $detail : '.'),
+            'error' => 'Daraja STK request failed (HTTP ' . $code . ')' . ($detail !== '' ? ': ' . $detail : '.') .
+                ($requestId !== '' ? ' [request ' . $requestId . ']' : ''),
             'http_status' => $code,
+            'request_id' => $requestId,
             'response' => $body,
         ];
         if ($error ?: ($errorCode !== '404.001.03')) {
