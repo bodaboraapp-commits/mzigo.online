@@ -4655,30 +4655,123 @@ return '<div class="mz-mobile-card">' +
     });
   }
 
-  function pollCustomerPayment(host, tracking, attempt) {
-    if (attempt > 50) {
-      toast('Still waiting for M-Pesa confirmation. You can refresh this page to check again.', 'info');
-      loadCustomer(host);
-      return;
+  function openMpesaWaiting(host, tracking, payment, pending) {
+    var overlay = doc.createElement('div');
+    overlay.className = 'mz-overlay';
+    var amount = Number(pending && pending.amount_kes ? pending.amount_kes : 0);
+    var sandbox = (pending && pending.environment === 'sandbox') || payment.environment === 'sandbox';
+    overlay.innerHTML =
+      '<div class="mz-dialog mz-mpesa-wait" role="dialog" aria-modal="true" aria-labelledby="mz-mpesa-wait-title">' +
+        '<div class="mz-mpesa-wait__hero" data-mpesa-wait-hero>' +
+          '<div class="mz-mpesa-wait__phone">' + ICON.phone + '</div>' +
+          '<h2 id="mz-mpesa-wait-title">Check your phone</h2>' +
+          '<p>Enter your M-Pesa PIN to approve ' + (amount > 0 ? money(amount) : 'the delivery fee') + '.</p>' +
+          '<p class="mz-mpesa-wait__sandbox" data-mpesa-wait-sandbox' + (sandbox ? '' : ' hidden') + '>Sandbox test charge</p>' +
+        '</div>' +
+        '<div class="mz-mpesa-wait__steps" data-mpesa-wait-steps>' +
+          '<div class="mz-mpesa-wait__step is-done"><span>✓</span> Request sent</div>' +
+          '<div class="mz-mpesa-wait__step is-active" data-mpesa-step="pin"><span class="mz-mpesa-wait__spinner"></span> Waiting for M-Pesa PIN</div>' +
+          '<div class="mz-mpesa-wait__step" data-mpesa-step="confirm"><span>3</span> Confirming payment</div>' +
+        '</div>' +
+        '<p class="mz-mpesa-wait__hint" data-mpesa-wait-hint>This usually takes a few seconds. Keep this page open.</p>' +
+        '<div class="mz-mpesa-wait__actions">' +
+          '<button type="button" class="mz-btn mz-btn--outline" data-mpesa-wait-check>Check status</button>' +
+          '<button type="button" class="mz-btn mz-btn--ghost" data-mpesa-wait-close>Close</button>' +
+        '</div>' +
+      '</div>';
+    doc.body.appendChild(overlay);
+    doc.body.style.overflow = 'hidden';
+    var closeBtn = overlay.querySelector('[data-mpesa-wait-close]');
+    var checkBtn = overlay.querySelector('[data-mpesa-wait-check]');
+    var hint = overlay.querySelector('[data-mpesa-wait-hint]');
+    var title = overlay.querySelector('[data-mpesa-wait-title]');
+    var hero = overlay.querySelector('[data-mpesa-wait-hero]');
+    var steps = overlay.querySelector('[data-mpesa-wait-steps]');
+    var closed = false;
+    var attempt = 0;
+    var timer = 0;
+    var started = Date.now();
+
+    function clearTimer() { if (timer) { clearTimeout(timer); timer = 0; } }
+    function close(refresh) {
+      if (closed) return;
+      closed = true;
+      clearTimer();
+      overlay.remove();
+      doc.body.style.overflow = '';
+      if (refresh) setTimeout(function () { loadCustomer(host); }, 40);
     }
-    setTimeout(function () {
-      api('customer.php', { method: 'POST', body: { action: 'payment_status', tracking: tracking } })
+    function setStep(step) {
+      if (!steps) return;
+      var order = ['pin', 'confirm'];
+      var activeIndex = order.indexOf(step);
+      steps.querySelectorAll('.mz-mpesa-wait__step').forEach(function (el, index) {
+        if (index === 0) return;
+        el.classList.toggle('is-active', index - 1 === activeIndex);
+        el.classList.toggle('is-done', index - 1 < activeIndex);
+      });
+    }
+    function showSuccess(res) {
+      clearTimer();
+      hero.innerHTML = '<div class="mz-mpesa-wait__success-icon">' + ICON.check + '</div>' +
+        '<h2>Payment confirmed</h2>' +
+        '<p>Your collection code is ready.</p>' +
+        (res.receipt ? '<div class="mz-mpesa-wait__receipt">M-Pesa receipt <strong class="mz-mono">' + esc(res.receipt) + '</strong></div>' : '');
+      if (steps) steps.hidden = true;
+      if (hint) hint.textContent = 'The receiver can now collect the parcel.';
+      if (checkBtn) checkBtn.hidden = true;
+      if (closeBtn) closeBtn.textContent = 'View collection code';
+      overlay.querySelector('.mz-dialog').classList.add('is-success');
+      trackEvent('customer_pay', { label: 'M-Pesa paid', meta: { tracking: tracking, receipt: res.receipt || '' } });
+      closeBtn.onclick = function () { close(true); };
+      closeBtn.focus();
+    }
+    function showFailure(message) {
+      clearTimer();
+      hero.innerHTML = '<div class="mz-mpesa-wait__error-icon">' + ICON.x + '</div>' +
+        '<h2>Payment not completed</h2>' +
+        '<p>' + esc(message || 'The M-Pesa request was not completed.') + '</p>';
+      if (steps) steps.hidden = true;
+      if (hint) hint.textContent = 'You can try again from the parcel card.';
+      if (checkBtn) checkBtn.hidden = true;
+      if (closeBtn) closeBtn.textContent = 'Back to parcel';
+      closeBtn.onclick = function () { close(true); };
+    }
+    function poll(forceQuery) {
+      if (closed) return;
+      var query = !!forceQuery || (attempt > 0 && attempt % 4 === 0);
+      if (checkBtn) checkBtn.disabled = true;
+      api('customer.php', { method: 'POST', body: { action: 'payment_status', tracking: tracking, query: query } })
         .then(function (res) {
-          if (res.status === 'paid') {
-            toast('M-Pesa payment confirmed.');
-            loadCustomer(host);
+          if (closed) return;
+          attempt++;
+          if (res.status === 'paid') { showSuccess(res); return; }
+          if (res.status === 'failed') { showFailure(res.message); return; }
+          setStep(attempt > 1 ? 'confirm' : 'pin');
+          if (hint) {
+            var elapsed = Math.max(1, Math.round((Date.now() - started) / 1000));
+            hint.textContent = attempt > 6
+              ? 'Still waiting for Safaricom… ' + elapsed + 's. You can keep this open or check again.'
+              : 'This usually takes a few seconds. Keep this page open.';
+          }
+          if (checkBtn) checkBtn.disabled = false;
+          if (attempt >= 100) {
+            if (hint) hint.textContent = 'This is taking longer than usual. Check status again shortly.';
             return;
           }
-          if (res.status === 'failed') {
-            toast(res.message || 'The M-Pesa payment was not completed.', 'error');
-            loadCustomer(host);
-            return;
-          }
-          pollCustomerPayment(host, tracking, attempt + 1);
+          timer = setTimeout(function () { poll(false); }, 3000);
         }).catch(function () {
-          pollCustomerPayment(host, tracking, attempt + 1);
+          if (closed) return;
+          if (checkBtn) checkBtn.disabled = false;
+          timer = setTimeout(function () { poll(false); }, 3000);
         });
-    }, attempt === 0 ? 2500 : 3000);
+    }
+    closeBtn.onclick = function () { close(true); };
+    checkBtn.onclick = function () { poll(true); };
+    overlay.addEventListener('click', function (ev) {
+      if (ev.target === overlay) close(true);
+    });
+    timer = setTimeout(function () { poll(false); }, 1800);
   }
 
   function openCustomerCheckout(host, tracking, fee, payment) {
@@ -4706,10 +4799,9 @@ return '<div class="mz-mobile-card">' +
       onSubmit: function (form) {
         return api('customer.php', { method: 'POST', body: { action: 'pay', tracking: tracking, coupon_code: couponCode } }).then(function (res) {
           if (res.pending) {
-            toast(res.message || 'Check your phone for the M-Pesa prompt.', 'info');
             dialog.close();
             trackEvent('customer_pay', { label: 'M-Pesa STK sent', meta: { tracking: tracking, coupon: couponCode } });
-            pollCustomerPayment(host, tracking, 0);
+            openMpesaWaiting(host, tracking, payment, res);
             return;
           }
           toast('Payment confirmed · ' + res.reference);

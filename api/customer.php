@@ -329,8 +329,8 @@ if ($action === 'payment_status') {
     $payStmt = db()->prepare('SELECT * FROM mpesa_payments WHERE parcel_id = ? ORDER BY id DESC LIMIT 1');
     $payStmt->execute([$row['id']]);
     $payment = $payStmt->fetch();
-    if ($payment && ($payment['status'] ?? '') === 'pending') {
-        $refresh = mpesa_refresh_payment($payment);
+    if ($payment && ($payment['status'] ?? '') === 'pending' && !empty($data['query'])) {
+        mpesa_refresh_payment($payment);
         $payStmt->execute([$row['id']]);
         $payment = $payStmt->fetch();
     }
@@ -446,6 +446,8 @@ if (($mpesaCfg['mode'] ?? 'demo') === 'live' && $payableKes > 0) {
     json_out([
         'ok' => true, 'pending' => true,
         'checkout_request_id' => $stk['checkout_request_id'],
+        'amount_kes' => $chargeKes,
+        'environment' => (string) $mpesaCfg['environment'],
         'message' => $stk['customer_message'] ?: 'Check your phone and enter your M-Pesa PIN.',
     ]);
 }
