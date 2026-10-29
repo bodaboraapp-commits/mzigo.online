@@ -7,12 +7,12 @@
   <meta name="robots" content="noindex, nofollow">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Mzigo Scan · Partner point</title>
+  <title>Mzigo Scan &#183; Partner point</title>
   <link rel="icon" href="/assets/img/favicon.ico" sizes="any">
   <link rel="icon" href="/assets/img/favicon-64.png" type="image/png">
   <link rel="apple-touch-icon" href="/assets/img/scan-icon-192.png">
   <link rel="manifest" href="/assets/scan-manifest.webmanifest">
-  <link rel="stylesheet" href="/assets/css/scan.css?v=20261029d">
+  <link rel="stylesheet" href="/assets/css/scan.css?v=20261029h">
 </head>
 <body>
   <header class="scan-head">
@@ -22,8 +22,8 @@
     </div>
     <div class="scan-head__right">
       <span id="netState" class="scan-pill scan-pill--ok">Online</span>
-      <button type="button" id="installBtn" class="scan-icon-btn" hidden title="Install scanner">↓</button>
-      <button type="button" id="settingsBtn" class="scan-icon-btn" title="Settings and recent scans">⚙</button>
+      <button type="button" id="installBtn" class="scan-icon-btn" hidden title="Install scanner">&#8595;</button>
+      <button type="button" id="settingsBtn" class="scan-icon-btn" title="Settings and recent scans">&#9881;</button>
     </div>
   </header>
 
@@ -31,10 +31,10 @@
     <section id="setup" class="scan-card">
       <div class="scan-kicker">Partner point access</div>
       <h1>Connect this phone</h1>
-      <p class="scan-muted">Enter the point token from Admin → Scan points. It stays on this device.</p>
+      <p class="scan-muted">Enter the point token from Admin &#8594; Scan points. It stays on this device.</p>
       <form id="tokenForm" class="scan-form">
         <label class="scan-label" for="tokenInput">Point access token</label>
-        <input id="tokenInput" class="scan-input scan-mono" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="mzp_…" required>
+        <input id="tokenInput" class="scan-input scan-mono" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="mzp_&#8230;" required>
         <button class="scan-btn scan-btn--primary" type="submit">Connect scanner</button>
       </form>
       <div id="setupError" class="scan-error" hidden></div>
@@ -46,10 +46,10 @@
         <div class="scan-row">
           <div>
             <div class="scan-kicker">Scanning point</div>
-            <h1 id="pointName">—</h1>
-            <div id="pointMeta" class="scan-muted">—</div>
+            <h1 id="pointName">&#8212;</h1>
+            <div id="pointMeta" class="scan-muted">&#8212;</div>
           </div>
-          <span id="pointType" class="scan-pill scan-pill--ok">—</span>
+          <span id="pointType" class="scan-pill scan-pill--ok">&#8212;</span>
         </div>
         <div class="scan-point-dash" id="pointDash" aria-live="polite"></div>
       </div>
@@ -58,21 +58,32 @@
 
       <form id="scanForm" class="scan-card scan-form">
         <div class="scan-field">
-          <span class="scan-label">1. Scan action</span>
+          <span class="scan-label">1. Scan parcel</span>
+          <button type="button" id="qrBtn" class="scan-btn scan-btn--scan scan-btn--large" title="Scan QR code">&#9635; Scan parcel label</button>
+          <div id="manualEntryWrap" class="scan-field" style="margin-top:2px;">
+            <label class="scan-label" for="tracking">Or enter tracking number</label>
+            <input id="tracking" class="scan-input scan-mono" placeholder="TRK-XXXXXXXX" autocomplete="off" autocapitalize="characters">
+          </div>
+          <div id="scanValue" class="scan-value" hidden></div>
+          <p class="scan-hint" id="scanHint">Scan the parcel label to load its journey and select the next action.</p>
+          <button type="button" id="manualActionBtn" class="scan-link" hidden>Choose action manually</button>
+        </div>
+
+        <section id="journeyCard" class="scan-journey" hidden>
+          <div class="scan-journey__head">
+            <span class="scan-journey__title">Parcel journey</span>
+            <span id="journeyTracking" class="scan-journey__tracking"></span>
+          </div>
+          <div id="journeyRail" class="scan-journey__rail"></div>
+          <div id="autoAction" class="scan-journey__action" hidden></div>
+          <button type="button" id="changeAction" class="scan-link" hidden>Choose a different action</button>
+        </section>
+
+        <div id="actionGridWrap" class="scan-field" hidden>
+          <span class="scan-label">Scan action</span>
           <div id="actionGrid" class="scan-actions"></div>
-          <p class="scan-hint" id="actionHint">Choose a scan action first to enable the scanner.</p>
+          <p class="scan-hint" id="actionHint">Choose a scan action.</p>
         </div>
-
-        <div class="scan-field">
-          <span class="scan-label">2. Scan parcel label</span>
-          <button type="button" id="qrBtn" class="scan-btn scan-btn--scan scan-btn--large" title="Scan QR code" disabled aria-disabled="true">▣ Scan parcel label</button>
-        </div>
-
-        <div class="scan-field" id="manualEntryWrap">
-          <label class="scan-label" for="tracking">Or enter tracking number</label>
-          <input id="tracking" class="scan-input scan-mono" placeholder="TRK-XXXXXXXX" autocomplete="off" autocapitalize="characters">
-        </div>
-        <div id="scanValue" class="scan-value" hidden></div>
 
         <div id="collectWrap" class="scan-field" hidden>
           <label class="scan-label" for="collectCode">Customer collection code</label>
@@ -131,6 +142,6 @@
   </nav>
 
   <script src="/assets/js/jsQR.min.js?v=20261028f" defer></script>
-  <script src="/assets/js/scan.js?v=20261029d" defer></script>
+  <script src="/assets/js/scan.js?v=20261029h" defer></script>
 </body>
 </html>

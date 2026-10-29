@@ -59,6 +59,75 @@ function scan_point_short(array $point): array
     ];
 }
 
+function scan_journey_for_status(string $status): array
+{
+    $stages = [
+        'dropoff' => ['label' => 'Drop off', 'description' => 'Origin office'],
+        'handover' => ['label' => 'Hand over', 'description' => 'To transporter'],
+        'arrival' => ['label' => 'Arrival', 'description' => 'Destination office'],
+        'collection' => ['label' => 'Collect', 'description' => 'Customer picked up'],
+    ];
+    $next = null;
+    $completed = [];
+    if ($status === 'CREATED') {
+        $next = 'dropoff';
+    } elseif ($status === 'AT_ORIGIN_POINT') {
+        $completed = ['dropoff'];
+        $next = 'handover';
+    } elseif (in_array($status, ['HANDED_TO_TRANSPORTER', 'IN_TRANSIT', 'ARRIVED_DEST_POINT'], true)) {
+        $completed = ['dropoff', 'handover'];
+        $next = 'arrival';
+    } elseif ($status === 'READY_FOR_COLLECTION') {
+        $completed = ['dropoff', 'handover', 'arrival'];
+        $next = 'collection';
+    } elseif (in_array($status, ['COLLECTED_PAID', 'COLLECTED'], true)) {
+        $completed = ['dropoff', 'handover', 'arrival', 'collection'];
+    }
+    $journey = [];
+    foreach ($stages as $key => $stage) {
+        $state = in_array($key, $completed, true) ? 'done'
+            : ($next === $key ? 'current' : 'upcoming');
+        $journey[] = ['key' => $key, 'label' => $stage['label'], 'description' => $stage['description'], 'state' => $state];
+    }
+    return ['next_action' => $next, 'journey' => $journey];
+}
+
+function scan_parcel_lookup(array $point, string $tracking): array
+{
+    $stmt = db()->prepare('SELECT * FROM parcels WHERE tracking = ? OR locker = ? LIMIT 1');
+    $stmt->execute([$tracking, $tracking]);
+    $parcel = $stmt->fetch();
+    if (!$parcel) {
+        fail_error('parcel_not_found', 'No parcel found for that tracking number.', 404);
+    }
+    if (strcasecmp((string) $parcel['carrier_slug'], (string) $point['partner_slug']) !== 0) {
+        fail_error('wrong_carrier', 'This parcel does not belong to your carrier.', 403);
+    }
+    $journey = scan_journey_for_status((string) $parcel['status']);
+    $next = $journey['next_action'];
+    $allowed = scan_point_actions($point);
+    $blocked = null;
+    if ($next !== null && !in_array($next, $allowed, true)) {
+        $blocked = 'This point is not enabled for the ' . $next . ' action.';
+        $next = null;
+    }
+    if ($next !== null && in_array($next, ['handover', 'arrival', 'collection'], true)
+        && $point['tenant_id'] !== null && (int) $point['tenant_id'] !== (int) ($parcel['tenant_id'] ?? 0)) {
+        $blocked = 'This parcel does not belong to this point workspace.';
+        $next = null;
+    }
+    return [
+        'tracking' => (string) $parcel['tracking'],
+        'status' => (string) $parcel['status'],
+        'carrier' => (string) $parcel['carrier'],
+        'route' => ['from' => (string) $parcel['from_city'], 'to' => (string) $parcel['to_city']],
+        'payment_status' => (string) ($parcel['payment_status'] ?? 'unpaid'),
+        'next_action' => $next,
+        'blocked_reason' => $blocked,
+        'journey' => $journey['journey'],
+    ];
+}
+
 function scan_point_respond(array $response, bool $idempotent = false): never
 {
     $response['idempotent'] = $idempotent;
@@ -77,9 +146,18 @@ if ($method === 'GET') {
         FROM scans WHERE point_id = ?');
     $statsStmt->execute([(int) $point['id']]);
     $pointStats = $statsStmt->fetch() ?: ['total' => 0, 'today' => 0];
+    $lookupTracking = strtoupper(trim((string) ($_GET['tracking'] ?? '')));
+    $parcelLookup = null;
+    if ($lookupTracking !== '') {
+        if (!preg_match('/^[A-Z0-9-]{3,20}$/', $lookupTracking)) {
+            fail_error('invalid_tracking', 'Enter a valid tracking number.', 422);
+        }
+        $parcelLookup = scan_parcel_lookup($point, $lookupTracking);
+    }
     json_out(['ok' => true, 'source' => 'mysql', 'point' => scan_point_short($point),
         'point_stats' => ['today' => (int) $pointStats['today'], 'total' => (int) $pointStats['total'],
             'last_scan_at' => $point['last_scan_at']],
+        'parcel' => $parcelLookup,
         'recent_scans' => $stmt->fetchAll()]);
 }
 
