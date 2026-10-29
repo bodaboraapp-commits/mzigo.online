@@ -8,6 +8,7 @@
   var LAST_ACTION_KEY = 'mzigo_scan_last_action';
   var token = '';
   var point = null;
+  var pointStats = { today: 0, total: 0, last_scan_at: null };
   var selectedAction = '';
   var pendingKey = '';
   var qrStream = null;
@@ -59,10 +60,33 @@
       collection: ['Collect', 'Customer picked up']
     };
   }
+  function relativeScanTime(value) {
+    if (!value) return 'No scans';
+    var then = new Date(String(value).replace(' ', 'T'));
+    if (isNaN(then.getTime())) return '—';
+    var mins = Math.max(0, Math.round((Date.now() - then.getTime()) / 60000));
+    if (mins < 1) return 'Just now';
+    if (mins < 60) return mins + 'm ago';
+    var hours = Math.round(mins / 60);
+    if (hours < 24) return hours + 'h ago';
+    if (hours < 48) return 'Yesterday';
+    return Math.round(hours / 24) + 'd ago';
+  }
+  function renderPointDash() {
+    var mount = $('#pointDash');
+    if (!mount) return;
+    mount.innerHTML =
+      '<div class="scan-point-dash__item"><strong>' + Number(pointStats.today || 0) + '</strong><span>Today</span></div>' +
+      '<div class="scan-point-dash__item"><strong>' + Number(pointStats.total || 0) + '</strong><span>Total</span></div>' +
+      '<div class="scan-point-dash__item"><strong>' + esc(relativeScanTime(pointStats.last_scan_at)) + '</strong><span>Last scan</span></div>';
+  }
+
   function renderPoint() {
     $('#pointName').textContent = point.name;
-    $('#pointMeta').textContent = point.code + ' · ' + point.partner_slug + ' · ' + (point.location || 'No location set');
+    var meta = [point.code, point.location || point.partner_slug].filter(Boolean);
+    $('#pointMeta').textContent = meta.join(' · ');
     $('#pointType').textContent = point.point_type;
+    renderPointDash();
     var labels = actionLabels();
     var lastAction = localStorage.getItem(LAST_ACTION_KEY) || '';
     var configured = point.actions && point.actions.length
@@ -120,8 +144,8 @@
     var hint = $('#actionHint');
     if (hint) {
       hint.textContent = enabled
-        ? 'Tap the scan button to open the camera. The camera stays open until a valid Mzigo label is detected or you press Cancel.'
-        : 'Choose a scan action first to enable the scanner.';
+        ? 'Tap Scan parcel label, then hold the QR code in the camera.'
+        : 'Choose a scan action to enable the scanner.';
     }
   }
   function toggleCollection() {
@@ -179,6 +203,12 @@
       remaining.shift();
       saveQueue(remaining);
       saveRecent({ tracking: res.tracking, action: item.payload.action, label: (res.label || 'Synced') + ' (queued)', at: new Date().toLocaleTimeString() });
+      if (!res.idempotent) {
+        pointStats.today = Number(pointStats.today || 0) + 1;
+        pointStats.total = Number(pointStats.total || 0) + 1;
+        pointStats.last_scan_at = new Date().toISOString();
+        renderPointDash();
+      }
       queueFlushing = false;
       if (remaining.length) flushQueue();
     }).catch(function () {
@@ -204,6 +234,7 @@
     setToken(value);
     return apiGet().then(function (res) {
       point = res.point;
+      pointStats = res.point_stats || { today: 0, total: 0, last_scan_at: null };
       renderPoint();
       renderRecent();
     }).catch(function (err) {
@@ -235,6 +266,12 @@
         '<div><strong>' + esc(res.label) + '</strong>' + esc(res.tracking) + ' · ' + esc(res.status) +
         (res.idempotent ? ' · already recorded' : '') + '</div></div>';
       saveRecent({ tracking: res.tracking, action: selectedAction, label: res.label, at: new Date().toLocaleTimeString() });
+      if (!res.idempotent) {
+        pointStats.today = Number(pointStats.today || 0) + 1;
+        pointStats.total = Number(pointStats.total || 0) + 1;
+        pointStats.last_scan_at = new Date().toISOString();
+        renderPointDash();
+      }
       clearScanFields();
     }).catch(function (err) {
       if (isNetworkError(err)) {

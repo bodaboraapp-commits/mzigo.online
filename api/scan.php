@@ -73,7 +73,13 @@ if ($method === 'GET') {
         FROM scans s LEFT JOIN parcels p ON p.id = s.subject_id
         WHERE s.point_id = ? ORDER BY s.id DESC LIMIT 10');
     $stmt->execute([(int) $point['id']]);
+    $statsStmt = db()->prepare('SELECT COUNT(*) AS total, COALESCE(SUM(DATE(scanned_at) = CURDATE()), 0) AS today
+        FROM scans WHERE point_id = ?');
+    $statsStmt->execute([(int) $point['id']]);
+    $pointStats = $statsStmt->fetch() ?: ['total' => 0, 'today' => 0];
     json_out(['ok' => true, 'source' => 'mysql', 'point' => scan_point_short($point),
+        'point_stats' => ['today' => (int) $pointStats['today'], 'total' => (int) $pointStats['total'],
+            'last_scan_at' => $point['last_scan_at']],
         'recent_scans' => $stmt->fetchAll()]);
 }
 

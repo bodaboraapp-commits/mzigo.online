@@ -12,7 +12,7 @@
   <link rel="icon" href="/assets/img/favicon-64.png" type="image/png">
   <link rel="apple-touch-icon" href="/assets/img/scan-icon-192.png">
   <link rel="manifest" href="/assets/scan-manifest.webmanifest">
-  <link rel="stylesheet" href="/assets/css/scan.css?v=20261029a">
+  <link rel="stylesheet" href="/assets/css/scan.css?v=20261029b">
 </head>
 <body>
   <header class="scan-head">
@@ -31,14 +31,14 @@
     <section id="setup" class="scan-card">
       <div class="scan-kicker">Partner point access</div>
       <h1>Connect this phone</h1>
-      <p class="scan-muted">Enter the point access token generated in Admin → Scan points. It is stored only on this device.</p>
+      <p class="scan-muted">Enter the point token from Admin → Scan points. It stays on this device.</p>
       <form id="tokenForm" class="scan-form">
         <label class="scan-label" for="tokenInput">Point access token</label>
         <input id="tokenInput" class="scan-input scan-mono" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="mzp_…" required>
         <button class="scan-btn scan-btn--primary" type="submit">Connect scanner</button>
       </form>
       <div id="setupError" class="scan-error" hidden></div>
-      <p class="scan-hint">Need a token? Ask the platform administrator to create a scan point.</p>
+      <p class="scan-hint">No token? Ask the platform administrator.</p>
     </section>
 
     <section id="app" hidden>
@@ -51,6 +51,7 @@
           </div>
           <span id="pointType" class="scan-pill scan-pill--ok">—</span>
         </div>
+        <div class="scan-point-dash" id="pointDash" aria-live="polite"></div>
       </div>
 
       <div id="result" class="scan-result" hidden></div>
@@ -76,11 +77,11 @@
         <div id="collectWrap" class="scan-field" hidden>
           <label class="scan-label" for="collectCode">Customer collection code</label>
           <input id="collectCode" class="scan-input scan-mono" placeholder="6-character code" maxlength="6" autocomplete="off" autocapitalize="characters">
-          <span class="scan-hint">Payment must be complete. Ask the customer for the code in their portal.</span>
+          <span class="scan-hint">Payment must be complete. Ask the customer for their code.</span>
         </div>
 
         <div class="scan-field">
-          <label class="scan-label" for="noteInput">3. Note (optional)</label>
+          <label class="scan-label" for="noteInput">3. Note</label>
           <input id="noteInput" class="scan-input" placeholder="e.g. package condition, bay number" maxlength="255">
         </div>
 
@@ -130,6 +131,6 @@
   </nav>
 
   <script src="/assets/js/jsQR.min.js?v=20261028f" defer></script>
-  <script src="/assets/js/scan.js?v=20261029a" defer></script>
+  <script src="/assets/js/scan.js?v=20261029b" defer></script>
 </body>
 </html>
