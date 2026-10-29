@@ -1,7 +1,7 @@
 # Engineering — V1 Production Readiness & Role Workflow Audit
 
-**Date:** 28 October 2026  
-**Decision:** **No-Go for full V1 production** in the current state. The app is feature-rich, but the core customer → payment → collection loop and runner/customer authentication are not production-ready.  
+**Date:** 29 October 2026  
+**Decision:** **Conditional No-Go for full V1 production** in the current state. The current production audit is in `docs/MVP_GO_LIVE_AUDIT.md`. The app is feature-rich, but the core customer → payment → collection loop and runner/customer authentication are not production-ready.  
 **Purpose:** role-by-role workflow gaps, launch classification, and the canonical pending engineering register moved out of the dev backlog.
 
 ---
@@ -73,7 +73,7 @@ The current app cannot complete steps 3–4 without demo mode, and cannot sign i
 | ID | Missing workflow | Impact | V1 class |
 |---|---|---|---|
 | CST-01 | Customer email OTP is active and reportedly reaching inboxes; SMS login is hidden. Verify production email OTP, expiry and lockout end-to-end, and decide whether SMS becomes a fallback. | Customers cannot access parcels if their email OTP fails. | **Pending QA/decision** |
-| CST-02 | **Delivery-fee payment is demo only.** `customer.php` returns `DEMO-MPESA-…` and marks the parcel paid without a real STK push/callback. | Receivers cannot actually pay; collection code cannot be released. | **V1 blocker** |
+| CST-02 | Customer delivery-fee STK is implemented with callback/query reconciliation and sandbox testing works. Production Daraja credentials and one real end-to-end payment are still required; demo fallback remains. | Real customer charging cannot be declared live until the production STK test passes. | **Pending production credentials/QA** |
 | CST-03 | No failed payment/retry/refund state, no STK pending/timeout UI. | Payment support gaps. | Pending |
 | CST-04 | Receipts/notifications attempt SMS + email, but live email and SMS delivery are not reliable: SMTP-accepted mail is not reaching Gmail, and Twilio trial hits a 50/day cap. | Some receivers receive nothing. | **V1 blocker via notifications** |
 | CST-05 | No profile/phone change/account recovery, no reschedule/redelivery request. | Support workaround; post-V1. | Post-V1 |
@@ -128,7 +128,7 @@ The current app cannot complete steps 3–4 without demo mode, and cannot sign i
 | ID | Missing workflow | Impact | V1 class |
 |---|---|---|---|
 | ADM-01 | **Only one platform-admin role.** No support/finance/ops roles or least-privilege permissions. | Everyone can do everything; hard to separate duties. | Pending; **V1 blocker if multiple staff** |
-| ADM-02 | Admin 2FA is optional; `/admin` has no VPN/Cloudflare/IP restriction. | Account takeover risk. | **V1 blocker** |
+| ADM-02 | Admin 2FA is currently disabled in production; `/admin` has no VPN/Cloudflare/IP restriction, and the documented demo admin password still works. | Account takeover risk. | **V1 blocker — P0** |
 | ADM-03 | Alert Ack/Escalate logs an event but does not assign/notify/resolve/snooze. | Queue does not actually clear. | Pending (Wave 2) |
 | ADM-04 | No filtered segmentation on the overview (city/carrier/workspace/sender/payment). | Slow root-cause analysis. | Pending (proposal approved for design) |
 | ADM-05 | No saved views/export/board pack; audit export limited. | Reporting overhead. | Post-V1 |
@@ -165,14 +165,14 @@ The current app cannot complete steps 3–4 without demo mode, and cannot sign i
 | PRD-09 | Independent penetration test + remediation | Required before public launch. | Pending |
 | PRD-10 | Load/soak test public tracking, intake, scanner ingestion and API limits | Unknown capacity. | Pending |
 | PRD-11 | Apply pending migrations `039`, `040`, `041` in production and verify tables/columns | Multi-role access, scan manual entry and parcel photos fail until applied. | **Pending deploy/DB** |
-| PAY-01 | Real M-Pesa customer/invoice payments: STK/callback/replay protection/reconciliation/refunds | Core collection loop is demo only. | **V1 blocker** |
+| PAY-01 | Customer delivery-fee STK is implemented in sandbox with callback/query reconciliation, payment waiting UX and ledger updates. Production Daraja credentials and a live test are pending. Subscription/invoice billing remains demo unless V1 is explicitly free. | Core customer collection can go live after production credentials/QA; merchant billing is out of scope for a free V1. | **Pending production credentials/QA** |
 | MSG-01 | Twilio SMS is configured for parcel notifications; trial account hit the 50 daily-message cap. Login SMS is hidden. WhatsApp remains blocked on sender/template approval. | SMS cannot be relied on for auth/notifications until the provider limit and credentials are resolved. | **Blocked/external** |
 | PAY-02 | Live Daraja payout/recovery credentials + payout result callback/reconciliation | Live payouts may stay `processing`. | **V1 blocker for live payouts** |
 | MAIL-01 | Live email delivery remains unconfirmed: SMTP accepts order/payment notifications but they have not reached Gmail; Mail-Tester delivery also failed. OTP email reportedly reaches the inbox. Check cPanel queue/Track Delivery, then fix SMTP or add a verified relay; add bounce/complaint callbacks. | Invites/receipts/reset/order notifications are unreliable. | **Blocked/ops** |
 | LEG-01 | Legal sign-off on runner/referral/insurance terms, privacy, DSR/retention | Compliance risk. | Pending |
 | SEO-01 | GSC/Bing tokens, CWV key, Search Console access | Marketing/analytics gap. | External input |
 | SOC-01 | Official social URLs/handles | Footer/social trust gap. | External input |
-| INS-01 | Real insurer contract/API credentials; live mode + strict issuance | Insurance promise unresolved. | External |
+| INS-01 | Production insurance is still in demo mode (demo policies issued); real insurer credentials/live issuance or a gated/removed public insurance promise are required. | Insurance promise unresolved. | External/P0 |
 | OPS-01 | Schedule and alert on `api/cron.php` (billing, claim SLA, webhook retries), growth campaign cron | Silent operational failures. | Pending |
 | OPS-02 | Encryption-key rotation drill, backup restore test, dependency/patch cadence | Resilience. | Pending |
 | OPS-03 | Retention/DSR/customer deletion workflows | Compliance. | Pending |
@@ -287,4 +287,5 @@ These were open in `docs/BACKLOG.md` / `docs/pending-tasks.md` and are now track
 - `docs/insurance-integration.md` — insurer config and contract needs
 - `docs/legal-launch-signoff.md` — legal/social/GSC checklist
 - `docs/admin-filters-layout-proposal.md` — approved filter design pending implementation
-- `docs/MVP_STATUS.md` — current MVP capability matrix, verification checklist and pending work (28 Oct 2026)
+- `docs/MVP_STATUS.md` — current MVP capability matrix, verification checklist and pending work
+- `docs/MVP_GO_LIVE_AUDIT.md` — 29 Oct production audit, verified baseline and launch blockers

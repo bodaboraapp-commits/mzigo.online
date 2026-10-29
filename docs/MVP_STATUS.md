@@ -1,8 +1,9 @@
 # Mzigo.online — MVP status and pending work
 
-**Updated:** 28 October 2026  
+**Updated:** 29 October 2026  
 **Scope:** current MVP/UAT build, production readiness and remaining launch work.  
 **Canonical launch register:** `docs/ENGINEERING_V1_READINESS.md`  
+**Production audit:** `docs/MVP_GO_LIVE_AUDIT.md`  
 **Production runbook:** `docs/PRODUCTION.md`
 
 ---
@@ -18,7 +19,7 @@ The MVP workflow is demonstrable end-to-end with demo payments and manual operat
 5. Partner scans collection.
 6. Sender, receiver and admin can track the parcel; claims and admin workflows exist.
 
-**This is not yet a public-production launch.** The core collection loop still uses demo M-Pesa settlement, live email/SMS delivery needs validation, and production hardening/migrations are not fully closed.
+**This is not yet a public-production launch.** Production is live on `mzigo.online` with `APP_ENV=production`, but M-Pesa is still sandbox, admin 2FA is disabled, and email/SMS/insurance launch gates remain open. See `docs/MVP_GO_LIVE_AUDIT.md`. The core collection loop has a working sandbox STK path, but public charging still needs production Daraja credentials and one real payment. Live email/SMS delivery, insurance and admin hardening also need sign-off.
 
 ### Launch classification
 
