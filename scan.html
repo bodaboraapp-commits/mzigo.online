@@ -12,7 +12,7 @@
   <link rel="icon" href="/assets/img/favicon-64.png" type="image/png">
   <link rel="apple-touch-icon" href="/assets/img/scan-icon-192.png">
   <link rel="manifest" href="/assets/scan-manifest.webmanifest">
-  <link rel="stylesheet" href="/assets/css/scan.css?v=20261029l">
+  <link rel="stylesheet" href="/assets/css/scan.css?v=20261029m">
 </head>
 <body>
   <header class="scan-head">
@@ -60,7 +60,6 @@
       <form id="scanForm" class="scan-card scan-form">
         <div class="scan-field">
           <span class="scan-label">1. Scan parcel</span>
-          <button type="button" id="qrBtn" class="scan-btn scan-btn--scan scan-btn--large" title="Scan QR code">&#9635; Scan parcel label</button>
           <div id="manualEntryWrap" class="scan-field" style="margin-top:2px;">
             <label class="scan-label" for="tracking">Or enter tracking number</label>
             <input id="tracking" class="scan-input scan-mono" placeholder="TRK-XXXXXXXX" autocomplete="off" autocapitalize="characters">
@@ -97,7 +96,10 @@
           <input id="noteInput" class="scan-input" placeholder="e.g. package condition, bay number" maxlength="255">
         </div>
 
-        <button id="submitScan" class="scan-btn scan-btn--primary scan-btn--large" type="submit">Record scan</button>
+        <div class="scan-action-bar">
+          <button type="button" id="qrBtn" class="scan-btn scan-btn--scan" title="Scan parcel label" aria-label="Scan parcel label">&#9635; Scan label</button>
+          <button id="submitScan" class="scan-btn scan-btn--primary" type="submit">Record scan</button>
+        </div>
         <div id="scanError" class="scan-error" hidden></div>
       </form>
     </section>
@@ -192,6 +194,6 @@
   </nav>
 
   <script src="/assets/js/jsQR.min.js?v=20261028f" defer></script>
-  <script src="/assets/js/scan.js?v=20261029l" defer></script>
+  <script src="/assets/js/scan.js?v=20261029m" defer></script>
 </body>
 </html>

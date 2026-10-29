@@ -252,3 +252,30 @@ h1 { font-size: 22px; line-height: 1.15; margin: 4px 0 6px; color: var(--green);
 .scan-track-scan span { color: var(--muted); font-size: 10px; }
 .scan-track-scan small { grid-column: 1 / -1; color: var(--muted); font-size: 9px; }
 .scan-track-result > .scan-hint { margin-top: 10px; }
+
+/* ------------------------------------------------ scan + record action bar */
+.scan-action-bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+  gap: 8px;
+  align-items: stretch;
+  margin-top: 2px;
+}
+.scan-action-bar .scan-btn {
+  width: 100%;
+  min-width: 0;
+  min-height: 54px;
+  padding: 11px 8px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.scan-action-bar #qrBtn { background: var(--mint); }
+.scan-action-bar #submitScan { font-size: 14px; }
+.scan-action-bar .scan-btn:disabled { opacity: .5; }
+@media (max-width: 340px) {
+  .scan-action-bar { gap: 6px; }
+  .scan-action-bar .scan-btn { padding: 10px 6px; font-size: 12px; }
+  .scan-action-bar #submitScan { font-size: 12px; }
+}
