@@ -539,6 +539,92 @@
     el.textContent = online ? 'Online' : 'Offline';
     el.className = 'scan-pill ' + (online ? 'scan-pill--ok' : 'scan-pill--warn');
   }
+  var SCAN_VIEWS = { scan: '#scanView', recent: '#recentView', track: '#trackView', help: '#helpView' };
+  function viewFromHash() {
+    var key = String(location.hash || '').replace('#', '');
+    return SCAN_VIEWS[key] ? key : 'scan';
+  }
+  function switchScanView(name, push) {
+    var view = SCAN_VIEWS[name] ? name : 'scan';
+    Object.keys(SCAN_VIEWS).forEach(function (key) {
+      var section = $(SCAN_VIEWS[key]);
+      if (section) section.hidden = key !== view;
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-scan-view]'), function (link) {
+      var active = link.getAttribute('data-scan-view') === view;
+      link.classList.toggle('is-active', active);
+      if (active) link.setAttribute('aria-current', 'page');
+      else link.removeAttribute('aria-current');
+    });
+    var main = $('.scan-main');
+    if (main) main.scrollTop = 0;
+    if (view === 'recent') {
+      renderRecent();
+      renderQueueStatus();
+      flushQueue();
+    } else if (view === 'track') {
+      var tracking = $('#tracking');
+      if (tracking && tracking.value && !$('#trackInput').value) $('#trackInput').value = tracking.value;
+      setTimeout(function () { if ($('#trackInput')) $('#trackInput').focus(); }, 40);
+    }
+    if (push && location.hash !== '#' + view) history.pushState({ scanView: view }, '', '#' + view);
+  }
+  function statusLabel(value) {
+    var text = String(value || '').replace(/_/g, ' ').toLowerCase();
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  }
+  function renderTrackResult(data) {
+    var box = $('#trackResult');
+    var record = data.record || {};
+    var scans = data.scans || record.scans || [];
+    if (!data.found) {
+      box.hidden = false;
+      box.className = 'scan-track-result scan-track-result--empty';
+      box.innerHTML = '<strong>No parcel found</strong><p class="scan-hint">Check the tracking number, Locker ID or errand ref and try again.</p>';
+      return;
+    }
+    var title = record.tracking || record.locker || record.ref || data.query;
+    var route = record.from && record.to ? record.from + ' → ' + record.to : '';
+    var scanRows = scans.slice(0, 4).map(function (scan) {
+      return '<div class="scan-track-scan"><strong>' + esc(statusLabel(scan.label || scan.status)) + '</strong>' +
+        (scan.location ? '<span>' + esc(scan.location) + '</span>' : '') +
+        (scan.scanned_at ? '<small>' + esc(scan.scanned_at) + '</small>' : '') + '</div>';
+    }).join('');
+    box.hidden = false;
+    box.className = 'scan-track-result';
+    box.innerHTML =
+      '<div class="scan-track-head"><div><span class="scan-kicker">' + (data.kind === 'errand' ? 'Errand' : 'Parcel') + ' found</span>' +
+      '<h2>' + esc(title) + '</h2>' + (route ? '<p class="scan-muted">' + esc(route) + '</p>' : '') + '</div>' +
+      '<span class="scan-track-status">' + esc(statusLabel(record.status)) + '</span></div>' +
+      '<div class="scan-track-meta"><span>Carrier</span><strong>' + esc(record.carrier || '—') + '</strong>' +
+      '<span>Payment</span><strong>' + esc(statusLabel(record.payment_status || '—')) + '</strong></div>' +
+      (scanRows ? '<div class="scan-track-scans"><div class="scan-card-title">Latest scans</div>' + scanRows + '</div>' : '') +
+      '<p class="scan-hint">Details are masked for privacy. Ask the customer for their receipt for full details.</p>';
+  }
+  function trackLookup(ev) {
+    ev.preventDefault();
+    var input = $('#trackInput');
+    var button = $('#trackBtn');
+    var box = $('#trackResult');
+    var query = input.value.trim().toUpperCase();
+    clearError('#trackError');
+    box.hidden = true;
+    if (!query) { toastError('#trackError', 'Enter a tracking number, Locker ID or errand reference.'); return; }
+    button.disabled = true;
+    var original = button.textContent;
+    button.textContent = 'Tracking…';
+    fetch('/api/track.php?q=' + encodeURIComponent(query), { cache: 'no-store' })
+      .then(function (res) {
+        return res.json().catch(function () { return { ok: false, error: { message: 'Unexpected response from the server.' } }; });
+      })
+      .then(function (data) {
+        if (!data || data.ok === false) throw new Error((data && data.error && data.error.message) || 'Tracking lookup failed.');
+        renderTrackResult(data);
+      })
+      .catch(function (err) { toastError('#trackError', err.message); })
+      .finally(function () { button.disabled = false; button.textContent = original; });
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
     updateNet();
     window.addEventListener('online', function () { updateNet(); flushQueue(); });
@@ -566,20 +652,22 @@
     $('#tracking').addEventListener('keydown', function (ev) {
       if (ev.key === 'Enter') { ev.preventDefault(); lookupParcel($('#tracking').value); }
     });
-    $('#settingsBtn').addEventListener('click', function () { renderRecent(); renderQueueStatus(); flushQueue(); $('#settingsOverlay').hidden = false; });
+    $('#settingsBtn').addEventListener('click', function () { $('#settingsOverlay').hidden = false; });
     $('#settingsClose').addEventListener('click', function () { $('#settingsOverlay').hidden = true; });
     $('#settingsOverlay').addEventListener('click', function (ev) {
       if (ev.target === $('#settingsOverlay')) $('#settingsOverlay').hidden = true;
     });
     $('#clearRecent').addEventListener('click', function () { localStorage.removeItem(RECENT_KEY); renderRecent(); });
-    var recentNav = document.querySelector('[data-scan-nav="recent"]');
-    if (recentNav) recentNav.addEventListener('click', function (ev) {
-      ev.preventDefault();
-      renderRecent();
-      renderQueueStatus();
-      flushQueue();
-      $('#settingsOverlay').hidden = false;
+    Array.prototype.forEach.call(document.querySelectorAll('[data-scan-view]'), function (link) {
+      link.addEventListener('click', function (ev) {
+        ev.preventDefault();
+        switchScanView(link.getAttribute('data-scan-view'), true);
+      });
     });
+    $('#trackForm').addEventListener('submit', trackLookup);
+    window.addEventListener('hashchange', function () { switchScanView(viewFromHash(), false); });
+    window.addEventListener('popstate', function () { switchScanView(viewFromHash(), false); });
+    switchScanView(viewFromHash(), false);
     $('#changeToken').addEventListener('click', function () {
       if (!window.confirm('Disconnect this point token from this phone?')) return;
       setToken(''); point = null; pendingKey = '';

@@ -12,7 +12,7 @@
   <link rel="icon" href="/assets/img/favicon-64.png" type="image/png">
   <link rel="apple-touch-icon" href="/assets/img/scan-icon-192.png">
   <link rel="manifest" href="/assets/scan-manifest.webmanifest">
-  <link rel="stylesheet" href="/assets/css/scan.css?v=20261029h">
+  <link rel="stylesheet" href="/assets/css/scan.css?v=20261029l">
 </head>
 <body>
   <header class="scan-head">
@@ -23,11 +23,12 @@
     <div class="scan-head__right">
       <span id="netState" class="scan-pill scan-pill--ok">Online</span>
       <button type="button" id="installBtn" class="scan-icon-btn" hidden title="Install scanner">&#8595;</button>
-      <button type="button" id="settingsBtn" class="scan-icon-btn" title="Settings and recent scans">&#9881;</button>
+      <button type="button" id="settingsBtn" class="scan-icon-btn" title="Scanner settings">&#9881;</button>
     </div>
   </header>
 
   <main class="scan-main">
+    <section id="scanView" class="scan-view">
     <section id="setup" class="scan-card">
       <div class="scan-kicker">Partner point access</div>
       <h1>Connect this phone</h1>
@@ -100,6 +101,57 @@
         <div id="scanError" class="scan-error" hidden></div>
       </form>
     </section>
+    </section>
+
+    <section id="recentView" class="scan-view" hidden>
+      <div class="scan-card">
+        <div class="scan-row">
+          <div><div class="scan-kicker">Scanner</div><h1>Recent scans</h1></div>
+          <button id="clearRecent" type="button" class="scan-link">Clear</button>
+        </div>
+        <p class="scan-muted">Scans recorded on this phone. They stay on this device.</p>
+        <div id="queueStatus" class="scan-hint"></div>
+        <div id="recentList" class="scan-recent"><p class="scan-hint">No scans yet on this device.</p></div>
+      </div>
+    </section>
+
+    <section id="trackView" class="scan-view" hidden>
+      <div class="scan-card">
+        <div class="scan-kicker">Parcel lookup</div>
+        <h1>Track</h1>
+        <p class="scan-muted">Check a parcel, Locker ID or errand reference without leaving the scanner.</p>
+        <form id="trackForm" class="scan-form">
+          <div class="scan-field">
+            <label class="scan-label" for="trackInput">Tracking number / Locker ID / errand ref</label>
+            <input id="trackInput" class="scan-input scan-mono" placeholder="TRK-XXXXXXXX" autocomplete="off" autocapitalize="characters">
+          </div>
+          <button id="trackBtn" class="scan-btn scan-btn--primary" type="submit">Track parcel</button>
+        </form>
+        <div id="trackError" class="scan-error" hidden></div>
+        <div id="trackResult" class="scan-track-result" hidden></div>
+      </div>
+    </section>
+
+    <section id="helpView" class="scan-view" hidden>
+      <div class="scan-card">
+        <div class="scan-kicker">Operator help</div>
+        <h1>Need a hand?</h1>
+        <p class="scan-muted">Quick scanner guidance. You can stay in the app while you work.</p>
+        <div class="scan-help-list">
+          <details class="scan-help"><summary>How do I scan a parcel?</summary><p>Choose <strong>Scan</strong> below, tap <strong>Scan parcel label</strong>, and hold the QR or Locker label steady in the camera. The scanner stays on until a valid Mzigo label is detected.</p></details>
+          <details class="scan-help"><summary>What does each scan action mean?</summary><p><strong>Drop off</strong> records a parcel at the origin. <strong>Hand over</strong> gives it to the transporter. <strong>Arrival</strong> checks it in at the destination. <strong>Collect</strong> releases it to the customer.</p></details>
+          <details class="scan-help"><summary>The label will not scan</summary><p>Type the tracking number in the manual entry field and tap the journey lookup. If manual entry is disabled, clean the label or ask your supervisor to enable manual entry for this point.</p></details>
+          <details class="scan-help"><summary>What happens when I am offline?</summary><p>Scans are saved on this phone and show as queued in <strong>Recent</strong>. Keep the app open and reconnect; they sync automatically.</p></details>
+          <details class="scan-help"><summary>Why do I need a collection code?</summary><p>Collection requires a completed payment and the customer's six-character code. Ask the customer to read it from their portal.</p></details>
+          <details class="scan-help"><summary>Wrong point or changed phone?</summary><p>Open the gear in the header and use <strong>Disconnect point / change token</strong>. The point token is stored only on this device.</p></details>
+        </div>
+        <div class="scan-help-contact">
+          <div class="scan-card-title">Still stuck?</div>
+          <p class="scan-hint">Send us the tracking number and your point code.</p>
+          <a class="scan-btn scan-btn--outline" href="mailto:hello@mzigo.online?subject=SCAN%20support">Email support</a>
+        </div>
+      </div>
+    </section>
   </main>
 
   <video id="qrVideo" playsinline hidden class="scan-video"></video>
@@ -115,33 +167,31 @@
   <div id="settingsOverlay" class="scan-qr-overlay" hidden>
     <div class="scan-settings-box">
       <div class="scan-row"><strong>Scanner settings</strong><button type="button" id="settingsClose" class="scan-link">Close</button></div>
-      <div class="scan-row" style="margin-top:16px;"><div class="scan-card-title">Recent scans on this phone</div><button id="clearRecent" type="button" class="scan-link">Clear</button></div>
-      <div id="queueStatus" class="scan-hint"></div>
-      <div id="recentList" class="scan-recent"><p class="scan-hint">No scans yet on this device.</p></div>
+      <p class="scan-hint" style="margin-top:12px;">This phone is connected to the point shown on the Scan page. The token is stored only on this device.</p>
       <button type="button" id="changeToken" class="scan-btn scan-btn--outline" style="width:100%;margin-top:16px;">Disconnect point / change token</button>
     </div>
   </div>
 
   <nav class="scan-bottomnav" aria-label="Scanner navigation">
-    <a class="is-active" href="/scan" aria-current="page">
+    <a class="is-active" href="#scan" data-scan-view="scan" aria-current="page">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M3 12h18"/></svg>
       <span>Scan</span>
     </a>
-    <a href="#" data-scan-nav="recent">
+    <a href="#recent" data-scan-view="recent">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 7v5l3 2"/></svg>
       <span>Recent</span>
     </a>
-    <a href="/track-mzigo">
+    <a href="#track" data-scan-view="track">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
       <span>Track</span>
     </a>
-    <a href="/help">
+    <a href="#help" data-scan-view="help">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 4.4 1.7c-.8.7-1.4 1.2-1.4 2.3"/><path d="M12 17h.01"/></svg>
       <span>Help</span>
     </a>
   </nav>
 
   <script src="/assets/js/jsQR.min.js?v=20261028f" defer></script>
-  <script src="/assets/js/scan.js?v=20261029h" defer></script>
+  <script src="/assets/js/scan.js?v=20261029l" defer></script>
 </body>
 </html>
