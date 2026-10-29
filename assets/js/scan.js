@@ -405,6 +405,14 @@
       if (ev.target === $('#settingsOverlay')) $('#settingsOverlay').hidden = true;
     });
     $('#clearRecent').addEventListener('click', function () { localStorage.removeItem(RECENT_KEY); renderRecent(); });
+    var recentNav = document.querySelector('[data-scan-nav="recent"]');
+    if (recentNav) recentNav.addEventListener('click', function (ev) {
+      ev.preventDefault();
+      renderRecent();
+      renderQueueStatus();
+      flushQueue();
+      $('#settingsOverlay').hidden = false;
+    });
     $('#changeToken').addEventListener('click', function () {
       if (!window.confirm('Disconnect this point token from this phone?')) return;
       setToken(''); point = null; pendingKey = '';

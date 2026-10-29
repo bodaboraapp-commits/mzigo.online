@@ -12,7 +12,7 @@
   <link rel="icon" href="/assets/img/favicon-64.png" type="image/png">
   <link rel="apple-touch-icon" href="/assets/img/scan-icon-192.png">
   <link rel="manifest" href="/assets/scan-manifest.webmanifest">
-  <link rel="stylesheet" href="/assets/css/scan.css?v=20261028f">
+  <link rel="stylesheet" href="/assets/css/scan.css?v=20261029a">
 </head>
 <body>
   <header class="scan-head">
@@ -110,7 +110,26 @@
     </div>
   </div>
 
+  <nav class="scan-bottomnav" aria-label="Scanner navigation">
+    <a class="is-active" href="/scan" aria-current="page">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M3 12h18"/></svg>
+      <span>Scan</span>
+    </a>
+    <a href="#" data-scan-nav="recent">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 7v5l3 2"/></svg>
+      <span>Recent</span>
+    </a>
+    <a href="/track-mzigo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <span>Track</span>
+    </a>
+    <a href="/help">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 4.4 1.7c-.8.7-1.4 1.2-1.4 2.3"/><path d="M12 17h.01"/></svg>
+      <span>Help</span>
+    </a>
+  </nav>
+
   <script src="/assets/js/jsQR.min.js?v=20261028f" defer></script>
-  <script src="/assets/js/scan.js?v=20261028f" defer></script>
+  <script src="/assets/js/scan.js?v=20261029a" defer></script>
 </body>
 </html>
