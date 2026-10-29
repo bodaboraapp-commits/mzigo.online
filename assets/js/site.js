@@ -2342,6 +2342,19 @@
     } catch (e) {}
   }
 
+  function bindOrdersHistory() {
+    if (window.__mzOrdersHistoryBound) return;
+    window.__mzOrdersHistoryBound = true;
+    window.addEventListener('popstate', function () {
+      if (window.location.pathname !== '/orders') return;
+      var host = $('[data-app="orders"]');
+      if (!host || !host.querySelector('[data-orders-table]')) return;
+      readOrdersFromUrl();
+      renderOrdersShell();
+      loadOrders();
+    });
+  }
+
   function initOrdersPage() {
     if (!APP.user) { window.location.href = '/login?next=%2Forders'; return; }
     if (APP.user.role === 'freelancer') { window.location.href = '/freelancer'; return; }
@@ -2352,6 +2365,7 @@
       renderOrdersShell();
       loadOrders();
       syncOrdersUrl(false);
+      bindOrdersHistory();
       return;
     }
     initAppNav();
@@ -2359,17 +2373,7 @@
     renderOrdersShell();
     loadOrders();
     syncOrdersUrl(false);
-    if (!window.__mzOrdersHistoryBound) {
-      window.__mzOrdersHistoryBound = true;
-      window.addEventListener('popstate', function (ev) {
-        if (!ev.state || !ev.state.mzOrders) return;
-        var host = $('[data-app="orders"]');
-        if (!host || !host.querySelector('[data-orders-table]')) return;
-        readOrdersFromUrl();
-        renderOrdersShell();
-        loadOrders();
-      });
-    }
+    bindOrdersHistory();
   }
 
   function renderOrdersShell() {
