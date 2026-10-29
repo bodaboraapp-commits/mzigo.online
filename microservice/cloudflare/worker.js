@@ -1,19 +1,24 @@
 /**
- * Cloudflare Worker (free plan) that proxies mzigo.online/microservice/*
- * to the Cloudflare Tunnel hostname that exposes the Python MCP service.
+ * Cloudflare Worker (free plan) that serves mzigo.online/microservice/*
+ * and forwards to the origin server by IP — no second subdomain and no loop.
  *
- * Required secret/variable:
- *   MCP_ORIGIN = https://mcp-origin.mzigo.online
+ * The origin web server must reverse-proxy /mcp-internal/mcp and
+ * /mcp-internal/health to 127.0.0.1:8484 on the Python service.
+ *
+ * Variables:
+ *   MCP_ORIGIN_IP = 162.0.209.206
+ *   MCP_HOST      = mzigo.online
  */
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    const path = url.pathname.replace(/^\/microservice/, "");
-    const origin = (env.MCP_ORIGIN || "https://mcp-origin.mzigo.online").replace(/\/+$/, "");
-    const target = new URL(origin + path + url.search);
+    const originIp = (env.MCP_ORIGIN_IP || "162.0.209.206").replace(/\/+$/, "");
+    const host = env.MCP_HOST || "mzigo.online";
+    const path = "/mcp-internal" + url.pathname.replace(/^\/microservice/, "");
+    const target = new URL("http://" + originIp + path + url.search);
 
     const headers = new Headers(request.headers);
-    headers.set("Host", target.host);
+    headers.set("Host", host);
 
     const init = {
       method: request.method,
