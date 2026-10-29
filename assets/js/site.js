@@ -2992,6 +2992,7 @@ return '<div class="mz-mobile-card">' +
           '<a class="mz-tab" style="border:1px solid var(--mz-border);" href="/profile">View profile</a>' +
         '</div>' +
         '<p style="font-size:11px;color:var(--mz-muted-fg);margin:16px 0 0;">Pay at collection by M-Pesa. The parcel is released only after the payment is confirmed.</p>' +
+        '<div data-mz-photo-retry></div>' +
       '</div>';
     var again = mount.querySelector('[data-mz-again]');
     if (again) again.addEventListener('click', function () { window.location.reload(); });
@@ -3132,6 +3133,136 @@ return '<div class="mz-mobile-card">' +
       packagePhoto: step3.querySelector('[data-mz-package-photo]'),
       estimate: step3.querySelector('[data-mz-estimate]')
     };
+
+    var photoState = {
+      product: { file: null, previewUrl: '' },
+      package: { file: null, previewUrl: '' }
+    };
+    function photoTile(kind) {
+      return step3.querySelector('[data-mz-photo-tile="' + kind + '"]');
+    }
+    function photoInput(kind) {
+      return step3.querySelector('[data-mz-' + kind + '-photo]');
+    }
+    function photoLabel(kind) {
+      return kind === 'product' ? 'Product photo' : 'Package photo';
+    }
+    function bytesLabel(bytes) {
+      if (bytes >= 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+      return Math.max(1, Math.round(bytes / 1024)) + ' KB';
+    }
+    function setPhotoError(kind, message) {
+      var tile = photoTile(kind);
+      if (!tile) return;
+      var error = tile.querySelector('[data-mz-photo-error]');
+      if (!error) return;
+      error.textContent = message || '';
+      error.hidden = !message;
+    }
+    function renderPhoto(kind) {
+      var tile = photoTile(kind);
+      if (!tile) return;
+      var state = photoState[kind];
+      var add = tile.querySelector('[data-mz-photo-open]');
+      var selected = tile.querySelector('[data-mz-photo-selected]');
+      var image = tile.querySelector('[data-mz-photo-preview]');
+      var name = tile.querySelector('[data-mz-photo-name]');
+      var hasFile = !!state.file;
+      tile.classList.toggle('is-filled', hasFile);
+      if (add) add.hidden = hasFile;
+      if (selected) selected.hidden = !hasFile;
+      if (image && hasFile) {
+        image.src = state.previewUrl;
+        image.alt = photoLabel(kind) + ' preview';
+      } else if (image) {
+        image.removeAttribute('src');
+      }
+      if (name) {
+        name.textContent = hasFile ? state.file.name + ' · ' + bytesLabel(state.file.size) : '';
+      }
+    }
+    function resetPhoto(kind) {
+      var state = photoState[kind];
+      if (state.previewUrl) URL.revokeObjectURL(state.previewUrl);
+      state.file = null;
+      state.previewUrl = '';
+      var input = photoInput(kind);
+      if (input) input.value = '';
+      setPhotoError(kind, '');
+      renderPhoto(kind);
+    }
+    function compressPhoto(file) {
+      if (!window.File || !file || !/^image\//.test(file.type || '')) return Promise.resolve(file);
+      if (file.size <= 900 * 1024) return Promise.resolve(file);
+      return new Promise(function (resolve) {
+        var source = URL.createObjectURL(file);
+        var img = new Image();
+        img.onload = function () {
+          var maxSide = Math.max(img.width, img.height);
+          var scale = maxSide > 1600 ? 1600 / maxSide : 1;
+          if (scale === 1 && file.size <= 2 * 1024 * 1024) {
+            URL.revokeObjectURL(source);
+            resolve(file);
+            return;
+          }
+          var canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round(img.width * scale));
+          canvas.height = Math.max(1, Math.round(img.height * scale));
+          var ctx = canvas.getContext('2d');
+          if (!ctx) { URL.revokeObjectURL(source); resolve(file); return; }
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob(function (blob) {
+            URL.revokeObjectURL(source);
+            if (!blob) { resolve(file); return; }
+            var name = (file.name || 'photo').replace(/\.[^.]+$/, '') + '.jpg';
+            resolve(new File([blob], name, { type: 'image/jpeg', lastModified: Date.now() }));
+          }, 'image/jpeg', 0.82);
+        };
+        img.onerror = function () {
+          URL.revokeObjectURL(source);
+          resolve(file);
+        };
+        img.src = source;
+      });
+    }
+    function handlePhoto(kind, file) {
+      if (!file) return;
+      var error = validatePhoto(file, photoLabel(kind));
+      if (error) {
+        setPhotoError(kind, error);
+        var input = photoInput(kind);
+        if (input) input.value = '';
+        return;
+      }
+      var state = photoState[kind];
+      if (state.previewUrl) URL.revokeObjectURL(state.previewUrl);
+      state.file = file;
+      state.previewUrl = URL.createObjectURL(file);
+      setPhotoError(kind, '');
+      renderPhoto(kind);
+      compressPhoto(file).then(function (compressed) {
+        if (photoState[kind].file !== file) return;
+        photoState[kind].file = compressed;
+        renderPhoto(kind);
+      }).catch(function () {});
+    }
+    ['product', 'package'].forEach(function (kind) {
+      var tile = photoTile(kind);
+      var input = photoInput(kind);
+      if (!tile || !input) return;
+      var open = tile.querySelector('[data-mz-photo-open]');
+      var replace = tile.querySelector('[data-mz-photo-replace]');
+      var remove = tile.querySelector('[data-mz-photo-remove]');
+      if (open) open.addEventListener('click', function () { input.value = ''; input.click(); });
+      if (replace) replace.addEventListener('click', function () { input.value = ''; input.click(); });
+      if (remove) remove.addEventListener('click', function () { resetPhoto(kind); });
+      input.addEventListener('change', function () {
+        handlePhoto(kind, input.files && input.files[0]);
+      });
+    });
+
     function refreshEstimate() {
       var q = quote({ size: (s3.size && s3.size.value) || 'Medium', value: Number((s3.value && s3.value.value) || 0) });
       sendState.quote = q;
@@ -3226,6 +3357,40 @@ return '<div class="mz-mobile-card">' +
       return '';
     }
 
+    function uploadPhotosFor(parcel, mount) {
+      var pending = [];
+      if (photoState.product.file) pending.push(uploadParcelPhoto(parcel.id, 'product', photoState.product.file));
+      if (photoState.package.file) pending.push(uploadParcelPhoto(parcel.id, 'package', photoState.package.file));
+      if (!pending.length) return Promise.resolve(parcel);
+      var status = step3.querySelector('[data-mz-photo-upload-status]');
+      if (status) { status.hidden = false; status.textContent = 'Uploading photos…'; }
+      return Promise.all(pending).then(function (results) {
+        parcel.photos = parcel.photos || {};
+        results.forEach(function (result) {
+          if (result.photos) parcel.photos = Object.assign({}, parcel.photos, result.photos);
+        });
+        if (status) { status.hidden = true; status.textContent = ''; }
+        renderReceipt(mount, parcel, 'parcel');
+        toast('Order photos uploaded.');
+        return parcel;
+      }).catch(function (err) {
+        if (status) { status.hidden = true; status.textContent = ''; }
+        var holder = mount.querySelector('[data-mz-photo-retry]');
+        if (holder) {
+          holder.innerHTML = '<div class="mz-alert" style="margin-top:14px;text-align:left;">' +
+            '<strong>Order registered, but photos did not upload.</strong><div style="margin-top:4px;">' +
+            esc(err.message || 'Photo upload failed.') + '</div>' +
+            '<button type="button" class="mz-btn mz-btn--outline mz-btn--sm" data-mz-photo-retry-button style="margin-top:10px;">Retry photos</button></div>';
+          var retry = holder.querySelector('[data-mz-photo-retry-button]');
+          if (retry) retry.addEventListener('click', function () {
+            holder.innerHTML = '';
+            uploadPhotosFor(parcel, mount).catch(function () {});
+          });
+        }
+        throw err;
+      });
+    }
+
     var submit = step3.querySelector('[data-mz-submit]');
     if (submit) submit.addEventListener('click', function () {
       var description = (s3.description && s3.description.value || '').trim();
@@ -3236,8 +3401,8 @@ return '<div class="mz-mobile-card">' +
       if (!(value > 0)) { toast('Declare the parcel value in KES.', 'error'); s3.value && s3.value.focus(); return; }
       if (!size) { toast('Select the package size.', 'error'); s3.size && s3.size.focus(); return; }
       if (!payment) { toast('Select the preferred payment method.', 'error'); s3.payment && s3.payment.focus(); return; }
-      var productFile = s3.productPhoto && s3.productPhoto.files ? s3.productPhoto.files[0] : null;
-      var packageFile = s3.packagePhoto && s3.packagePhoto.files ? s3.packagePhoto.files[0] : null;
+      var productFile = photoState.product.file;
+      var packageFile = photoState.package.file;
       var photoError = validatePhoto(productFile, 'Product photo') || validatePhoto(packageFile, 'Package photo');
       if (photoError) { toast(photoError, 'error'); return; }
       var partner = APP.partners.filter(function (p) { return p.name === sendState.carrier; })[0];
@@ -3264,21 +3429,9 @@ return '<div class="mz-mobile-card">' +
         stepper.innerHTML = '';
         var sub = $('[data-mz-wizard-sub]');
         if (sub) sub.textContent = 'Registered';
-        var pendingUploads = [];
-        if (productFile) pendingUploads.push(uploadParcelPhoto(parcel.id, 'product', productFile));
-        if (packageFile) pendingUploads.push(uploadParcelPhoto(parcel.id, 'package', packageFile));
-        if (pendingUploads.length) {
+        if (productFile || packageFile) {
           toast('Order saved. Uploading photos…', 'info');
-          Promise.all(pendingUploads).then(function (results) {
-            parcel.photos = parcel.photos || {};
-            results.forEach(function (result) {
-              if (result.photos) parcel.photos = Object.assign({}, parcel.photos, result.photos);
-            });
-            renderReceipt(mount, parcel, 'parcel');
-            toast('Order photos uploaded.');
-          }).catch(function (err) {
-            toast('Order saved, but photo upload failed: ' + err.message, 'error');
-          });
+          uploadPhotosFor(parcel, mount).catch(function () {});
         } else {
           toast('Parcel ' + parcel.tracking + ' saved to MySQL.');
         }
@@ -9342,12 +9495,17 @@ return '<div class="mz-mobile-card">' +
         onPage: function (page) { adminTablePages.ctaEvents = page; }
       });
       var recentRows = recent.map(function (r) {
+        var geo = (r.geo_country || r.geo_city)
+          ? (r.geo_country ? r.geo_country : '') + (r.geo_city ? (r.geo_country ? ' · ' : '') + r.geo_city : '')
+          : '—';
         return '<tr><td>' + esc(r.label) + '</td><td>' + esc(r.location) + '</td><td>' + esc(r.audience) + '</td>' +
-          '<td class="mz-mono" style="font-size:11px;">' + esc(r.path) + '</td><td>' + esc(fmtDate(r.created_at)) + '</td></tr>';
+          '<td class="mz-mono" style="font-size:11px;">' + esc(r.path) + '</td>' +
+          '<td class="mz-mono" style="font-size:11px;">' + esc(r.ip || '—') + '</td>' +
+          '<td>' + esc(geo) + '</td><td>' + esc(fmtDate(r.created_at)) + '</td></tr>';
       });
       renderPagedTable(mount.querySelector('[data-admin-cta-recent]'), {
         title: 'Recent CTA clicks',
-        columns: ['CTA', 'Location', 'Audience', 'Page', 'When'],
+        columns: ['CTA', 'Location', 'Audience', 'Page', 'IP', 'Geo', 'When'],
         rows: recentRows,
         empty: 'No CTA clicks captured yet.',
         perPage: 6,
