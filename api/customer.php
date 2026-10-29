@@ -15,6 +15,7 @@ require __DIR__ . '/_claims.php';
 require_once __DIR__ . '/_verification.php';
 require_once __DIR__ . '/_growth.php';
 require_once __DIR__ . '/_notification_prefs.php';
+require_once __DIR__ . '/_mpesa_payments.php';
 
 $user = require_customer();
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
@@ -82,6 +83,7 @@ if ($method === 'GET') {
         'customer' => ['id' => (int) $user['id'], 'name' => $user['name'], 'phone' => $user['phone'],
             'email' => $accountRow['email'] ?? null, 'email_verified' => !empty($accountRow['email_verified_at'])],
         'channels' => notification_channels(true),
+        'payment' => mpesa_payment_public_config(),
         'preference' => $pref,
         'email_preferences' => notification_preferences((int) $user['id']),
         'whatsapp_optin' => $whatsappOptin,
@@ -318,6 +320,31 @@ if ($action === 'file_claim') {
         'message' => 'Claim ' . $ref . ' submitted to the seller for review.']);
 }
 
+if ($action === 'payment_status') {
+    $tracking = param($data, 'tracking', 3, 40, 'tracking');
+    $stmt = db()->prepare('SELECT * FROM parcels WHERE tracking = :tracking AND receiver_phone_key = :key LIMIT 1');
+    $stmt->execute([':tracking' => $tracking, ':key' => $key]);
+    $row = $stmt->fetch();
+    if (!$row) { fail_error('not_found', 'No parcel for your account matches that tracking number.', 404); }
+    $payStmt = db()->prepare('SELECT * FROM mpesa_payments WHERE parcel_id = ? ORDER BY id DESC LIMIT 1');
+    $payStmt->execute([$row['id']]);
+    $payment = $payStmt->fetch();
+    if ($payment && ($payment['status'] ?? '') === 'pending') {
+        $refresh = mpesa_refresh_payment($payment);
+        $payStmt->execute([$row['id']]);
+        $payment = $payStmt->fetch();
+    }
+    $fresh = db()->prepare('SELECT * FROM parcels WHERE id = ? LIMIT 1');
+    $fresh->execute([$row['id']]);
+    json_out([
+        'ok' => true,
+        'status' => $payment['status'] ?? (($row['payment_status'] ?? '') === 'paid' ? 'paid' : 'not_started'),
+        'receipt' => (string) ($payment['mpesa_receipt'] ?? ''),
+        'message' => $payment ? (string) ($payment['result_desc'] ?? '') : '',
+        'parcel' => customer_parcel_view($fresh->fetch()),
+    ]);
+}
+
 if ($action === 'resend_receipt') {
     $tracking = param($data, 'tracking', 3, 40, 'tracking');
     $stmt = db()->prepare('SELECT * FROM parcels WHERE tracking = :tracking AND receiver_phone_key = :key LIMIT 1');
@@ -375,9 +402,51 @@ if ($couponCode !== '') {
     $discountKes = (int) $couponResult['discount_kes'];
     $payableKes = (int) $couponResult['final_kes'];
 }
+$mpesaCfg = mpesa_payment_config();
+if (($mpesaCfg['mode'] ?? 'demo') === 'live') {
+    $pendingStmt = db()->prepare('SELECT * FROM mpesa_payments WHERE parcel_id = ? AND status = "pending" ORDER BY id DESC LIMIT 1');
+    $pendingStmt->execute([$row['id']]);
+    $pendingPayment = $pendingStmt->fetch();
+    if ($pendingPayment) {
+        json_out([
+            'ok' => true, 'pending' => true,
+            'checkout_request_id' => $pendingPayment['checkout_request_id'],
+            'message' => 'An M-Pesa request is already waiting on your phone. Enter your PIN or wait for confirmation.',
+        ]);
+    }
+}
 $ref = 'DEMO-MPESA-' . strtoupper(bin2hex(random_bytes(3)));
 $creditUsed = growth_credit_use((int) $user['id'], 'parcel_credit', $payableKes, $ref);
 if ($creditUsed > 0) { $payableKes = max(0, $payableKes - $creditUsed); }
+if (($mpesaCfg['mode'] ?? 'demo') === 'live' && !mpesa_stk_ready($mpesaCfg)) {
+    if ($creditUsed > 0) {
+        growth_credit_add((int) $user['id'], $creditUsed, 'parcel_credit', 'M-Pesa configuration failed', $ref);
+    }
+    fail_error('mpesa_not_configured', 'M-Pesa payments are not configured. Contact support.', 503);
+}
+if (($mpesaCfg['mode'] ?? 'demo') === 'live' && $payableKes > 0) {
+    $stk = mpesa_stk_push($mpesaCfg, (string) ($user['phone'] ?? ''), $payableKes,
+        (string) $row['tracking'], 'Mzigo delivery fee ' . $row['tracking']);
+    if (!$stk['ok']) {
+        if ($creditUsed > 0) {
+            growth_credit_add((int) $user['id'], $creditUsed, 'parcel_credit', 'M-Pesa request failed refund', $ref);
+        }
+        fail_error('mpesa_stk_failed', $stk['error'] ?? 'Could not start the M-Pesa payment.', 502);
+    }
+    db()->prepare('INSERT INTO mpesa_payments (parcel_id, user_id, checkout_request_id, merchant_request_id, phone, amount_kes, account_ref, status, coupon_id, coupon_code, discount_kes, credit_used_kes, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, "pending", ?, ?, ?, ?, NOW())')
+        ->execute([$row['id'], (int) $user['id'], $stk['checkout_request_id'], $stk['merchant_request_id'] ?? '',
+            (string) ($user['phone'] ?? ''), $payableKes, (string) $row['tracking'],
+            $coupon['id'] ?? null, $coupon['code'] ?? null, $discountKes, $creditUsed]);
+    audit('customer.mpesa_stk_requested', 'parcel', (string) $row['id'], [
+        'tracking' => $row['tracking'], 'amount_kes' => $payableKes, 'checkout_request_id' => $stk['checkout_request_id'],
+    ], $row['tenant_id'] ? (int) $row['tenant_id'] : null);
+    json_out([
+        'ok' => true, 'pending' => true,
+        'checkout_request_id' => $stk['checkout_request_id'],
+        'message' => $stk['customer_message'] ?: 'Check your phone and enter your M-Pesa PIN.',
+    ]);
+}
 $pdo = db();
 $pdo->beginTransaction();
 try {

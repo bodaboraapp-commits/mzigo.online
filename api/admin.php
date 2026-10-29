@@ -30,6 +30,7 @@ require_once __DIR__ . '/_api_usage.php';
 require_once __DIR__ . '/_claim_rails.php';
 require __DIR__ . '/_cms.php';
 require_once __DIR__ . '/_payouts.php';
+require_once __DIR__ . '/_mpesa.php';
 require_once __DIR__ . '/_contact_threads.php';
 require_once __DIR__ . '/_insurance.php';
 
@@ -355,6 +356,7 @@ if ($method === 'GET') {
         'pricing_mode' => pricing_mode(),
         'fee_config' => fee_config(),
         'order_photos_required' => order_photos_required(),
+        'mpesa_payment_config' => mpesa_payment_public_config(),
         'payout_config' => payout_config(),
         'runner_launch_config' => runner_launch_config(),
         'pending_runner_payouts' => db()->query("SELECT p.*, u.name AS runner_name, u.phone AS runner_phone FROM runner_payouts p JOIN users u ON u.id = p.runner_id WHERE p.status = 'pending' ORDER BY p.requested_at ASC LIMIT 50")->fetchAll(),
@@ -1556,6 +1558,20 @@ switch ($action) {
         $clean = payout_config_save($data);
         audit('admin.payout_config_saved', 'platform', 'payout_config', ['mode' => $clean['mode'], 'schedule' => $clean['schedule']]);
         json_out(['ok' => true, 'payout_config' => $clean]);
+    }
+
+    case 'save_mpesa_payment_config': {
+        $clean = mpesa_payment_config_save(isset($data['config']) && is_array($data['config']) ? $data['config'] : $data);
+        audit('admin.mpesa_payment_config_saved', 'platform', 'mpesa_payment_config', [
+            'mode' => $clean['mode'], 'environment' => $clean['environment'], 'shortcode' => $clean['shortcode'],
+        ]);
+        json_out(['ok' => true, 'mpesa_payment_config' => mpesa_payment_public_config()]);
+    }
+
+    case 'test_mpesa_payment_auth': {
+        $result = mpesa_stk_token(mpesa_payment_config());
+        json_out(['ok' => !empty($result['ok']), 'message' => !empty($result['ok'])
+            ? 'Daraja authentication succeeded.' : (string) ($result['error'] ?? 'Daraja authentication failed.')]);
     }
 
     case 'save_order_photos_requirement': {

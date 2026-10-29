@@ -58,6 +58,7 @@ Pending MVP migrations:
 039_multi_role_access.sql   -> user_roles
 040_scan_manual_entry.sql   -> partner_points.manual_entry_enabled
 041_parcel_photos.sql       -> parcel_photos
+042_mpesa_payments.sql      -> mpesa_payments (Daraja STK)
 ```
 
 Verify all three before testing multi-role login, scan manual entry or order photos.

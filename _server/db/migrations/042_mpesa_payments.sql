@@ -1,0 +1,28 @@
+-- Mzigo.online — migration 042: Daraja STK customer payment records.
+CREATE TABLE IF NOT EXISTS mpesa_payments (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  parcel_id CHAR(36) NOT NULL,
+  user_id BIGINT UNSIGNED NULL,
+  checkout_request_id VARCHAR(100) NOT NULL,
+  merchant_request_id VARCHAR(100) NULL,
+  phone VARCHAR(20) NOT NULL,
+  amount_kes INT UNSIGNED NOT NULL,
+  account_ref VARCHAR(40) NOT NULL,
+  status ENUM('pending','paid','failed','cancelled') NOT NULL DEFAULT 'pending',
+  result_code VARCHAR(20) NULL,
+  result_desc VARCHAR(255) NULL,
+  mpesa_receipt VARCHAR(40) NULL,
+  coupon_id BIGINT UNSIGNED NULL,
+  coupon_code VARCHAR(40) NULL,
+  discount_kes INT UNSIGNED NOT NULL DEFAULT 0,
+  credit_used_kes INT UNSIGNED NOT NULL DEFAULT 0,
+  transaction_id BIGINT UNSIGNED NULL,
+  raw_callback TEXT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uniq_mpesa_checkout (checkout_request_id),
+  KEY idx_mpesa_parcel (parcel_id),
+  KEY idx_mpesa_user_status (user_id, status),
+  CONSTRAINT fk_mpesa_parcel FOREIGN KEY (parcel_id) REFERENCES parcels(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
