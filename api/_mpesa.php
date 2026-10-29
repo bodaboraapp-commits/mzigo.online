@@ -156,56 +156,72 @@ function mpesa_stk_push(array $cfg, string $phone, int $amountKes, string $accou
     if ($amountKes < 1) {
         return ['ok' => false, 'error' => 'The amount must be at least KES 1.'];
     }
-    $token = mpesa_stk_token($cfg);
-    if (!$token['ok']) {
-        return $token;
+    $endpoint = mpesa_payment_env_base($cfg) . '/mpesa/stkpush/v1/processrequest';
+    $last = ['ok' => false, 'error' => 'Daraja STK request failed.'];
+    for ($attempt = 0; $attempt < 2; $attempt++) {
+        $token = mpesa_stk_token($cfg);
+        if (!$token['ok']) {
+            return $token;
+        }
+        $timestamp = date('YmdHis');
+        $payload = [
+            'BusinessShortCode' => (string) $cfg['shortcode'],
+            'Password' => mpesa_stk_password($cfg, $timestamp),
+            'Timestamp' => $timestamp,
+            'TransactionType' => (string) ($cfg['transaction_type'] ?: 'CustomerPayBillOnline'),
+            'Amount' => $amountKes,
+            'PartyA' => mpesa_payment_phone($phone),
+            'PartyB' => (string) $cfg['shortcode'],
+            'PhoneNumber' => mpesa_payment_phone($phone),
+            'CallBackURL' => (string) $cfg['callback_url'],
+            'AccountReference' => mb_substr($accountRef, 0, 40),
+            'TransactionDesc' => mb_substr($description, 0, 100),
+        ];
+        $ch = curl_init($endpoint);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 20,
+            CURLOPT_CONNECTTIMEOUT => 8,
+            CURLOPT_POST => true,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $token['token'],
+            ],
+            CURLOPT_POSTFIELDS => json_encode($payload, JSON_UNESCAPED_SLASHES),
+        ]);
+        $raw = curl_exec($ch);
+        $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        curl_close($ch);
+        $body = json_decode((string) $raw, true);
+        if ($code >= 200 && $code < 300 && is_array($body) && empty($body['errorCode'])
+            && (empty($body['ResponseCode']) || (string) $body['ResponseCode'] === '0')
+            && !empty($body['CheckoutRequestID'])) {
+            return [
+                'ok' => true,
+                'merchant_request_id' => (string) ($body['MerchantRequestID'] ?? ''),
+                'checkout_request_id' => (string) $body['CheckoutRequestID'],
+                'customer_message' => (string) ($body['CustomerMessage'] ?? 'Check your phone and enter your M-Pesa PIN.'),
+                'response' => $body,
+            ];
+        }
+        $errorCode = is_array($body) ? (string) ($body['errorCode'] ?? '') : '';
+        $detail = is_array($body)
+            ? (string) ($body['errorMessage'] ?? $body['ResponseDescription'] ?? '')
+            : mb_substr(trim(strip_tags((string) $raw)), 0, 180);
+        $last = [
+            'ok' => false,
+            'error' => 'Daraja STK request failed (HTTP ' . $code . ')' . ($detail !== '' ? ': ' . $detail : '.'),
+            'http_status' => $code,
+            'response' => $body,
+        ];
+        if ($error ?: ($errorCode !== '404.001.03')) {
+            break;
+        }
+        // A stale/invalid token can be fixed by one fresh OAuth attempt.
+        usleep(150000);
     }
-    $timestamp = date('YmdHis');
-    $payload = [
-        'BusinessShortCode' => (string) $cfg['shortcode'],
-        'Password' => mpesa_stk_password($cfg, $timestamp),
-        'Timestamp' => $timestamp,
-        'TransactionType' => (string) ($cfg['transaction_type'] ?: 'CustomerPayBillOnline'),
-        'Amount' => $amountKes,
-        'PartyA' => mpesa_payment_phone($phone),
-        'PartyB' => (string) $cfg['shortcode'],
-        'PhoneNumber' => mpesa_payment_phone($phone),
-        'CallBackURL' => (string) $cfg['callback_url'],
-        'AccountReference' => mb_substr($accountRef, 0, 40),
-        'TransactionDesc' => mb_substr($description, 0, 100),
-    ];
-    $ch = curl_init(mpesa_payment_env_base($cfg) . '/mpesa/stkpush/v1/processrequest');
-    curl_setopt_array($ch, [
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT => 30,
-        CURLOPT_POST => true,
-        CURLOPT_HTTPHEADER => [
-            'Content-Type: application/json',
-            'Authorization: Bearer ' . $token['token'],
-        ],
-        CURLOPT_POSTFIELDS => json_encode($payload, JSON_UNESCAPED_SLASHES),
-    ]);
-    $raw = curl_exec($ch);
-    $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $error = curl_error($ch);
-    curl_close($ch);
-    $body = json_decode((string) $raw, true);
-    if ($code < 200 || $code >= 300 || !is_array($body)) {
-        return ['ok' => false, 'error' => 'Daraja STK request failed (HTTP ' . $code . '). ' . ($error ?: ''), 'http_status' => $code, 'response' => $body];
-    }
-    if (!empty($body['errorCode']) || (isset($body['ResponseCode']) && (string) $body['ResponseCode'] !== '0')) {
-        return ['ok' => false, 'error' => (string) ($body['errorMessage'] ?? $body['ResponseDescription'] ?? 'Daraja rejected the STK request.'), 'response' => $body];
-    }
-    if (empty($body['CheckoutRequestID'])) {
-        return ['ok' => false, 'error' => 'Daraja did not return a checkout request ID.', 'response' => $body];
-    }
-    return [
-        'ok' => true,
-        'merchant_request_id' => (string) ($body['MerchantRequestID'] ?? ''),
-        'checkout_request_id' => (string) $body['CheckoutRequestID'],
-        'customer_message' => (string) ($body['CustomerMessage'] ?? 'Check your phone and enter your M-Pesa PIN.'),
-        'response' => $body,
-    ];
+    return $last;
 }
 
 function mpesa_stk_query(array $cfg, string $checkoutRequestId): array
