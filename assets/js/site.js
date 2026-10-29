@@ -166,7 +166,7 @@
     return true;
   }
 
-  /** Load MySQL-backed state (user, catalog, parcels, errands, senders). */
+  /** Load platform-backed state (user, catalog, parcels, errands, senders). */
   function hydrate() {
     return api('bootstrap.php').then(function (b) {
       APP.user = b.user || null;
@@ -245,7 +245,7 @@
   function user() { return APP.user; }
   function savedSenders() { return APP.senders; }
 
-  /** Union of every carrier's destinations (backed by the MySQL catalog). */
+  /** Union of every carrier's destinations (backed by the platform catalog). */
   function allDestinations() {
     var seen = {}, out = [];
     APP.partners.forEach(function (partner) {
@@ -611,7 +611,7 @@
     return list;
   }
 
-  /** Ask MySQL for a parcel/errand by tracking number, Locker ID or errand ref. */
+  /** Ask the platform for a parcel/errand by tracking number, Locker ID or errand ref. */
   function trackLookup(term) {
     return api('track.php?q=' + encodeURIComponent(term));
   }
@@ -1408,7 +1408,7 @@
       '</div>' +
       collect +
       '<div class="mz-list-card" style="margin-top:14px;">' +
-        '<div class="mz-cap">Scan history · MySQL</div>' +
+        '<div class="mz-cap">Scan history</div>' +
         '<div class="mz-timeline">' + timeline + '</div>' +
       '</div>' +
       '<div class="mz-list-card" style="margin-top:14px;">' +
@@ -1436,7 +1436,7 @@
     var mount = $('[data-mz-track-result]');
     if (!mount) return Promise.resolve();
     mount.innerHTML = '<div class="mz-list-card" style="text-align:center;padding:26px;">' +
-      '<div class="mz-cap">Querying MySQL</div>' +
+      '<div class="mz-cap">Checking tracking history</div>' +
       '<p style="margin:6px 0 0;font-size:14px;">Looking up “' + esc(term) + '”…</p></div>';
     return trackLookup(term).then(function (res) {
       if (!res.found) {
@@ -2719,7 +2719,7 @@ return '<div class="mz-mobile-card">' +
       var errandCount = APP.errands.length;
       dbBadge = '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:12px;font-size:12px;color:var(--mz-muted-fg);">' +
         '<span style="width:8px;height:8px;border-radius:999px;background:#16a34a;display:inline-block;"></span>' +
-        '<span><strong style="color:var(--mz-hunter);">MySQL connected</strong> · ' + esc(APP.database) + ' · ' +
+        '<span><strong style="color:var(--mz-hunter);">Connected</strong> · ' +
         pkgCount + ' parcel' + (pkgCount === 1 ? '' : 's') + ', ' + errandCount + ' errand' + (errandCount === 1 ? '' : 's') + '</span></div>';
     }
     body.innerHTML = dbBadge + planCard + authBanner + '<section aria-live="polite">' + content + '</section>';
@@ -3476,7 +3476,7 @@ return '<div class="mz-mobile-card">' +
           toast('Order saved. Uploading photos…', 'info');
           uploadPhotosFor(parcel, mount).catch(function () {});
         } else {
-          toast('Parcel ' + parcel.tracking + ' saved to MySQL.');
+          toast('Parcel ' + parcel.tracking + ' registered.');
         }
       }
       function registerParcel() {
@@ -3632,7 +3632,7 @@ return '<div class="mz-mobile-card">' +
         stepper.innerHTML = '';
         var sub = $('[data-mz-wizard-sub]');
         if (sub) sub.textContent = 'Booked';
-        toast('Errand ' + record.ref + ' saved to MySQL.');
+        toast('Errand ' + record.ref + ' registered.');
       }).catch(function (err) {
         toast(err.message, 'error');
       }).then(function () { if (bookBtn) bookBtn.disabled = false; });
@@ -6178,7 +6178,7 @@ return '<div class="mz-mobile-card">' +
     return '<div class="mz-row mz-analytics-head">' +
         '<div><div class="mz-cap">Business intelligence</div>' +
         '<div class="mz-section-title">Performance overview</div>' +
-        '<div class="mz-hint">Revenue, adoption and operational mix from MySQL.</div></div>' +
+        '<div class="mz-hint">Revenue, adoption and operational mix.</div></div>' +
         '<div class="mz-range-tabs" role="tablist" aria-label="Analytics range">' +
           '<button type="button" class="mz-tab" data-analytics-range="30" role="tab">30 days</button>' +
           '<button type="button" class="mz-tab" data-analytics-range="90" role="tab" aria-selected="true">90 days</button>' +
@@ -6361,7 +6361,7 @@ return '<div class="mz-mobile-card">' +
   function loadAdminAnalytics(section, range) {
     var seq = ++adminAnalyticsSeq;
     var foot = section.querySelector('[data-analytics-foot]');
-    if (foot) foot.textContent = 'Loading ' + range + '-day analytics from MySQL…';
+    if (foot) foot.textContent = 'Loading ' + range + '-day analytics…';
     section.classList.add('is-loading');
     api('admin-analytics.php?range=' + range).then(function (data) {
       if (seq !== adminAnalyticsSeq) return; // a newer range switch won
@@ -6393,7 +6393,7 @@ return '<div class="mz-mobile-card">' +
     }
     var foot = section.querySelector('[data-analytics-foot]');
     if (foot) {
-      foot.innerHTML = 'MySQL · ' + esc(APP.database) + ' · ' + esc(data.range.bucket) + ' buckets · ' +
+      foot.innerHTML = 'Live analytics · ' + esc(data.range.bucket) + ' buckets · ' +
         esc(data.range.start.slice(0, 10)) + ' → ' + esc(data.range.end.slice(0, 10)) +
         ' · ' + komma(k.parcels) + ' parcels · ' + komma(k.errands) + ' errands';
     }
@@ -10120,7 +10120,7 @@ return '<div class="mz-mobile-card">' +
             '<div class="mz-saas-card" data-admin-messages></div>' +
           '</section>' +
           '<section class="mz-admin-section" data-admin-section="sessions" hidden>' +
-            adminSectionHead('Sessions', 'Active and recent sign-ins, stored in MySQL.') +
+            adminSectionHead('Sessions', 'Active and recent sign-ins, stored securely.') +
             '<div class="mz-saas-card" data-admin-sessions></div>' +
           '</section>' +
           '<section class="mz-admin-section" data-admin-section="users" hidden>' +
