@@ -4,7 +4,6 @@
   var TOKEN_KEY = 'mzigo_point_token';
   var RECENT_KEY = 'mzigo_scan_recent';
   var QUEUE_KEY = 'mzigo_scan_queue';
-  var LAST_ACTION_KEY = 'mzigo_scan_last_action';
   var token = '';
   var point = null;
   var pointStats = { today: 0, total: 0, last_scan_at: null };
@@ -60,14 +59,6 @@
     token = value || '';
     if (token) localStorage.setItem(TOKEN_KEY, token); else localStorage.removeItem(TOKEN_KEY);
   }
-  function actionLabels() {
-    return {
-      dropoff: ['Drop off', 'Origin office'],
-      handover: ['Hand over', 'To transporter'],
-      arrival: ['Arrival', 'Destination office'],
-      collection: ['Collect', 'Customer picked up']
-    };
-  }
   function relativeScanTime(value) {
     if (!value) return 'No scans';
     var then = new Date(String(value).replace(' ', 'T'));
@@ -95,40 +86,11 @@
     $('#pointMeta').textContent = meta.join(' · ');
     $('#pointType').textContent = point.point_type;
     renderPointDash();
-    var labels = actionLabels();
-    var lastAction = localStorage.getItem(LAST_ACTION_KEY) || '';
-    var configured = point.actions && point.actions.length
-      ? point.actions.slice()
-      : (point.allowed_actions || []).map(function (key) {
-          var pair = labels[key] || [key, ''];
-          return { key: key, label: pair[0], description: pair[1] };
-        });
-    configured.sort(function (a, b) {
-      if (a.key === lastAction) return -1;
-      if (b.key === lastAction) return 1;
-      return 0;
-    });
-    $('#actionGrid').innerHTML = configured.map(function (a) {
-      return '<button type="button" class="scan-action" data-scan-action="' + esc(a.key) + '"><strong>' + esc(a.label) + '</strong><span>' + esc(a.description || '') + '</span>' +
-        (a.key === lastAction ? '<em>Recent</em>' : '') + '</button>';
-    }).join('');
     selectedAction = '';
     primaryMode = 'scan';
-    Array.prototype.forEach.call(document.querySelectorAll('[data-scan-action]'), function (btn) {
-      btn.addEventListener('click', function () {
-        selectedAction = btn.getAttribute('data-scan-action');
-        localStorage.setItem(LAST_ACTION_KEY, selectedAction);
-        Array.prototype.forEach.call(document.querySelectorAll('[data-scan-action]'), function (b) { b.classList.remove('is-selected'); });
-        btn.classList.add('is-selected');
-        toggleCollection();
-        if (primaryMode !== 'auto') { primaryMode = 'record'; }
-        syncActionState();
-      });
-    });
     toggleCollection();
     syncActionState();
     syncManualEntry();
-    $('#manualActionBtn').hidden = false;
     $('#setup').hidden = true;
     $('#app').hidden = false;
   }
@@ -194,11 +156,6 @@
     var labels = { dropoff: 'Drop off', handover: 'Hand over', arrival: 'Arrival', collection: 'Collect' };
     return labels[key] || key || '';
   }
-  function selectActionButton() {
-    Array.prototype.forEach.call(document.querySelectorAll('[data-scan-action]'), function (btn) {
-      btn.classList.toggle('is-selected', btn.getAttribute('data-scan-action') === selectedAction);
-    });
-  }
   function renderJourneyRail(items, vertical) {
     var mount = $('#journeyRail');
     if (!mount) return;
@@ -232,24 +189,18 @@
       auto.hidden = false;
       auto.innerHTML = '<span>Auto-selected action</span><strong>' + esc(actionLabel(autoAction)) + '</strong>' +
         '<small>Based on the parcel journey</small>';
-      $('#actionGridWrap').hidden = true;
-      $('#changeAction').hidden = false;
-      $('#manualActionBtn').hidden = true;
       $('#scanHint').textContent = 'Journey loaded. The next valid action is selected.';
     } else {
       auto.hidden = false;
       auto.innerHTML = '<span>Parcel journey</span><strong>' +
         (parcel.blocked_reason || (parcel.status === 'COLLECTED_PAID' ? 'Journey complete' : 'No scan action available')) +
         '</strong><small>' + esc(parcel.tracking) + '</small>';
-      $('#actionGridWrap').hidden = false;
-      $('#changeAction').hidden = true;
-      $('#manualActionBtn').hidden = false;
       $('#scanHint').textContent = parcel.blocked_reason || 'This parcel has no next scan action at this point.';
     }
-    selectActionButton();
     toggleCollection();
     if (autoRecord && autoAction) startAutoRecord();
-    else setPrimaryMode('record');
+    else if (autoAction) setPrimaryMode('record');
+    else setPrimaryMode('scan');
   }
   function resetJourney() {
     lookupSeq++;
@@ -260,26 +211,12 @@
     selectedAction = '';
     $('#journeyCard').hidden = true;
     $('#autoAction').hidden = true;
-    $('#changeAction').hidden = true;
-    $('#actionGridWrap').hidden = true;
-    $('#manualActionBtn').hidden = true;
     $('#journeyRail').innerHTML = '';
     $('#journeyCard').classList.remove('scan-journey--vertical');
     $('#journeyTracking').textContent = '';
     $('#scanHint').textContent = 'Scan the parcel label to load its journey and select the next action.';
-    selectActionButton();
     syncActionState();
     toggleCollection();
-  }
-  function showManualActions() {
-    clearAutoRecord();
-    primaryMode = 'record';
-    $('#actionGridWrap').hidden = false;
-    $('#manualActionBtn').hidden = true;
-    $('#changeAction').hidden = true;
-    $('#autoAction').hidden = true;
-    $('#actionHint').textContent = 'Choose the scan action for this parcel.';
-    syncActionState();
   }
   function lookupParcel(tracking, autoRecord) {
     var value = String(tracking || '').trim().toUpperCase();
@@ -293,15 +230,17 @@
       if (res.parcel) {
         applyJourney(res.parcel, !!autoRecord);
       } else {
-        showManualActions();
-        $('#scanHint').textContent = 'No parcel journey found. Choose the action manually.';
+        resetJourney();
+        $('#scanHint').textContent = 'No parcel journey found. Scan the label again or check the tracking number.';
+        toastError('#scanError', 'No parcel journey found for that tracking number.');
       }
     }).catch(function (err) {
       if (seq !== lookupSeq) return;
-      showManualActions();
+      resetJourney();
       $('#scanHint').textContent = isNetworkError(err)
-        ? 'Journey lookup unavailable offline. Choose the action manually.'
+        ? 'Journey lookup requires a connection. Reconnect and scan again.'
         : err.message;
+      toastError('#scanError', isNetworkError(err) ? 'Journey lookup requires a connection.' : err.message);
     });
   }
 
@@ -318,10 +257,6 @@
   }
   function syncActionState() {
     renderPrimaryAction();
-    var hint = $('#actionHint');
-    if (hint) {
-      hint.textContent = selectedAction ? 'The next action is selected.' : 'Choose a scan action.';
-    }
   }
   function toggleCollection() {
     $('#collectWrap').hidden = selectedAction !== 'collection';
@@ -706,8 +641,6 @@
       setPrimaryMode('record');
     });
     $('#qrClose').addEventListener('click', closeQr);
-    $('#manualActionBtn').addEventListener('click', showManualActions);
-    $('#changeAction').addEventListener('click', showManualActions);
     $('#tracking').addEventListener('input', function () {
       clearTimeout(lookupTimer);
       var value = $('#tracking').value.trim();

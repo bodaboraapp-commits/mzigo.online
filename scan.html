@@ -12,7 +12,7 @@
   <link rel="icon" href="/assets/img/favicon-64.png" type="image/png">
   <link rel="apple-touch-icon" href="/assets/img/scan-icon-192.png">
   <link rel="manifest" href="/assets/scan-manifest.webmanifest">
-  <link rel="stylesheet" href="/assets/css/scan.css?v=20261029p">
+  <link rel="stylesheet" href="/assets/css/scan.css?v=20261029r">
 </head>
 <body>
   <header class="scan-head">
@@ -59,14 +59,13 @@
 
       <form id="scanForm" class="scan-card scan-form">
         <div class="scan-field">
-          <span class="scan-label">1. Scan parcel</span>
+          <span class="scan-label">Scan parcel</span>
           <div id="manualEntryWrap" class="scan-field" style="margin-top:2px;">
             <label class="scan-label" for="tracking">Or enter tracking number</label>
             <input id="tracking" class="scan-input scan-mono" placeholder="TRK-XXXXXXXX" autocomplete="off" autocapitalize="characters">
           </div>
           <div id="scanValue" class="scan-value" hidden></div>
           <p class="scan-hint" id="scanHint">Scan the parcel label to load its journey and select the next action.</p>
-          <button type="button" id="manualActionBtn" class="scan-link" hidden>Choose action manually</button>
         </div>
 
         <section id="journeyCard" class="scan-journey" hidden>
@@ -76,14 +75,7 @@
           </div>
           <div id="journeyRail" class="scan-journey__rail"></div>
           <div id="autoAction" class="scan-journey__action" hidden></div>
-          <button type="button" id="changeAction" class="scan-link" hidden>Choose a different action</button>
         </section>
-
-        <div id="actionGridWrap" class="scan-field" hidden>
-          <span class="scan-label">Scan action</span>
-          <div id="actionGrid" class="scan-actions"></div>
-          <p class="scan-hint" id="actionHint">Choose a scan action.</p>
-        </div>
 
         <div id="collectWrap" class="scan-field" hidden>
           <label class="scan-label" for="collectCode">Customer collection code</label>
@@ -92,7 +84,7 @@
         </div>
 
         <div class="scan-field">
-          <label class="scan-label" for="noteInput">3. Note</label>
+          <label class="scan-label" for="noteInput">Note</label>
           <input id="noteInput" class="scan-input" placeholder="e.g. package condition, bay number" maxlength="255">
         </div>
 
@@ -197,6 +189,6 @@
   </nav>
 
   <script src="/assets/js/jsQR.min.js?v=20261028f" defer></script>
-  <script src="/assets/js/scan.js?v=20261029p" defer></script>
+  <script src="/assets/js/scan.js?v=20261029r" defer></script>
 </body>
 </html>
