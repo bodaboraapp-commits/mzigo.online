@@ -33,4 +33,7 @@ _server/config-key.php.bak.*
 microservice/config.json
 microservice/data/
 microservice/*.log
+microservice/__pycache__/
+__pycache__/
+*.pyc
 
