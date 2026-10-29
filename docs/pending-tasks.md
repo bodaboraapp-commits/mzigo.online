@@ -1,6 +1,6 @@
 # Pending development tasks
 
-**Updated:** 28 October 2026  
+**Updated:** 29 October 2026  
 **Scope:** remaining product engineering, integrations, launch hardening and decisions.  
 **Environment:** local/demo at `http://localhost:8090`, live MariaDB, SMTP email configured; live inbox delivery still unconfirmed.
 
@@ -77,6 +77,7 @@ Full deployment checklist: `docs/PRODUCTION.md`. Security findings: `docs/SECURI
 | MSG-01 | SMS/WhatsApp transport + codes | Code/QA | Twilio SMS is configured for parcel notifications; trial daily cap and delivery validation remain. Login SMS is hidden; WhatsApp remains blocked on sender/template approval. |
 | PAY-02 | Validate live Daraja payout/recovery credentials | External/QA | B2C shortcode, consumer key/secret, passkey, initiator/security credential, result/timeout URLs. Code paths already support demo/sandbox/live modes. |
 | MAIL-01 | Validate live email provider | External/QA | Current SMTP accepts order/payment notifications but delivery to Gmail is unconfirmed; OTP email reportedly works. Check cPanel queue/Track Delivery or add a verified relay; add bounce/complaint callbacks. |
+| MCP-01 | Wire MCP microservice on production without a subdomain | Ops/Code | Microservice + admin controls + stdio bridge + Cloudflare Worker are built locally. On the origin add an Apache/Nginx/Caddy vhost proxy for `/mcp-internal/mcp` and `/mcp-internal/health` to `127.0.0.1:8484`; keep the Worker route `mzigo.online/microservice/*` with `MCP_ORIGIN_IP=162.0.209.206` and `MCP_HOST=mzigo.online`; then verify the full chain. |
 | SEO-01 | Enter Search Console/Bing tokens and CWV key | External/Admin | Fields and p75 dashboard are ready in **Admin → SEO**. Property ownership and account access are still needed. |
 | SOC-01 | Enter real social profile URLs | External/Admin | **Admin → Website → Social media links**; placeholder/default links currently fall back. |
 | LEG-01 | Legal counsel sign-off | External | Runner/referral terms published. Need approval reference, effective dates and recorded sign-off; see `docs/legal-launch-signoff.md`. |
