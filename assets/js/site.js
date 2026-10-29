@@ -4785,8 +4785,9 @@ return '<div class="mz-mobile-card">' +
       submitLabel: live ? 'Send M-Pesa request' : 'Pay ' + money(fee),
       body:
         '<div class="mz-alert" style="margin-bottom:12px;">' + (live
-          ? 'An M-Pesa prompt will be sent to your registered phone. Enter your PIN to confirm the delivery fee.' +
-            (sandbox ? ' Sandbox testing charges KES 1; production charges the full order amount.' : '')
+          ? (sandbox
+              ? 'An M-Pesa prompt will be sent to your registered phone. Enter your PIN. Sandbox testing charges KES 1.'
+              : 'An M-Pesa prompt will be sent to your registered phone. Enter your PIN. The full order amount after discounts will be charged to your M-Pesa account.')
           : 'Pay the delivery fee to receive your collection code. In demo mode no real money moves.') + '</div>' +
         '<div class="mz-form-grid"><label class="mz-field"><span class="mz-label">Coupon code (optional)</span>' +
           '<input class="mz-input" name="coupon_code" placeholder="e.g. MZIGO100"></label>' +
@@ -5074,7 +5075,18 @@ return '<div class="mz-mobile-card">' +
     });
     host.querySelectorAll('[data-customer-pay]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        openCustomerCheckout(host, btn.getAttribute('data-customer-pay'), Number(btn.getAttribute('data-customer-fee') || 0), APP.mpesaPayment);
+        var tracking = btn.getAttribute('data-customer-pay');
+        var fee = Number(btn.getAttribute('data-customer-fee') || 0);
+        // Refresh the M-Pesa environment so a switch to production changes the
+        // amount/copy without requiring a full page reload.
+        api('customer.php', { method: 'POST', body: { action: 'payment_config' } })
+          .then(function (res) {
+            APP.mpesaPayment = (res && res.payment) || APP.mpesaPayment;
+            openCustomerCheckout(host, tracking, fee, APP.mpesaPayment);
+          })
+          .catch(function () {
+            openCustomerCheckout(host, tracking, fee, APP.mpesaPayment);
+          });
       });
     });
     host.querySelectorAll('[data-customer-pay-old]').forEach(function (btn) {

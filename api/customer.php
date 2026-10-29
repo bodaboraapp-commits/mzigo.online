@@ -320,6 +320,10 @@ if ($action === 'file_claim') {
         'message' => 'Claim ' . $ref . ' submitted to the seller for review.']);
 }
 
+if ($action === 'payment_config') {
+    json_out(['ok' => true, 'payment' => mpesa_payment_public_config()]);
+}
+
 if ($action === 'payment_status') {
     $tracking = param($data, 'tracking', 3, 40, 'tracking');
     $stmt = db()->prepare('SELECT * FROM parcels WHERE tracking = :tracking AND receiver_phone_key = :key LIMIT 1');
