@@ -1,0 +1,13 @@
+name = "mzigo-microservice"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+
+# Route on the main domain. Replace account_id before deploying with wrangler.
+# `routes` are only valid when the Worker is attached to a zone.
+routes = [
+  { pattern = "mzigo.online/microservice/*", zone_id = "REPLACE_WITH_ZONE_ID" }
+]
+
+[vars]
+# Public hostname created by Cloudflare Tunnel (free).
+MCP_ORIGIN = "https://mcp-origin.mzigo.online"

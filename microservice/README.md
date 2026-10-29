@@ -37,6 +37,23 @@ same effect.
 GET http://localhost:8090/microservice/health
 ```
 
+## Free Cloudflare deployment (same domain)
+
+Use the free plan only — no Spectrum, no paid port proxy:
+
+1. **Tunnel** — expose the Python service on a public hostname:
+   - `cloudflared tunnel create mzigo-mcp`
+   - route DNS: `mcp-origin.mzigo.online`
+   - ingress points that hostname to `http://127.0.0.1:8484`
+   - see `cloudflare/cloudflared-config.yml.example`
+
+2. **Worker** — map the main-domain path to the tunnel:
+   - Deploy `cloudflare/worker.js`
+   - Add route `mzigo.online/microservice/*`
+   - Set `MCP_ORIGIN = https://mcp-origin.mzigo.online`
+
+3. Clients then use `https://mzigo.online/microservice/mcp`.
+
 ## MCP client config example
 
 ```json

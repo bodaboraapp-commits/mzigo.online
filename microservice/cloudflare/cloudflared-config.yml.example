@@ -1,0 +1,19 @@
+# Cloudflare Tunnel (free) configuration.
+#
+# 1. Install cloudflared on the cPanel/VPS host.
+# 2. cloudflared tunnel login
+# 3. cloudflared tunnel create mzigo-mcp
+# 4. Replace <TUNNEL_UUID> below and in the DNS route command.
+# 5. cloudflared tunnel route dns mzigo-mcp mcp-origin.mzigo.online
+# 6. Run: cloudflared tunnel run mzigo-mcp
+#
+# The Python service can stay bound to 127.0.0.1:8484 because the tunnel
+# connects locally. No public port or Spectrum is needed.
+
+tunnel: <TUNNEL_UUID>
+credentials-file: /home/<CPANEL_USER>/.cloudflared/<TUNNEL_UUID>.json
+
+ingress:
+  - hostname: mcp-origin.mzigo.online
+    service: http://127.0.0.1:8484
+  - service: http_status:404
