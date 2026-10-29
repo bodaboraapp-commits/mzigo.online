@@ -1119,12 +1119,12 @@ switch ($action) {
         $code = $check->fetchColumn();
         if ($code === false) { fail_error('not_found', 'Point not found.', 404); }
         $token = admin_point_token();
-        $pdo->prepare('UPDATE partner_points SET access_token_prefix = ?, access_token_hash = ? WHERE id = ?')
+        $pdo->prepare('UPDATE partner_points SET access_token_prefix = ?, access_token_hash = ?, manual_entry_enabled = 1 WHERE id = ?')
             ->execute([$token['prefix'], $token['hash'], $pointId]);
-        audit('admin.point_token_regenerated', 'partner_point', (string) $pointId, ['code' => $code]);
+        audit('admin.point_token_regenerated', 'partner_point', (string) $pointId, ['code' => $code, 'manual_entry_enabled' => 1]);
         json_out(['ok' => true, 'source' => 'mysql', 'point_token' => $token['raw'],
             'partner_points' => admin_partner_points(),
-            'message' => 'New point token generated. Copy it now — the old token no longer works.'], 201);
+            'message' => 'New point token generated. The scanner now allows QR scan or manual tracking entry. Copy the token now — the old token no longer works.'], 201);
         // no break
 
     case 'delete_partner_point':
