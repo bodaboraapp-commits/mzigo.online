@@ -6191,12 +6191,13 @@ return '<div class="mz-mobile-card">' +
           });
         });
         mount.querySelector('[data-promise-save]').addEventListener('click', function (ev) {
+          var promiseBtn = ev.currentTarget;
           var input = mount.querySelector('[data-promise-hours]');
           var hours = Number(input.value || 48);
-          ev.currentTarget.disabled = true;
+          promiseBtn.disabled = true;
           api('admin.php', { method: 'POST', body: { action: 'save_promise_config', hours: hours } })
             .then(function () { toast('Promise window saved.'); load(); })
-            .catch(function (err) { toast(err.message, 'error'); ev.currentTarget.disabled = false; });
+            .catch(function (err) { toast(err.message, 'error'); promiseBtn.disabled = false; });
         });
         function alertAction(key, action, btn) {
           btn.disabled = true;
@@ -8554,16 +8555,18 @@ return '<div class="mz-mobile-card">' +
             .catch(function (err) { toast(err.message, 'error'); });
         });
         mount.querySelector('[data-insurance-test]').addEventListener('click', function (ev) {
-          ev.currentTarget.disabled = true;
+          var insuranceTestBtn = ev.currentTarget;
+          insuranceTestBtn.disabled = true;
           api('admin-insurance.php', { method: 'POST', body: { action: 'test_connection' } })
-            .then(function (res) { toast(res.message || 'Connection OK.'); })
-            .catch(function (err) { toast(err.message, 'error'); ev.currentTarget.disabled = false; });
+            .then(function (res) { toast(res.message || 'Connection OK.'); insuranceTestBtn.disabled = false; })
+            .catch(function (err) { toast(err.message, 'error'); insuranceTestBtn.disabled = false; });
         });
         mount.querySelector('[data-insurance-retry]').addEventListener('click', function (ev) {
-          ev.currentTarget.disabled = true;
+          var insuranceRetryBtn = ev.currentTarget;
+          insuranceRetryBtn.disabled = true;
           api('admin-insurance.php', { method: 'POST', body: { action: 'retry_pending', limit: 20 } })
-            .then(function (res) { toast(res.message); load(); })
-            .catch(function (err) { toast(err.message, 'error'); ev.currentTarget.disabled = false; });
+            .then(function (res) { toast(res.message); load(); insuranceRetryBtn.disabled = false; })
+            .catch(function (err) { toast(err.message, 'error'); insuranceRetryBtn.disabled = false; });
         });
       }).catch(function (err) {
         mount.innerHTML = '<div class="mz-alert">Could not load insurance settings: ' + esc(err.message) + '</div>';
@@ -8678,7 +8681,8 @@ return '<div class="mz-mobile-card">' +
       '</div>' +
       '<div class="mz-hint" data-mpesa-result style="margin-top:8px;"></div>';
     card.querySelector('[data-mpesa-save]').addEventListener('click', function (ev) {
-      ev.currentTarget.disabled = true;
+      var saveBtn = ev.currentTarget;
+      saveBtn.disabled = true;
       var config = {};
       card.querySelectorAll('[data-mpesa-field]').forEach(function (el) {
         config[el.getAttribute('data-mpesa-field')] = el.value;
@@ -8690,14 +8694,15 @@ return '<div class="mz-mobile-card">' +
             APP.mpesaPayment = res.mpesa_payment_config;
           }
           loadAdmin();
-        }).catch(function (err) { toast(err.message, 'error'); ev.currentTarget.disabled = false; });
+        }).catch(function (err) { toast(err.message, 'error'); saveBtn.disabled = false; });
     });
     card.querySelector('[data-mpesa-test]').addEventListener('click', function (ev) {
-      ev.currentTarget.disabled = true;
+      var testBtn = ev.currentTarget;
+      testBtn.disabled = true;
       var out = card.querySelector('[data-mpesa-result]');
       api('admin.php', { method: 'POST', body: { action: 'test_mpesa_payment_auth' } })
-        .then(function (res) { if (out) out.textContent = res.message || 'Daraja authentication succeeded.'; toast(res.message || 'Daraja OK.'); ev.currentTarget.disabled = false; })
-        .catch(function (err) { if (out) out.textContent = err.message; toast(err.message, 'error'); ev.currentTarget.disabled = false; });
+        .then(function (res) { if (out) out.textContent = res.message || 'Daraja authentication succeeded.'; toast(res.message || 'Daraja OK.'); testBtn.disabled = false; })
+        .catch(function (err) { if (out) out.textContent = err.message; toast(err.message, 'error'); testBtn.disabled = false; });
     });
   }
 
@@ -8717,14 +8722,15 @@ return '<div class="mz-mobile-card">' +
         '<button class="mz-btn mz-btn--sm" type="button" data-order-photo-save>Save photo requirement</button>' +
       '</div>';
     card.querySelector('[data-order-photo-save]').addEventListener('click', function (ev) {
-      ev.currentTarget.disabled = true;
+      var photoSaveBtn = ev.currentTarget;
+      photoSaveBtn.disabled = true;
       var requiredNow = card.querySelector('[data-order-photo-mode]').value === 'mandatory';
       api('admin.php', { method: 'POST', body: { action: 'save_order_photos_requirement', required: requiredNow } })
         .then(function (res) {
           APP.orderPhotosRequired = res.order_photos_required === true;
           toast('Order photo requirement saved.');
           loadAdmin();
-        }).catch(function (err) { toast(err.message, 'error'); ev.currentTarget.disabled = false; });
+        }).catch(function (err) { toast(err.message, 'error'); photoSaveBtn.disabled = false; });
     });
   }
 
@@ -8746,7 +8752,8 @@ return '<div class="mz-mobile-card">' +
         '<button class="mz-btn mz-btn--sm" type="button" data-fee-save>Save platform fees</button>' +
       '</div>';
     card.querySelector('[data-fee-save]').addEventListener('click', function (ev) {
-      ev.currentTarget.disabled = true;
+      var feeSaveBtn = ev.currentTarget;
+      feeSaveBtn.disabled = true;
       api('admin.php', { method: 'POST', body: {
         action: 'save_fee_config',
         holding_fee_kes: Number(card.querySelector('[data-fee-field="holding_fee_kes"]').value || 0),
@@ -8757,7 +8764,7 @@ return '<div class="mz-mobile-card">' +
           APP.feeConfig = res.fee_config;
         }
         loadAdmin();
-      }).catch(function (err) { toast(err.message, 'error'); ev.currentTarget.disabled = false; });
+      }).catch(function (err) { toast(err.message, 'error'); feeSaveBtn.disabled = false; });
     });
   }
 
@@ -9383,12 +9390,13 @@ return '<div class="mz-mobile-card">' +
       thread.querySelector('[data-wa-close]').addEventListener('click', function () { act('close'); });
       thread.querySelector('[data-wa-reopen]').addEventListener('click', function () { act('reopen'); });
       thread.querySelector('[data-wa-send]').addEventListener('click', function (ev) {
+        var waSendBtn = ev.currentTarget;
         var body = (thread.querySelector('[data-wa-reply]') || {}).value || '';
         if (!body.trim()) { toast('Write a reply first.', 'error'); return; }
-        ev.currentTarget.disabled = true;
+        waSendBtn.disabled = true;
         api('admin-whatsapp.php', { method: 'POST', body: { action: 'reply', conversation_id: Number(conv.id), body: body } })
           .then(function (res) { toast('Reply sent.'); absorb(res); render(); openThread(Number(conv.id)); })
-          .catch(function (err) { toast(err.message, 'error'); ev.currentTarget.disabled = false; });
+          .catch(function (err) { toast(err.message, 'error'); waSendBtn.disabled = false; });
       });
     }
     function openThread(id) {
