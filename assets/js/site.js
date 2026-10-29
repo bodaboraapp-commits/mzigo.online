@@ -11,6 +11,7 @@
 
   var doc = document;
   var root = doc.documentElement;
+  if ('scrollRestoration' in history) history.scrollRestoration = 'auto';
 
   /* ------------------------------------------------------------------ utils */
   function $(sel, ctx) { return (ctx || doc).querySelector(sel); }
@@ -389,14 +390,37 @@
     var errorBox = overlay.querySelector('[data-dialog-error]');
     var closed = false;
     var completed = false;
+    var dialogId = 'mz-dialog-' + uid();
     if (cfg.wide) overlay.querySelector('.mz-dialog').classList.add('mz-dialog--wide');
 
-    function close() {
+    // Dialogs are history entries: Back closes the dialog instead of leaving
+    // the page, and Forward reopens it.
+    function pushDialogState(replace) {
+      try {
+        var state = Object.assign({}, history.state || {}, { mzDialog: dialogId });
+        if (replace) history.replaceState(state, '', window.location.href);
+        else history.pushState(state, '', window.location.href);
+      } catch (e) {}
+    }
+    function popDialogState() {
+      try {
+        if (history.state && history.state.mzDialog === dialogId) history.back();
+      } catch (e) {}
+    }
+    function onPop() {
+      if (!closed) close(true);
+    }
+    pushDialogState(false);
+    window.addEventListener('popstate', onPop);
+
+    function close(fromHistory) {
       if (closed) return;
       closed = true;
       doc.removeEventListener('keydown', onKey);
+      window.removeEventListener('popstate', onPop);
       doc.body.style.overflow = previousOverflow;
       overlay.remove();
+      if (!fromHistory) popDialogState();
       if (lastFocus && typeof lastFocus.focus === 'function') lastFocus.focus();
       if (!completed && typeof cfg.onDismiss === 'function') {
         try { cfg.onDismiss(); } catch (e) {}
@@ -642,10 +666,17 @@
     var links = appLinks();
     if (links.length < 2) { host.innerHTML = ''; return; }
     var path = window.location.pathname;
-    host.innerHTML = links.map(function (link) {
-      var active = path === link[0] ? ' is-active' : '';
-      return '<a class="mz-tab' + active + '" href="' + link[0] + '">' + link[1] + '</a>';
-    }).join('');
+    var canGoBack = path !== '/' && window.history.length > 1;
+    host.innerHTML = (canGoBack ? '<button type="button" class="mz-tab" data-mz-back aria-label="Go back">← Back</button>' : '') +
+      links.map(function (link) {
+        var active = path === link[0] ? ' is-active' : '';
+        return '<a class="mz-tab' + active + '" href="' + link[0] + '">' + link[1] + '</a>';
+      }).join('');
+    var back = host.querySelector('[data-mz-back]');
+    if (back) back.addEventListener('click', function () {
+      if (window.history.length > 1) window.history.back();
+      else window.location.href = '/';
+    });
   }
 
   function initAuthUI() {
@@ -2283,21 +2314,62 @@
   var ordersState = { tab: 'parcels', q: '', status: '', from: '', to: '', page: 1, per_page: 10 };
   var ordersData = { rows: [] };
 
+  function readOrdersFromUrl() {
+    var params = new URLSearchParams(window.location.search);
+    var tab = params.get('tab');
+    ordersState.tab = tab === 'errands' ? 'errands' : 'parcels';
+    ordersState.q = params.get('q') || '';
+    ordersState.status = params.get('status') || '';
+    ordersState.from = params.get('from') || '';
+    ordersState.to = params.get('to') || '';
+    ordersState.page = Math.max(1, parseInt(params.get('page'), 10) || 1);
+    var hashTab = (window.location.hash || '').replace('#', '');
+    if (hashTab === 'errands') ordersState.tab = 'errands';
+  }
+
+  function syncOrdersUrl(push) {
+    var params = new URLSearchParams();
+    params.set('tab', ordersState.tab);
+    if (ordersState.q) params.set('q', ordersState.q);
+    if (ordersState.status) params.set('status', ordersState.status);
+    if (ordersState.from) params.set('from', ordersState.from);
+    if (ordersState.to) params.set('to', ordersState.to);
+    if (ordersState.page > 1) params.set('page', String(ordersState.page));
+    var url = '/orders?' + params.toString();
+    try {
+      if (push) history.pushState({ mzOrders: true }, '', url);
+      else history.replaceState(Object.assign({}, history.state || {}, { mzOrders: true }), '', url);
+    } catch (e) {}
+  }
+
   function initOrdersPage() {
     if (!APP.user) { window.location.href = '/login?next=%2Forders'; return; }
     if (APP.user.role === 'freelancer') { window.location.href = '/freelancer'; return; }
     if (APP.user.role === 'customer') { window.location.href = '/customer'; return; }
     if (!APP.tenant) {
       initAppNav();
+      readOrdersFromUrl();
       renderOrdersShell();
       loadOrders();
+      syncOrdersUrl(false);
       return;
     }
     initAppNav();
-    var hashTab = (window.location.hash || '').replace('#', '');
-    if (hashTab === 'errands') ordersState.tab = 'errands';
+    readOrdersFromUrl();
     renderOrdersShell();
     loadOrders();
+    syncOrdersUrl(false);
+    if (!window.__mzOrdersHistoryBound) {
+      window.__mzOrdersHistoryBound = true;
+      window.addEventListener('popstate', function (ev) {
+        if (!ev.state || !ev.state.mzOrders) return;
+        var host = $('[data-app="orders"]');
+        if (!host || !host.querySelector('[data-orders-table]')) return;
+        readOrdersFromUrl();
+        renderOrdersShell();
+        loadOrders();
+      });
+    }
   }
 
   function renderOrdersShell() {
@@ -2312,10 +2384,10 @@
             '<button type="button" class="mz-tab" data-orders-tab="errands">Errands</button>' +
           '</div>' +
           '<div class="mz-orders-toolbar">' +
-            '<input class="mz-input" data-orders-search placeholder="Search tracking, receiver, route…" aria-label="Search orders">' +
+            '<input class="mz-input" data-orders-search value="' + esc(ordersState.q) + '" placeholder="Search tracking, receiver, route…" aria-label="Search orders">' +
             '<select class="mz-input" data-orders-status style="width:auto;" aria-label="Filter by status"></select>' +
-            '<input class="mz-input" type="date" data-orders-from style="width:auto;" aria-label="From date">' +
-            '<input class="mz-input" type="date" data-orders-to style="width:auto;" aria-label="To date">' +
+            '<input class="mz-input" type="date" data-orders-from value="' + esc(ordersState.from) + '" style="width:auto;" aria-label="From date">' +
+            '<input class="mz-input" type="date" data-orders-to value="' + esc(ordersState.to) + '" style="width:auto;" aria-label="To date">' +
             '<button type="button" class="mz-tab" data-orders-export>Export CSV</button>' +
           '</div>' +
         '</div>' +
@@ -2332,6 +2404,7 @@
         ordersState.page = 1;
         tabs.forEach(function (b) { b.classList.toggle('is-active', b === btn); });
         loadOrders();
+        syncOrdersUrl(true);
       });
     });
 
@@ -2353,12 +2426,14 @@
         ordersState.q = search.value.trim();
         ordersState.page = 1;
         loadOrders();
+        syncOrdersUrl(true);
       }, 300);
     });
     statusSel.addEventListener('change', function () {
       ordersState.status = statusSel.value;
       ordersState.page = 1;
       loadOrders();
+      syncOrdersUrl(true);
     });
     var fromInput = host.querySelector('[data-orders-from]');
     var toInput = host.querySelector('[data-orders-to]');
@@ -2368,6 +2443,7 @@
         ordersState.to = toInput.value;
         ordersState.page = 1;
         loadOrders();
+        syncOrdersUrl(true);
       });
     });
     host.querySelector('[data-orders-export]').addEventListener('click', exportOrdersCsv);
@@ -2422,6 +2498,7 @@
         ordersState.status = btn.getAttribute('data-orders-chip');
         ordersState.page = 1;
         loadOrders();
+        syncOrdersUrl(true);
       });
     });
   }
@@ -2513,10 +2590,10 @@ return '<div class="mz-mobile-card">' +
         '<button type="button" class="mz-tab" data-orders-next' + (res.page >= res.pages ? ' disabled' : '') + '>Next →</button></div>';
 
     table.querySelector('[data-orders-prev]').addEventListener('click', function () {
-      if (res.page > 1) { ordersState.page = res.page - 1; loadOrders(); }
+      if (res.page > 1) { ordersState.page = res.page - 1; loadOrders(); syncOrdersUrl(true); }
     });
     table.querySelector('[data-orders-next]').addEventListener('click', function () {
-      if (res.page < res.pages) { ordersState.page = res.page + 1; loadOrders(); }
+      if (res.page < res.pages) { ordersState.page = res.page + 1; loadOrders(); syncOrdersUrl(true); }
     });
     table.querySelectorAll('[data-order-doc]').forEach(function (btn) {
       btn.addEventListener('click', function () {
@@ -3313,8 +3390,21 @@ return '<div class="mz-mobile-card">' +
     if (s3.payment) s3.payment.addEventListener('change', function () { sendState.payment = s3.payment.value; });
     refreshEstimate();
 
-    // navigation
-    function go(n) {
+    // navigation — each step is a history entry so Back/Forward work.
+    var wizardKey = 'send';
+    var currentStep = 1;
+    function setStepUrl(step, replace) {
+      try {
+        var url = new URL(window.location.href);
+        if (step > 1) url.searchParams.set('step', String(step));
+        else url.searchParams.delete('step');
+        var next = url.pathname + url.search + url.hash;
+        var state = Object.assign({}, history.state || {}, { mzWizard: wizardKey, step: step });
+        if (replace) history.replaceState(state, '', next);
+        else history.pushState(state, '', next);
+      } catch (e) {}
+    }
+    function go(n, fromHistory) {
       if (n === 2) {
         setSum('s2', 'carrier', sendState.carrier);
         setSum('s2', 'from', sendState.from);
@@ -3325,9 +3415,30 @@ return '<div class="mz-mobile-card">' +
         setSum('s3', 'from', sendState.from);
         setSum('s3', 'to', sendState.to);
       }
+      if (!fromHistory && n < currentStep) {
+        if (history.state && history.state.mzWizard === wizardKey && history.state.step === currentStep) {
+          history.back();
+          return;
+        }
+        setStepUrl(n, true);
+      } else if (!fromHistory) {
+        setStepUrl(n, n === currentStep);
+      } else {
+        setStepUrl(n, true);
+      }
+      currentStep = n;
       showStep(wizard, n);
       stepTitle('Send Mzigo', Math.min(n, 3));
       renderStepper(stepper, Math.min(n, 3), stepLabels);
+    }
+    if (!window.__mzSendWizardHistoryBound) {
+      window.__mzSendWizardHistoryBound = true;
+      window.addEventListener('popstate', function (ev) {
+        if (!document.body.contains(wizard)) return;
+        var step = ev.state && ev.state.mzWizard === wizardKey ? Number(ev.state.step) : 1;
+        if (!(step >= 1 && step <= 4)) step = 1;
+        go(step, true);
+      });
     }
 
     var next1 = step1.querySelector('[data-mz-next]');
@@ -3503,7 +3614,15 @@ return '<div class="mz-mobile-card">' +
     });
 
 
-    go(initialSlug && initialFrom && initialTo ? 2 : 1);
+    var startStep = Number(qs('step')) || (initialSlug && initialFrom && initialTo ? 2 : 1);
+    startStep = startStep >= 1 && startStep <= 4 ? startStep : 1;
+    if (startStep > 1) {
+      setStepUrl(1, true);
+      currentStep = 1;
+      go(startStep, false);
+    } else {
+      go(1, true);
+    }
   }
 
   /* --------------------------------------------------------------- errand flow */
@@ -3566,12 +3685,46 @@ return '<div class="mz-mobile-card">' +
     }
     refreshEstimate();
 
-    function go(n) {
+    var wizardKey = 'errand';
+    var currentStep = 1;
+    function setStepUrl(step, replace) {
+      try {
+        var url = new URL(window.location.href);
+        if (step > 1) url.searchParams.set('step', String(step));
+        else url.searchParams.delete('step');
+        var next = url.pathname + url.search + url.hash;
+        var state = Object.assign({}, history.state || {}, { mzWizard: wizardKey, step: step });
+        if (replace) history.replaceState(state, '', next);
+        else history.pushState(state, '', next);
+      } catch (e) {}
+    }
+    function go(n, fromHistory) {
       if (n === 2) { setSum('e2', 'carrier', errandState.carrier || 'Any runner'); setSum('e2', 'from', errandState.pickup); setSum('e2', 'to', errandState.dropoff); }
       if (n === 3) { setSum('e3', 'carrier', errandState.carrier || 'Any runner'); setSum('e3', 'from', errandState.pickup); setSum('e3', 'to', errandState.dropoff); }
+      if (!fromHistory && n < currentStep) {
+        if (history.state && history.state.mzWizard === wizardKey && history.state.step === currentStep) {
+          history.back();
+          return;
+        }
+        setStepUrl(n, true);
+      } else if (!fromHistory) {
+        setStepUrl(n, n === currentStep);
+      } else {
+        setStepUrl(n, true);
+      }
+      currentStep = n;
       showStep(wizard, n);
       stepTitle('Run an errand', Math.min(n, 3));
       renderStepper(stepper, Math.min(n, 3), labels);
+    }
+    if (!window.__mzErrandWizardHistoryBound) {
+      window.__mzErrandWizardHistoryBound = true;
+      window.addEventListener('popstate', function (ev) {
+        if (!document.body.contains(wizard)) return;
+        var step = ev.state && ev.state.mzWizard === wizardKey ? Number(ev.state.step) : 1;
+        if (!(step >= 1 && step <= 4)) step = 1;
+        go(step, true);
+      });
     }
 
     var next1 = step1.querySelector('[data-mz-next]');
@@ -3645,7 +3798,15 @@ return '<div class="mz-mobile-card">' +
     if (prePickup) { pickupSel.set(prePickup); errandState.pickup = prePickup; }
     if (preDrop) { dropSel.set(preDrop); errandState.dropoff = preDrop; }
     update();
-    go(1);
+    var errandStart = Number(qs('step')) || 1;
+    errandStart = errandStart >= 1 && errandStart <= 4 ? errandStart : 1;
+    if (errandStart > 1) {
+      setStepUrl(1, true);
+      currentStep = 1;
+      go(errandStart, false);
+    } else {
+      go(1, true);
+    }
   }
 
 
@@ -7779,7 +7940,11 @@ return '<div class="mz-mobile-card">' +
       btn.classList.toggle('is-active', btn.getAttribute('data-admin-goto') === key);
       btn.setAttribute('aria-current', btn.getAttribute('data-admin-goto') === key ? 'page' : 'false');
     });
-    if (push) history.replaceState(null, '', '#' + key);
+    if (push) {
+      history.pushState({ mzAdmin: key }, '', '#' + key);
+    } else if (!history.state || history.state.mzAdmin !== key) {
+      history.replaceState(Object.assign({}, history.state || {}, { mzAdmin: key }), '', '#' + key);
+    }
     if (key === 'analytics' || key === 'overview') setTimeout(function () { window.dispatchEvent(new Event('resize')); }, 60);
   }
 
@@ -10222,6 +10387,12 @@ return '<div class="mz-mobile-card">' +
         if (target && target.querySelector('.mz-admin-layout')) {
           switchAdminSection(target, adminInitialSection(), false);
         }
+      });
+      window.addEventListener('popstate', function (ev) {
+        var target = document.querySelector('[data-app="admin"]');
+        if (!target || !target.querySelector('.mz-admin-layout')) return;
+        var key = ev.state && ev.state.mzAdmin ? ev.state.mzAdmin : (window.location.hash || '').replace('#', '');
+        switchAdminSection(target, ADMIN_SECTIONS.indexOf(key) >= 0 ? key : 'overview', false);
       });
     }
 
