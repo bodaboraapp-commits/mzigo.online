@@ -16,7 +16,7 @@ import os
 import sys
 import urllib.request
 
-URL = os.environ.get("MZIGO_MCP_URL", "http://127.0.0.1:8484/mcp")
+URL = os.environ.get("MZIGO_MCP_URL", "http://127.0.0.1:8090/microservice/mcp")
 TOKEN = os.environ.get("MZIGO_MCP_TOKEN", "")
 TENANT_ID = os.environ.get("MZIGO_TENANT_ID", "1")
 

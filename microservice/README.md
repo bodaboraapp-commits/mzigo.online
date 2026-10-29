@@ -12,7 +12,17 @@ Privacy-enforcing MCP microservice for Mzigo.online.
 python server.py
 ```
 
-Default: `http://127.0.0.1:8484`.
+The Python process stays on `http://127.0.0.1:8484`, but it is proxied by the
+main Apache so clients use the same host/port as the rest of the app:
+
+- Local: `http://localhost:8090/microservice/mcp`
+- Live: `https://mzigo.online/microservice/mcp`
+
+On a shared cPanel host, the `/microservice/` reverse proxy must be configured at
+the Apache vhost level (ProxyPass/ProxyPassReverse), not in `.htaccess`, because
+cPanel disables `ProxyPass` in `.htaccess`. Ask the host to proxy
+`/microservice/` to the Python service, or use a Cloudflare Worker for the
+same effect.
 
 ## Configure
 
@@ -24,7 +34,7 @@ Default: `http://127.0.0.1:8484`.
 ## Health
 
 ```text
-GET http://127.0.0.1:8484/health
+GET http://localhost:8090/microservice/health
 ```
 
 ## MCP client config example
@@ -41,7 +51,7 @@ GET http://127.0.0.1:8484/health
 }
 ```
 
-For a real MCP client that speaks HTTP JSON-RPC, point it at `http://127.0.0.1:8484/mcp` with:
+For a real MCP client that speaks HTTP JSON-RPC, point it at `http://localhost:8090/microservice/mcp` (or `https://mzigo.online/microservice/mcp` on live) with:
 
 - `Authorization: Bearer <token>`
 - `X-Tenant-Id: <workspace id>`
