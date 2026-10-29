@@ -9560,6 +9560,67 @@ return '<div class="mz-mobile-card">' +
     });
   }
 
+  function initAdminMcp(host) {
+    var mount = host.querySelector('[data-admin-mcp]');
+    if (!mount) return;
+    function render(policy) {
+      var p = policy || {};
+      mount.innerHTML =
+        '<div class="mz-card__title">MCP microservice privacy</div>' +
+        '<p class="mz-hint">Controls the privacy policy applied by <code>microservice/server.py</code>. Changes are written to <code>microservice/config.json</code> and take effect on the next MCP request.</p>' +
+        '<form class="mz-stack" data-mcp-form style="margin-top:10px;">' +
+          '<div class="mz-form-2col">' +
+            '<label class="mz-field"><span class="mz-label">Mode</span><select class="mz-input" name="mode">' +
+              '<option value="sandbox"' + (p.mode === 'sandbox' ? ' selected' : '') + '>Sandbox (synthetic data)</option>' +
+              '<option value="proxy"' + (p.mode === 'proxy' ? ' selected' : '') + '>Proxy (live API)</option></select></label>' +
+            '<label class="mz-field"><span class="mz-label">Rate limit / min</span><input class="mz-input" name="rate_limit_per_min" type="number" min="1" value="' + Number(p.rate_limit_per_min || 60) + '"></label>' +
+            '<label class="mz-field"><span class="mz-label">Max rows</span><input class="mz-input" name="max_rows" type="number" min="1" max="500" value="' + Number(p.max_rows || 50) + '"></label>' +
+            '<label class="mz-field"><span class="mz-label">Retention (days)</span><input class="mz-input" name="retention_days" type="number" min="1" value="' + Number(p.retention_days || 30) + '"></label>' +
+          '</div>' +
+          '<label class="mz-field"><span class="mz-label">Allowed scopes (comma separated)</span><input class="mz-input" name="allowed_scopes" value="' + esc(p.allowed_scopes || '') + '" placeholder="parcel.track,orders.list,workspace.analytics_summary"></label>' +
+          '<label class="mz-field"><span class="mz-label">PII fields to mask (comma separated)</span><input class="mz-input" name="mask_fields" value="' + esc(p.mask_fields || '') + '" placeholder="phone,email"></label>' +
+          '<div class="mz-row" style="gap:18px;flex-wrap:wrap;">' +
+            '<label class="mz-check"><input type="checkbox" name="enabled"' + (p.enabled ? ' checked' : '') + '><span><strong>Enabled</strong></span></label>' +
+            '<label class="mz-check"><input type="checkbox" name="tenant_isolation"' + (p.tenant_isolation ? ' checked' : '') + '><span><strong>Tenant isolation</strong></span></label>' +
+            '<label class="mz-check"><input type="checkbox" name="read_only"' + (p.read_only ? ' checked' : '') + '><span><strong>Read only</strong></span></label>' +
+          '</div>' +
+          '<div class="mz-row" style="justify-content:flex-start;gap:8px;align-items:center;">' +
+            '<input class="mz-input mz-mono" name="token" value="' + esc(p.token || '') + '" placeholder="Generate an MCP token" style="max-width:360px;">' +
+            '<button type="button" class="mz-tab" data-mcp-regenerate>Regenerate token</button>' +
+          '</div>' +
+          '<button class="mz-btn" type="submit">Save privacy policy</button>' +
+        '</form>';
+      var form = mount.querySelector('[data-mcp-form]');
+      form.addEventListener('submit', function (ev) {
+        ev.preventDefault();
+        var btn = form.querySelector('[type="submit"]');
+        btn.disabled = true;
+        api('admin-mcp.php', { method: 'POST', body: {
+          action: 'save',
+          mode: formValue(form, 'mode'),
+          enabled: form.querySelector('[name="enabled"]').checked,
+          tenant_isolation: form.querySelector('[name="tenant_isolation"]').checked,
+          read_only: form.querySelector('[name="read_only"]').checked,
+          token: formValue(form, 'token'),
+          allowed_scopes: formValue(form, 'allowed_scopes'),
+          mask_fields: formValue(form, 'mask_fields'),
+          max_rows: Number(formValue(form, 'max_rows') || 50),
+          rate_limit_per_min: Number(formValue(form, 'rate_limit_per_min') || 60),
+          retention_days: Number(formValue(form, 'retention_days') || 30)
+        } }).then(function (res) { toast(res.message || 'Privacy policy saved.'); render(res.policy); })
+          .catch(function (err) { toast(err.message, 'error'); btn.disabled = false; });
+      });
+      var regen = mount.querySelector('[data-mcp-regenerate]');
+      regen.addEventListener('click', function () {
+        api('admin-mcp.php', { method: 'POST', body: { action: 'regenerate_token' } })
+          .then(function (res) { toast(res.message || 'Token regenerated.'); render(res.policy); })
+          .catch(function (err) { toast(err.message, 'error'); });
+      });
+    }
+    api('admin-mcp.php').then(function (data) { render(data.policy); })
+      .catch(function (err) { mount.innerHTML = '<div class="mz-hint">Could not load MCP policy: ' + esc(err.message) + '</div>'; });
+  }
+
   function initAdminEvents(host) {
     var mount = host.querySelector('[data-admin-events]');
     if (!mount) return;
@@ -9928,6 +9989,7 @@ return '<div class="mz-mobile-card">' +
             '<div class="mz-saas-card" data-admin-fee-settings style="margin-bottom:16px;"></div>' +
             '<div class="mz-saas-card" data-admin-payout-settings style="margin-bottom:16px;"></div>' +
             '<div class="mz-saas-card" data-admin-runner-config style="margin-bottom:16px;"></div>' +
+            '<div class="mz-saas-card" data-admin-mcp style="margin-bottom:16px;"></div>' +
             '<div class="mz-saas-card" data-admin-claim-rails style="margin-bottom:16px;"></div>' +
             '<div class="mz-saas-card" data-admin-pricing style="margin-bottom:16px;"></div>' +
             '<div class="mz-saas-card" data-admin-twofa style="margin-bottom:16px;"></div>' +
@@ -10035,6 +10097,7 @@ return '<div class="mz-mobile-card">' +
     renderAdminFeeSettings(host.querySelector('[data-admin-fee-settings]'), data);
     renderAdminPayoutSettings(host.querySelector('[data-admin-payout-settings]'), data);
     renderAdminRunnerConfig(host.querySelector('[data-admin-runner-config]'), data);
+    initAdminMcp(host);
     bindAdminActions(host);
   }
 

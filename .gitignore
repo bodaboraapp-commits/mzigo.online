@@ -29,3 +29,8 @@ _server/config-key.php.bak.*
 # Local server PID files
 *.pid
 
+# MCP microservice runtime state (policy secrets and audit DB)
+microservice/config.json
+microservice/data/
+microservice/*.log
+
