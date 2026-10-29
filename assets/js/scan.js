@@ -13,6 +13,9 @@
   var autoAction = '';
   var lookupSeq = 0;
   var lookupTimer = 0;
+  var primaryMode = 'scan';
+  var autoRecordInterval = 0;
+  var autoRecordLeft = 0;
   var selectedAction = '';
   var pendingKey = '';
   var qrStream = null;
@@ -111,6 +114,7 @@
         (a.key === lastAction ? '<em>Recent</em>' : '') + '</button>';
     }).join('');
     selectedAction = '';
+    primaryMode = 'scan';
     Array.prototype.forEach.call(document.querySelectorAll('[data-scan-action]'), function (btn) {
       btn.addEventListener('click', function () {
         selectedAction = btn.getAttribute('data-scan-action');
@@ -118,6 +122,7 @@
         Array.prototype.forEach.call(document.querySelectorAll('[data-scan-action]'), function (b) { b.classList.remove('is-selected'); });
         btn.classList.add('is-selected');
         toggleCollection();
+        if (primaryMode !== 'auto') { primaryMode = 'record'; }
         syncActionState();
       });
     });
@@ -128,6 +133,59 @@
     $('#setup').hidden = true;
     $('#app').hidden = false;
   }
+  function clearAutoRecord() {
+    if (autoRecordInterval) { clearInterval(autoRecordInterval); autoRecordInterval = 0; }
+    autoRecordLeft = 0;
+    var note = $('#autoRecordNote');
+    if (note) note.hidden = true;
+  }
+  function renderPrimaryAction() {
+    var btn = $('#submitScan');
+    if (!btn) return;
+    btn.setAttribute('aria-busy', 'false');
+    if (primaryMode === 'auto') {
+      btn.textContent = 'Recording…';
+      btn.disabled = true;
+      return;
+    }
+    if (primaryMode === 'record') {
+      var label = selectedAction ? actionLabel(selectedAction).toLowerCase() : 'scan';
+      btn.textContent = 'Record ' + label;
+      btn.disabled = !selectedAction;
+    } else {
+      btn.innerHTML = '&#9635; Scan parcel label';
+      btn.disabled = false;
+    }
+  }
+  function setPrimaryMode(mode) {
+    primaryMode = mode;
+    syncActionState();
+  }
+  function startAutoRecord() {
+    clearAutoRecord();
+    if (!selectedAction || selectedAction === 'collection' || !navigator.onLine) {
+      setPrimaryMode('record');
+      return;
+    }
+    autoRecordLeft = 2;
+    primaryMode = 'auto';
+    $('#autoRecordAction').textContent = actionLabel(selectedAction).toLowerCase();
+    $('#autoRecordCount').textContent = '2';
+    $('#autoRecordNote').hidden = false;
+    renderPrimaryAction();
+    autoRecordInterval = setInterval(function () {
+      autoRecordLeft--;
+      if (autoRecordLeft > 0) {
+        $('#autoRecordCount').textContent = String(autoRecordLeft);
+        return;
+      }
+      clearAutoRecord();
+      primaryMode = 'record';
+      syncActionState();
+      submitScan();
+    }, 1000);
+  }
+
   function actionLabel(key) {
     if (point && point.actions && point.actions.length) {
       for (var i = 0; i < point.actions.length; i++) {
@@ -162,7 +220,7 @@
         (index < items.length - 1 ? '<span class="scan-journey__line' + (item.state === 'done' ? ' is-done' : '') + '"></span>' : '');
     }).join('');
   }
-  function applyJourney(parcel) {
+  function applyJourney(parcel, autoRecord) {
     parcelJourney = parcel;
     autoAction = parcel.next_action || '';
     selectedAction = autoAction;
@@ -190,11 +248,14 @@
       $('#scanHint').textContent = parcel.blocked_reason || 'This parcel has no next scan action at this point.';
     }
     selectActionButton();
-    syncActionState();
     toggleCollection();
+    if (autoRecord && autoAction) startAutoRecord();
+    else setPrimaryMode('record');
   }
   function resetJourney() {
     lookupSeq++;
+    clearAutoRecord();
+    primaryMode = 'scan';
     parcelJourney = null;
     autoAction = '';
     selectedAction = '';
@@ -212,22 +273,26 @@
     toggleCollection();
   }
   function showManualActions() {
+    clearAutoRecord();
+    primaryMode = 'record';
     $('#actionGridWrap').hidden = false;
     $('#manualActionBtn').hidden = true;
     $('#changeAction').hidden = true;
     $('#autoAction').hidden = true;
     $('#actionHint').textContent = 'Choose the scan action for this parcel.';
+    syncActionState();
   }
-  function lookupParcel(tracking) {
+  function lookupParcel(tracking, autoRecord) {
     var value = String(tracking || '').trim().toUpperCase();
     if (!value) return;
+    clearAutoRecord();
     if (parcelJourney && parcelJourney.tracking !== value) resetJourney();
     var seq = ++lookupSeq;
     $('#scanHint').textContent = 'Loading parcel journey…';
     apiGet({ tracking: value }).then(function (res) {
       if (seq !== lookupSeq) return;
       if (res.parcel) {
-        applyJourney(res.parcel);
+        applyJourney(res.parcel, !!autoRecord);
       } else {
         showManualActions();
         $('#scanHint').textContent = 'No parcel journey found. Choose the action manually.';
@@ -248,20 +313,12 @@
     var wrap = $('#manualEntryWrap');
     var input = $('#tracking');
     var value = $('#scanValue');
-    var qr = $('#qrBtn');
     if (wrap) wrap.hidden = !enabled;
     if (input) input.required = enabled;
     if (value) value.hidden = enabled;
-    if (qr) qr.classList.toggle('scan-btn--wide', !enabled);
   }
   function syncActionState() {
-    var qrBtn = $('#qrBtn');
-    if (qrBtn) {
-      qrBtn.disabled = false;
-      qrBtn.setAttribute('aria-disabled', 'false');
-    }
-    var submit = $('#submitScan');
-    if (submit) submit.disabled = !selectedAction;
+    renderPrimaryAction();
     var hint = $('#actionHint');
     if (hint) {
       hint.textContent = selectedAction ? 'The next action is selected.' : 'Choose a scan action.';
@@ -365,7 +422,8 @@
     });
   }
   function submitScan(ev) {
-    ev.preventDefault();
+    if (ev && ev.preventDefault) ev.preventDefault();
+    clearAutoRecord();
     clearError('#scanError');
     var tracking = $('#tracking').value.trim().toUpperCase();
     if (!tracking) { toastError('#scanError', 'Enter a tracking number.'); return; }
@@ -408,7 +466,7 @@
         return;
       }
       toastError('#scanError', err.message);
-      $('#submitScan').disabled = false;
+      syncActionState();
     });
   }
   function setQrHint(text) {
@@ -416,8 +474,9 @@
     if (hint) hint.textContent = text;
   }
   function resetQrButton() {
-    var btn = $('#qrBtn');
-    if (btn) { btn.disabled = false; btn.setAttribute('aria-busy', 'false'); }
+    var btn = $('#submitScan');
+    if (btn) btn.setAttribute('aria-busy', 'false');
+    renderPrimaryAction();
   }
   function closeQr() {
     qrRequestSeq++;
@@ -445,7 +504,7 @@
     }
     qrOpening = true;
     var seq = ++qrRequestSeq;
-    var btn = $('#qrBtn');
+    var btn = $('#submitScan');
     if (btn) { btn.disabled = true; btn.setAttribute('aria-busy', 'true'); }
     $('#qrOverlay').hidden = false;
     setQrHint('Starting camera…');
@@ -511,7 +570,7 @@
             if (scanValue) scanValue.textContent = 'Scanned: ' + scanned;
             if (navigator.vibrate) navigator.vibrate(80);
             closeQr();
-            lookupParcel(scanned);
+            lookupParcel(scanned, true);
             if (!$('#manualEntryWrap').hidden) $('#tracking').focus();
           } else {
             if (raw !== '') setQrHint('Not a Mzigo label — keep the camera on a valid QR/Locker label.');
@@ -639,7 +698,14 @@
       connect(input.value.trim()).finally(function () { btn.disabled = false; });
     });
     $('#scanForm').addEventListener('submit', submitScan);
-    $('#qrBtn').addEventListener('click', openQr);
+    $('#submitScan').addEventListener('click', function () {
+      if (primaryMode === 'scan') openQr();
+      else if (primaryMode === 'record') submitScan();
+    });
+    $('#cancelAutoRecord').addEventListener('click', function () {
+      clearAutoRecord();
+      setPrimaryMode('record');
+    });
     $('#qrClose').addEventListener('click', closeQr);
     $('#manualActionBtn').addEventListener('click', showManualActions);
     $('#changeAction').addEventListener('click', showManualActions);
