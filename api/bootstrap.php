@@ -45,6 +45,7 @@ json_out([
     'paymentMethods' => $cat['paymentMethods'],
     'insurancePricing' => insurance_pricing_public(),
     'feeConfig' => fee_config(),
+    'orderPhotosRequired' => order_photos_required(),
     'packages'       => parcels_for_scope(),
     'errands'        => errands_for_scope(),
     'senders'        => senders_for_scope(),

@@ -354,6 +354,7 @@ if ($method === 'GET') {
         'web_vitals' => cms_web_vitals_summary(),
         'pricing_mode' => pricing_mode(),
         'fee_config' => fee_config(),
+        'order_photos_required' => order_photos_required(),
         'payout_config' => payout_config(),
         'runner_launch_config' => runner_launch_config(),
         'pending_runner_payouts' => db()->query("SELECT p.*, u.name AS runner_name, u.phone AS runner_phone FROM runner_payouts p JOIN users u ON u.id = p.runner_id WHERE p.status = 'pending' ORDER BY p.requested_at ASC LIMIT 50")->fetchAll(),
@@ -1555,6 +1556,12 @@ switch ($action) {
         $clean = payout_config_save($data);
         audit('admin.payout_config_saved', 'platform', 'payout_config', ['mode' => $clean['mode'], 'schedule' => $clean['schedule']]);
         json_out(['ok' => true, 'payout_config' => $clean]);
+    }
+
+    case 'save_order_photos_requirement': {
+        $required = order_photos_required_save(!empty($data['required']));
+        audit('admin.order_photos_requirement_saved', 'platform', 'order_photos_required', ['required' => $required]);
+        json_out(['ok' => true, 'order_photos_required' => $required]);
     }
 
     case 'save_fee_config': {

@@ -93,6 +93,7 @@
     partners: [], packageSizes: [], paymentMethods: [],
     insurancePricing: { mode: 'percentage', percent: 1.5, fixed: 30, minimum: 30 },
     feeConfig: { holding_fee_kes: 30, platform_fee_kes: 80 },
+    orderPhotosRequired: false,
     packages: [], errands: [], senders: [], demos: [],
     pricingMode: 'paid',
     ready: false, source: 'offline', database: 'mzigo_online'
@@ -179,6 +180,7 @@
       APP.paymentMethods = b.paymentMethods || [];
       APP.insurancePricing = b.insurancePricing || APP.insurancePricing;
       APP.feeConfig = b.feeConfig || APP.feeConfig;
+      APP.orderPhotosRequired = b.orderPhotosRequired === true;
       APP.packages = b.packages || [];
       APP.errands = b.errands || [];
       APP.senders = b.senders || [];
@@ -3262,6 +3264,32 @@ return '<div class="mz-mobile-card">' +
         handlePhoto(kind, input.files && input.files[0]);
       });
     });
+    function syncPhotoRequirement() {
+      var hint = step3.querySelector('[data-mz-photo-requirement-hint]');
+      if (!hint) return;
+      hint.textContent = (APP.orderPhotosRequired
+        ? 'Product and package photos are required for every new order. '
+        : '') +
+        'Only Mzigo, the workspace and the receiver can see these photos; they are not shown on public tracking.';
+    }
+    syncPhotoRequirement();
+
+    function fileToPhotoPayload(file) {
+      return new Promise(function (resolve, reject) {
+        var reader = new FileReader();
+        reader.onload = function () {
+          var raw = String(reader.result || '');
+          var comma = raw.indexOf(',');
+          resolve({
+            name: file.name || 'photo',
+            mime: file.type || 'image/jpeg',
+            data: comma >= 0 ? raw.slice(comma + 1) : raw
+          });
+        };
+        reader.onerror = function () { reject(new Error('Could not read the selected photo.')); };
+        reader.readAsDataURL(file);
+      });
+    }
 
     function refreshEstimate() {
       var q = quote({ size: (s3.size && s3.size.value) || 'Medium', value: Number((s3.value && s3.value.value) || 0) });
@@ -3403,6 +3431,19 @@ return '<div class="mz-mobile-card">' +
       if (!payment) { toast('Select the preferred payment method.', 'error'); s3.payment && s3.payment.focus(); return; }
       var productFile = photoState.product.file;
       var packageFile = photoState.package.file;
+      var photosRequired = !!APP.orderPhotosRequired;
+      if (photosRequired) {
+        var missingKind = !productFile ? 'product' : (!packageFile ? 'package' : '');
+        if (missingKind) {
+          setPhotoError('product', productFile ? '' : 'Product photo is required.');
+          setPhotoError('package', packageFile ? '' : 'Package photo is required.');
+          toast('Add both product and package photos before submitting.', 'error');
+          var missingTile = photoTile(missingKind);
+          var missingButton = missingTile && missingTile.querySelector('[data-mz-photo-open]');
+          if (missingButton) missingButton.focus();
+          return;
+        }
+      }
       var photoError = validatePhoto(productFile, 'Product photo') || validatePhoto(packageFile, 'Package photo');
       if (photoError) { toast(photoError, 'error'); return; }
       var partner = APP.partners.filter(function (p) { return p.name === sendState.carrier; })[0];
@@ -3419,8 +3460,7 @@ return '<div class="mz-mobile-card">' +
         value: value,
         payment: payment
       };
-      submit.disabled = true;
-      api('register-parcel.php', { method: 'POST', body: payload }).then(function (res) {
+      function afterRegistered(res) {
         var parcel = res.parcel;
         APP.packages.unshift(parcel);
         var mount = receipt.querySelector('[data-mz-receipt]');
@@ -3429,16 +3469,36 @@ return '<div class="mz-mobile-card">' +
         stepper.innerHTML = '';
         var sub = $('[data-mz-wizard-sub]');
         if (sub) sub.textContent = 'Registered';
-        if (productFile || packageFile) {
+        if (photosRequired) {
+          toast('Parcel ' + parcel.tracking + ' saved with photos.');
+        } else if (productFile || packageFile) {
           toast('Order saved. Uploading photos…', 'info');
           uploadPhotosFor(parcel, mount).catch(function () {});
         } else {
           toast('Parcel ' + parcel.tracking + ' saved to MySQL.');
         }
-      }).catch(function (err) {
-        if (err.code === 'plan_limit') showUpgradeNotice(err);
-        toast(err.message, 'error');
-      }).then(function () { submit.disabled = false; });
+      }
+      function registerParcel() {
+        return api('register-parcel.php', { method: 'POST', body: payload }).then(afterRegistered).catch(function (err) {
+          if (err.code === 'plan_limit') showUpgradeNotice(err);
+          toast(err.message, 'error');
+        }).then(function () { submit.disabled = false; });
+      }
+      submit.disabled = true;
+      if (photosRequired) {
+        Promise.all([
+          fileToPhotoPayload(productFile),
+          fileToPhotoPayload(packageFile)
+        ]).then(function (photos) {
+          payload.photos = { product: photos[0], package: photos[1] };
+          return registerParcel();
+        }).catch(function (err) {
+          toast(err.message || 'Could not prepare photos.', 'error');
+          submit.disabled = false;
+        });
+      } else {
+        registerParcel();
+      }
     });
 
 
@@ -8551,6 +8611,33 @@ return '<div class="mz-mobile-card">' +
     load();
   }
 
+  function renderAdminOrderPhotoSettings(card, data) {
+    if (!card) return;
+    var required = data.order_photos_required === true;
+    card.innerHTML = '<div class="mz-card__title">Order photos</div>' +
+      '<p class="mz-hint">Choose whether product and package photos are required on every new order. The public form never displays an “Optional” badge.</p>' +
+      '<div class="mz-form-2col">' +
+        '<label class="mz-field"><span class="mz-label">Photo requirement</span>' +
+          '<select class="mz-input" data-order-photo-mode>' +
+            '<option value="optional"' + (!required ? ' selected' : '') + '>Optional</option>' +
+            '<option value="mandatory"' + (required ? ' selected' : '') + '>Mandatory</option>' +
+          '</select></label>' +
+      '</div>' +
+      '<div class="mz-row" style="justify-content:flex-start;margin-top:8px;">' +
+        '<button class="mz-btn mz-btn--sm" type="button" data-order-photo-save>Save photo requirement</button>' +
+      '</div>';
+    card.querySelector('[data-order-photo-save]').addEventListener('click', function (ev) {
+      ev.currentTarget.disabled = true;
+      var requiredNow = card.querySelector('[data-order-photo-mode]').value === 'mandatory';
+      api('admin.php', { method: 'POST', body: { action: 'save_order_photos_requirement', required: requiredNow } })
+        .then(function (res) {
+          APP.orderPhotosRequired = res.order_photos_required === true;
+          toast('Order photo requirement saved.');
+          loadAdmin();
+        }).catch(function (err) { toast(err.message, 'error'); ev.currentTarget.disabled = false; });
+    });
+  }
+
   function renderAdminFeeSettings(card, data) {
     if (!card) return;
     var cfg = data.fee_config || {};
@@ -9837,6 +9924,7 @@ return '<div class="mz-mobile-card">' +
           '</section>' +
           '<section class="mz-admin-section" data-admin-section="settings" hidden>' +
             adminSectionHead('Settings', 'Payouts, runner areas/KYC, pricing and platform configuration.') +
+            '<div class="mz-saas-card" data-admin-order-photos style="margin-bottom:16px;"></div>' +
             '<div class="mz-saas-card" data-admin-fee-settings style="margin-bottom:16px;"></div>' +
             '<div class="mz-saas-card" data-admin-payout-settings style="margin-bottom:16px;"></div>' +
             '<div class="mz-saas-card" data-admin-runner-config style="margin-bottom:16px;"></div>' +
@@ -9943,6 +10031,7 @@ return '<div class="mz-mobile-card">' +
     initAdminKyc(host);
     initAdminInsurance(host);
     initAdminRunnerJobs(host);
+    renderAdminOrderPhotoSettings(host.querySelector('[data-admin-order-photos]'), data);
     renderAdminFeeSettings(host.querySelector('[data-admin-fee-settings]'), data);
     renderAdminPayoutSettings(host.querySelector('[data-admin-payout-settings]'), data);
     renderAdminRunnerConfig(host.querySelector('[data-admin-runner-config]'), data);

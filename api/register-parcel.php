@@ -17,6 +17,15 @@ require_once __DIR__ . '/_insurance.php';
 require_post();
 verify_csrf();
 $data = body_json();
+$photoPayload = isset($data['photos']) && is_array($data['photos']) ? $data['photos'] : [];
+$photosRequired = order_photos_required();
+if ($photosRequired) {
+    foreach (['product', 'package'] as $photoKind) {
+        if (empty($photoPayload[$photoKind]['data']) || !is_string($photoPayload[$photoKind]['data'])) {
+            fail_error('photos_required', 'Product and package photos are required for every new order.', 422);
+        }
+    }
+}
 $pdo = db();
 $user = current_user();
 $tenant = current_tenant();
@@ -147,6 +156,32 @@ if (!$insuranceIssue['ok'] && !empty(insurance_config()['require_policy'])) {
     $pdo->prepare("DELETE FROM scans WHERE subject_type = 'parcel' AND subject_id = ?")->execute([$id]);
     $pdo->prepare('DELETE FROM parcels WHERE id = ?')->execute([$id]);
     fail('The parcel could not be insured right now. Please try again or contact support.', 502, ['insurance' => $insuranceIssue['error'] ?? 'Insurer unavailable.']);
+}
+
+if ($photoPayload) {
+    try {
+        foreach (['product', 'package'] as $photoKind) {
+            if (!isset($photoPayload[$photoKind]) || !is_array($photoPayload[$photoKind])) {
+                continue;
+            }
+            parcel_photo_save_data_uri($id, $photoKind, $photoPayload[$photoKind]);
+        }
+    } catch (Throwable $e) {
+        // Do not leave a half-created order behind when required photos fail.
+        try {
+            $photoRows = $pdo->prepare('SELECT storage_name FROM parcel_photos WHERE parcel_id = ?');
+            $photoRows->execute([$id]);
+            foreach ($photoRows->fetchAll() as $photoRow) {
+                @unlink(parcel_photo_dir() . DIRECTORY_SEPARATOR . basename((string) $photoRow['storage_name']));
+            }
+            $pdo->prepare('DELETE FROM parcel_photos WHERE parcel_id = ?')->execute([$id]);
+            $pdo->prepare("DELETE FROM scans WHERE subject_type = 'parcel' AND subject_id = ?")->execute([$id]);
+            $pdo->prepare('DELETE FROM parcels WHERE id = ?')->execute([$id]);
+        } catch (Throwable $cleanupError) {
+            error_log('parcel photo rollback failed: ' . $cleanupError->getMessage());
+        }
+        fail_error('photo_upload_failed', $e->getMessage() ?: 'Could not save the order photos.', 422);
+    }
 }
 
 audit('parcel.created', 'parcel', $id, [
