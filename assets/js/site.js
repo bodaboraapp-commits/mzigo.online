@@ -94,6 +94,7 @@
     insurancePricing: { mode: 'percentage', percent: 1.5, fixed: 30, minimum: 30 },
     feeConfig: { holding_fee_kes: 30, platform_fee_kes: 80 },
     orderPhotosRequired: false,
+    mpesaPayment: { mode: 'demo', ready: false },
     packages: [], errands: [], senders: [], demos: [],
     pricingMode: 'paid',
     ready: false, source: 'offline', database: 'mzigo_online'
@@ -4654,14 +4655,44 @@ return '<div class="mz-mobile-card">' +
     });
   }
 
-  function openCustomerCheckout(host, tracking, fee) {
+  function pollCustomerPayment(host, tracking, attempt) {
+    if (attempt > 50) {
+      toast('Still waiting for M-Pesa confirmation. You can refresh this page to check again.', 'info');
+      loadCustomer(host);
+      return;
+    }
+    setTimeout(function () {
+      api('customer.php', { method: 'POST', body: { action: 'payment_status', tracking: tracking } })
+        .then(function (res) {
+          if (res.status === 'paid') {
+            toast('M-Pesa payment confirmed.');
+            loadCustomer(host);
+            return;
+          }
+          if (res.status === 'failed') {
+            toast(res.message || 'The M-Pesa payment was not completed.', 'error');
+            loadCustomer(host);
+            return;
+          }
+          pollCustomerPayment(host, tracking, attempt + 1);
+        }).catch(function () {
+          pollCustomerPayment(host, tracking, attempt + 1);
+        });
+    }, attempt === 0 ? 2500 : 3000);
+  }
+
+  function openCustomerCheckout(host, tracking, fee, payment) {
+    payment = payment || APP.mpesaPayment || { mode: 'demo', ready: false };
+    var live = payment.mode === 'live';
     var couponCode = '';
     var dialog = openDialog({
       title: 'Pay ' + money(fee) + ' at collection',
-      sub: 'Delivery fee for ' + tracking + ' · M-Pesa demo checkout',
-      submitLabel: 'Pay ' + money(fee),
+      sub: 'Delivery fee for ' + tracking + (live ? ' · M-Pesa checkout' : ' · M-Pesa demo checkout'),
+      submitLabel: live ? 'Send M-Pesa request' : 'Pay ' + money(fee),
       body:
-        '<div class="mz-alert" style="margin-bottom:12px;">Pay the delivery fee to receive your collection code. In demo mode no real money moves.</div>' +
+        '<div class="mz-alert" style="margin-bottom:12px;">' + (live
+          ? 'An M-Pesa prompt will be sent to your registered phone. Enter your PIN to confirm the delivery fee.'
+          : 'Pay the delivery fee to receive your collection code. In demo mode no real money moves.') + '</div>' +
         '<div class="mz-form-grid"><label class="mz-field"><span class="mz-label">Coupon code (optional)</span>' +
           '<input class="mz-input" name="coupon_code" placeholder="e.g. MZIGO100"></label>' +
           '<div style="display:flex;align-items:flex-end;"><button type="button" class="mz-btn mz-btn--outline mz-btn--sm" data-coupon-apply>Apply coupon</button></div></div>' +
@@ -4672,6 +4703,13 @@ return '<div class="mz-mobile-card">' +
         '<div class="mz-hint" data-coupon-message></div>',
       onSubmit: function (form) {
         return api('customer.php', { method: 'POST', body: { action: 'pay', tracking: tracking, coupon_code: couponCode } }).then(function (res) {
+          if (res.pending) {
+            toast(res.message || 'Check your phone for the M-Pesa prompt.', 'info');
+            dialog.close();
+            trackEvent('customer_pay', { label: 'M-Pesa STK sent', meta: { tracking: tracking, coupon: couponCode } });
+            pollCustomerPayment(host, tracking, 0);
+            return;
+          }
           toast('Payment confirmed · ' + res.reference);
           trackEvent('customer_pay', { label: 'Pay with M-Pesa', meta: { reference: res.reference, coupon: couponCode } });
           dialog.close();
@@ -4762,7 +4800,7 @@ return '<div class="mz-mobile-card">' +
         '</div>' +
         (p.payment_ref ? '<div style="font-size:11px;color:var(--mz-muted-fg);margin-top:6px;">Receipt ' + esc(p.payment_ref) + (p.paid_at ? ' · ' + esc(fmtDate(p.paid_at)) : '') + '</div>' : '');
     } else if (p.can_pay) {
-      action = '<button type="button" class="mz-btn" data-customer-pay="' + esc(p.tracking) + '" data-customer-fee="' + fee + '" style="margin-top:12px;">Pay ' + money(fee) + ' with M-Pesa (demo)</button>' +
+      action = '<button type="button" class="mz-btn" data-customer-pay="' + esc(p.tracking) + '" data-customer-fee="' + fee + '" style="margin-top:12px;">Pay ' + money(fee) + ' with M-Pesa' + ((APP.mpesaPayment && APP.mpesaPayment.mode === 'live') ? '' : ' (demo)') + '</button>' +
         '<div style="font-size:11px;color:var(--mz-muted-fg);margin-top:6px;">Your collection code appears after payment.</div>' +
         '<div class="mz-row" style="gap:12px;margin-top:8px;justify-content:flex-start;flex-wrap:wrap;">' +
           '<span class="mz-hint" style="margin:0;">Parcel not as expected?</span>' +
@@ -4802,6 +4840,7 @@ return '<div class="mz-mobile-card">' +
   }
 
   function renderCustomer(host, data) {
+    APP.mpesaPayment = data.payment || { mode: 'demo', ready: false };
     setTimeout(function () { mountReferralCard(host, 'customer'); }, 0);
     var c = data.customer;
     var sum = data.summary;
@@ -4941,7 +4980,7 @@ return '<div class="mz-mobile-card">' +
     });
     host.querySelectorAll('[data-customer-pay]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        openCustomerCheckout(host, btn.getAttribute('data-customer-pay'), Number(btn.getAttribute('data-customer-fee') || 0));
+        openCustomerCheckout(host, btn.getAttribute('data-customer-pay'), Number(btn.getAttribute('data-customer-fee') || 0), APP.mpesaPayment);
       });
     });
     host.querySelectorAll('[data-customer-pay-old]').forEach(function (btn) {
@@ -7551,7 +7590,7 @@ return '<div class="mz-mobile-card">' +
   }
 
   var adminSection = 'overview';
-  var ADMIN_SECTIONS = ['overview', 'analytics', 'workspaces', 'invoices', 'transactions', 'unassigned', 'claims', 'runnerjobs', 'kyc', 'messages', 'sessions', 'users', 'communications', 'whatsapp', 'campaigns', 'points', 'activities', 'growth', 'faqs', 'insurance', 'cms', 'seo', 'settings'];
+  var ADMIN_SECTIONS = ['overview', 'analytics', 'workspaces', 'invoices', 'transactions', 'unassigned', 'claims', 'runnerjobs', 'kyc', 'messages', 'sessions', 'users', 'communications', 'whatsapp', 'campaigns', 'points', 'activities', 'growth', 'faqs', 'insurance', 'cms', 'seo', 'mcp', 'settings'];
 
   function adminIcon(name) {
     var paths = {
@@ -7577,7 +7616,8 @@ return '<div class="mz-mobile-card">' +
       campaigns: '<path d="M3 11l18-8-8 18-2-8-8-2z"/><path d="M8 13l3 3"/>',
       points: '<path d="M12 22s7-6.1 7-12a7 7 0 1 0-14 0c0 5.9 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/>',
       activities: '<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
-      settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>'
+      settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
+      mcp: '<path d="M4 4h16v12H4z"/><path d="M8 20h8M12 16v4"/><path d="M8 8h8M8 12h5"/>'
     };
     return '<svg class="mz-admin-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (paths[name] || '') + '</svg>';
   }
@@ -7611,6 +7651,7 @@ return '<div class="mz-mobile-card">' +
       ['faqs', 'FAQs', ''],
       ['cms', 'Website', ''],
       ['seo', 'SEO', ''],
+      ['mcp', 'MCP', ''],
       ['settings', 'Settings', '']
     ];
   }
@@ -8609,6 +8650,55 @@ return '<div class="mz-mobile-card">' +
       });
     }
     load();
+  }
+
+  function renderAdminMpesaPayments(card, data) {
+    if (!card) return;
+    var cfg = data.mpesa_payment_config || {};
+    var field = function (label, key, value, type, placeholder) {
+      return '<label class="mz-field"><span class="mz-label">' + label + '</span>' +
+        '<input class="mz-input" data-mpesa-field="' + key + '" type="' + (type || 'text') + '" value="' + esc(value || '') + '" placeholder="' + esc(placeholder || '') + '"></label>';
+    };
+    card.innerHTML = '<div class="mz-row"><div><div class="mz-card__title" style="margin:0;">M-Pesa payments (Daraja STK)</div>' +
+      '<p class="mz-hint" style="margin:4px 0 0;">Used when a customer pays the delivery fee from the customer portal. Demo mode keeps the old simulated checkout.</p></div>' +
+      '<span class="mz-badge ' + (cfg.ready ? 'mz-badge--ok' : 'mz-badge--warn') + '">' + (cfg.ready ? 'Live ready' : 'Not live-ready') + '</span></div>' +
+      '<div class="mz-form-2col" style="margin-top:12px;">' +
+        '<label class="mz-field"><span class="mz-label">Mode</span><select class="mz-input" data-mpesa-field="mode"><option value="demo"' + (cfg.mode !== 'live' ? ' selected' : '') + '>Demo</option><option value="live"' + (cfg.mode === 'live' ? ' selected' : '') + '>Live STK</option></select></label>' +
+        '<label class="mz-field"><span class="mz-label">Environment</span><select class="mz-input" data-mpesa-field="environment"><option value="sandbox"' + (cfg.environment !== 'production' ? ' selected' : '') + '>Sandbox</option><option value="production"' + (cfg.environment === 'production' ? ' selected' : '') + '>Production</option></select></label>' +
+        field('Shortcode / BusinessShortCode', 'shortcode', cfg.shortcode) +
+        field('Transaction type', 'transaction_type', cfg.transaction_type, 'text', 'CustomerPayBillOnline') +
+        field('Consumer key', 'consumer_key', '', 'password', cfg.consumer_key_set ? 'Saved - leave blank to keep' : 'Daraja consumer key') +
+        field('Consumer secret', 'consumer_secret', '', 'password', cfg.consumer_secret_set ? 'Saved - leave blank to keep' : 'Daraja consumer secret') +
+        field('Passkey', 'passkey', '', 'password', cfg.passkey_set ? 'Saved - leave blank to keep' : 'Daraja passkey') +
+        field('Callback URL', 'callback_url', cfg.callback_url, 'url', 'https://mzigo.online/api/mpesa-callback.php') +
+      '</div>' +
+      '<div class="mz-row" style="justify-content:flex-start;gap:8px;flex-wrap:wrap;margin-top:8px;">' +
+        '<button class="mz-btn mz-btn--sm" type="button" data-mpesa-save>Save M-Pesa config</button>' +
+        '<button class="mz-btn mz-btn--outline mz-btn--sm" type="button" data-mpesa-test>Test Daraja auth</button>' +
+      '</div>' +
+      '<div class="mz-hint" data-mpesa-result style="margin-top:8px;"></div>';
+    card.querySelector('[data-mpesa-save]').addEventListener('click', function (ev) {
+      ev.currentTarget.disabled = true;
+      var config = {};
+      card.querySelectorAll('[data-mpesa-field]').forEach(function (el) {
+        config[el.getAttribute('data-mpesa-field')] = el.value;
+      });
+      api('admin.php', { method: 'POST', body: { action: 'save_mpesa_payment_config', config: config } })
+        .then(function (res) {
+          toast('M-Pesa payment configuration saved.');
+          if (res.mpesa_payment_config) {
+            APP.mpesaPayment = res.mpesa_payment_config;
+          }
+          loadAdmin();
+        }).catch(function (err) { toast(err.message, 'error'); ev.currentTarget.disabled = false; });
+    });
+    card.querySelector('[data-mpesa-test]').addEventListener('click', function (ev) {
+      ev.currentTarget.disabled = true;
+      var out = card.querySelector('[data-mpesa-result]');
+      api('admin.php', { method: 'POST', body: { action: 'test_mpesa_payment_auth' } })
+        .then(function (res) { if (out) out.textContent = res.message || 'Daraja authentication succeeded.'; toast(res.message || 'Daraja OK.'); ev.currentTarget.disabled = false; })
+        .catch(function (err) { if (out) out.textContent = err.message; toast(err.message, 'error'); ev.currentTarget.disabled = false; });
+    });
   }
 
   function renderAdminOrderPhotoSettings(card, data) {
@@ -9983,13 +10073,17 @@ return '<div class="mz-mobile-card">' +
             '<div class="mz-saas-card" data-admin-seo style="margin-bottom:16px;"></div>' +
             '<div class="mz-saas-card" data-admin-events></div>' +
           '</section>' +
+          '<section class="mz-admin-section" data-admin-section="mcp" hidden>' +
+            adminSectionHead('MCP', 'Model Context Protocol microservice and its privacy policy.') +
+            '<div class="mz-saas-card" data-admin-mcp></div>' +
+          '</section>' +
           '<section class="mz-admin-section" data-admin-section="settings" hidden>' +
             adminSectionHead('Settings', 'Payouts, runner areas/KYC, pricing and platform configuration.') +
+            '<div class="mz-saas-card" data-admin-mpesa-payments style="margin-bottom:16px;"></div>' +
             '<div class="mz-saas-card" data-admin-order-photos style="margin-bottom:16px;"></div>' +
             '<div class="mz-saas-card" data-admin-fee-settings style="margin-bottom:16px;"></div>' +
             '<div class="mz-saas-card" data-admin-payout-settings style="margin-bottom:16px;"></div>' +
             '<div class="mz-saas-card" data-admin-runner-config style="margin-bottom:16px;"></div>' +
-            '<div class="mz-saas-card" data-admin-mcp style="margin-bottom:16px;"></div>' +
             '<div class="mz-saas-card" data-admin-claim-rails style="margin-bottom:16px;"></div>' +
             '<div class="mz-saas-card" data-admin-pricing style="margin-bottom:16px;"></div>' +
             '<div class="mz-saas-card" data-admin-twofa style="margin-bottom:16px;"></div>' +
@@ -10093,6 +10187,7 @@ return '<div class="mz-mobile-card">' +
     initAdminKyc(host);
     initAdminInsurance(host);
     initAdminRunnerJobs(host);
+    renderAdminMpesaPayments(host.querySelector('[data-admin-mpesa-payments]'), data);
     renderAdminOrderPhotoSettings(host.querySelector('[data-admin-order-photos]'), data);
     renderAdminFeeSettings(host.querySelector('[data-admin-fee-settings]'), data);
     renderAdminPayoutSettings(host.querySelector('[data-admin-payout-settings]'), data);
