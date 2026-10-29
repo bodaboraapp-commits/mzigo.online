@@ -422,7 +422,7 @@ if (($mpesaCfg['mode'] ?? 'demo') === 'live' && !mpesa_stk_ready($mpesaCfg)) {
     if ($creditUsed > 0) {
         growth_credit_add((int) $user['id'], $creditUsed, 'parcel_credit', 'M-Pesa configuration failed', $ref);
     }
-    fail_error('mpesa_not_configured', 'M-Pesa payments are not configured. Contact support.', 503);
+    fail_error('mpesa_not_configured', 'M-Pesa payments are not configured. Contact support.', 422);
 }
 if (($mpesaCfg['mode'] ?? 'demo') === 'live' && $payableKes > 0) {
     $chargeKes = mpesa_stk_charge_amount($mpesaCfg, $payableKes);
@@ -432,7 +432,8 @@ if (($mpesaCfg['mode'] ?? 'demo') === 'live' && $payableKes > 0) {
         if ($creditUsed > 0) {
             growth_credit_add((int) $user['id'], $creditUsed, 'parcel_credit', 'M-Pesa request failed refund', $ref);
         }
-        fail_error('mpesa_stk_failed', $stk['error'] ?? 'Could not start the M-Pesa payment.', 502);
+        error_log('M-Pesa STK failed for ' . $row['tracking'] . ': ' . (string) ($stk['error'] ?? 'unknown'));
+        fail_error('mpesa_stk_failed', $stk['error'] ?? 'Could not start the M-Pesa payment.', 422);
     }
     db()->prepare('INSERT INTO mpesa_payments (parcel_id, user_id, checkout_request_id, merchant_request_id, phone, amount_kes, account_ref, status, coupon_id, coupon_code, discount_kes, credit_used_kes, created_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, "pending", ?, ?, ?, ?, NOW())')
