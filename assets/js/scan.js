@@ -3,7 +3,6 @@
   var API = '/api/scan.php';
   var TOKEN_KEY = 'mzigo_point_token';
   var RECENT_KEY = 'mzigo_scan_recent';
-  var TICK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="26" height="26"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>';
   var QUEUE_KEY = 'mzigo_scan_queue';
   var LAST_ACTION_KEY = 'mzigo_scan_last_action';
   var token = '';
@@ -440,8 +439,8 @@
       box.hidden = false;
       box.className = 'scan-result scan-result--ok';
       box.setAttribute('role', 'status');
-      box.innerHTML = '<div class="scan-success"><span class="scan-success__icon">' + TICK_ICON + '</span>' +
-        '<div><strong>' + esc(res.label) + '</strong>' + esc(res.tracking) + ' · ' + esc(res.status) +
+      box.innerHTML = '<div class="scan-success"><div><strong>' + esc(res.label) + '</strong>' +
+        esc(res.tracking) + ' · ' + esc(res.status) +
         (res.idempotent ? ' · already recorded' : '') + '</div></div>';
       saveRecent({ tracking: res.tracking, action: selectedAction, label: res.label, at: new Date().toLocaleTimeString() });
       if (!res.idempotent) {

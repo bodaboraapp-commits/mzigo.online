@@ -1,5 +1,5 @@
 /* Mzigo Scan PWA shell cache — API requests are always network-only. */
-const CACHE = 'mzigo-scan-v19';
+const CACHE = 'mzigo-scan-v20';
 const SHELL = [
   '/scan.html',
   '/assets/css/scan.css?v=20261029h',
