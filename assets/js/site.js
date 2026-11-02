@@ -4065,6 +4065,119 @@ return '<div class="mz-mobile-card">' +
       if (step1) step1.hidden = false;
       if (step2) step2.hidden = true;
     });
+    initFirebaseOtp();
+  }
+
+  function initFirebaseOtp() {
+    var sendForm = $('[data-firebase-otp-form]');
+    if (!sendForm) return;
+    var codeForm = $('[data-firebase-code-form]');
+    var status = $('[data-firebase-status]');
+    var otpTab = $('[data-login-tab="otp"]');
+    var otpPanel = $('[data-login-panel="otp"]');
+    var confirmation = null;
+    var auth = null;
+
+    function setStatus(message, isError) {
+      if (!status) return;
+      status.hidden = !message;
+      status.textContent = message || '';
+      status.classList.toggle('mz-hint', !isError);
+      if (isError) status.style.color = 'var(--danger, #9f1d1d)';
+      else status.style.color = '';
+    }
+    function loadScript(src) {
+      return new Promise(function (resolve, reject) {
+        var s = doc.createElement('script');
+        s.src = src;
+        s.async = true;
+        s.onload = resolve;
+        s.onerror = function () { reject(new Error('Could not load SMS sign-in.')); };
+        doc.head.appendChild(s);
+      });
+    }
+    function normalizePhone(value) {
+      var d = String(value || '').replace(/\D/g, '');
+      if (d.indexOf('254') === 0) return '+' + d;
+      if (d.indexOf('0') === 0) return '+254' + d.slice(1);
+      if (d.length === 9 && d.charAt(0) === '7') return '+254' + d;
+      return '';
+    }
+    function showStep(step) {
+      sendForm.hidden = step > 1;
+      if (codeForm) codeForm.hidden = step < 2;
+    }
+    api('firebase-config.php').then(function (res) {
+      if (!res || !res.enabled || !res.config) {
+        if (otpTab) otpTab.hidden = true;
+        if (otpPanel) otpPanel.hidden = true;
+        return;
+      }
+      var cfg = res.config;
+      Promise.all([
+        loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js'),
+        loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js')
+      ]).then(function () {
+        if (!window.firebase) throw new Error('Firebase SDK did not load.');
+        if (!window.firebase.apps.length) window.firebase.initializeApp(cfg);
+        auth = window.firebase.auth();
+        auth.useDeviceLanguage();
+        var recaptcha = new window.firebase.auth.RecaptchaVerifier('firebase-recaptcha', { size: 'invisible' });
+        sendForm.addEventListener('submit', function (ev) {
+          ev.preventDefault();
+          var phone = normalizePhone(formValue(sendForm, 'phone'));
+          if (!phone) { setStatus('Enter a valid Kenyan phone number, e.g. 0712 345 678.', true); return; }
+          var btn = sendForm.querySelector('[type="submit"]');
+          btn.disabled = true;
+          setStatus('Sending SMS…');
+          auth.signInWithPhoneNumber(phone, recaptcha).then(function (result) {
+            confirmation = result;
+            showStep(2);
+            setStatus('Code sent to ' + phone + '.');
+            var code = $('[data-firebase-code-form] [name="code"]');
+            if (code) { code.value = ''; code.focus(); }
+          }).catch(function (err) {
+            setStatus(err && err.message ? err.message : 'Could not send the SMS code.', true);
+            btn.disabled = false;
+          });
+        });
+        if (codeForm) codeForm.addEventListener('submit', function (ev) {
+          ev.preventDefault();
+          if (!confirmation) { setStatus('Request a new SMS code first.', true); return; }
+          var btn = codeForm.querySelector('[type="submit"]');
+          var code = formValue(codeForm, 'code').replace(/\s+/g, '');
+          btn.disabled = true;
+          setStatus('Verifying…');
+          confirmation.confirm(code).then(function (result) {
+            return result.user.getIdToken();
+          }).then(function (idToken) {
+            return api('firebase-otp-login.php', { method: 'POST', body: {
+              id_token: idToken,
+              scope: formValue(sendForm, 'scope') || 'business'
+            } });
+          }).then(function (res) {
+            window.location.href = safeNext(res.redirect || '/profile');
+          }).catch(function (err) {
+            setStatus(err && err.message ? err.message : 'That code is not correct.', true);
+            btn.disabled = false;
+          });
+        });
+        var restart = $('[data-firebase-restart]');
+        if (restart) restart.addEventListener('click', function () {
+          confirmation = null;
+          showStep(1);
+          setStatus('');
+          if (sendForm) sendForm.querySelector('[type="submit"]').disabled = false;
+        });
+      }).catch(function (err) {
+        if (otpTab) otpTab.hidden = true;
+        if (otpPanel) otpPanel.hidden = true;
+        setStatus(err.message || 'SMS sign-in is unavailable.', true);
+      });
+    }).catch(function () {
+      if (otpTab) otpTab.hidden = true;
+      if (otpPanel) otpPanel.hidden = true;
+    });
   }
 
   function initForgotPasswordPage() {

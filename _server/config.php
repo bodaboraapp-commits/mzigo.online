@@ -53,6 +53,13 @@ return [
             'from' => getenv('SMTP_FROM') ?: (getenv('MAIL_FROM') ?: 'no-reply@mzigo.online'),
         ],
     ],
+    'firebase' => [
+        'enabled'     => filter_var(getenv('FIREBASE_ENABLED') ?: '0', FILTER_VALIDATE_BOOLEAN),
+        'api_key'     => getenv('FIREBASE_API_KEY') ?: '',
+        'auth_domain' => getenv('FIREBASE_AUTH_DOMAIN') ?: '',
+        'project_id'  => getenv('FIREBASE_PROJECT_ID') ?: '',
+        'app_id'      => getenv('FIREBASE_APP_ID') ?: '',
+    ],
     'security' => [
         'session_name'         => 'mzigo_saas',
         'login_max_attempts'   => 5,

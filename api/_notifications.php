@@ -49,6 +49,20 @@ function notification_channels(bool $activeOnly = false, bool $withConfig = fals
     return $rows;
 }
 
+/** Raw (decrypted) config for the first active channel using a provider. */
+function notification_channel_raw(string $provider): ?array
+{
+    $stmt = db()->prepare('SELECT code, provider, config FROM communication_channels WHERE provider = ? AND is_active = 1 ORDER BY sort_order, code LIMIT 1');
+    $stmt->execute([$provider]);
+    $row = $stmt->fetch();
+    if (!$row) return null;
+    return [
+        'code' => (string) $row['code'],
+        'provider' => (string) $row['provider'],
+        'config' => channel_config_decode((string) ($row['config'] ?? '')),
+    ];
+}
+
 /**
  * Catalog of messaging providers the admin console can configure.
  *
@@ -107,6 +121,18 @@ function channel_provider_catalog(): array
                 ['key' => 'from_number', 'label' => 'From number', 'placeholder' => '+254 712 345 678', 'required' => true],
                 ['key' => 'messaging_service_sid', 'label' => 'Messaging Service SID (optional)', 'placeholder' => 'MG9f8e7d6c5b4a…'],
                 ['key' => 'verify_service_sid', 'label' => 'Verify Service SID for login OTP (recommended for Kenya)', 'placeholder' => 'VA1a2b3c4d…', 'hint' => 'Create a Twilio Verify Service and set its code length to 4 digits. Login OTPs will use Twilio Verify instead of the long code.'],
+            ],
+        ],
+
+        'firebase' => [
+            'label' => 'Firebase Phone Auth (SMS OTP)',
+            'group' => 'sms',
+            'hint'  => 'Firebase Phone Authentication for password-less SMS login. Copy the web app config from Firebase Console → Project settings → Your apps. Enable Phone sign-in under Authentication → Sign-in method.',
+            'fields' => [
+                ['key' => 'api_key', 'label' => 'Web API key', 'placeholder' => 'AIza…', 'required' => true],
+                ['key' => 'auth_domain', 'label' => 'Auth domain', 'placeholder' => 'mzigo-xxxx.firebaseapp.com', 'required' => true],
+                ['key' => 'project_id', 'label' => 'Project ID', 'placeholder' => 'mzigo-xxxx', 'required' => true],
+                ['key' => 'app_id', 'label' => 'App ID', 'placeholder' => '1:123456789:web:abc123', 'required' => true],
             ],
         ],
 
