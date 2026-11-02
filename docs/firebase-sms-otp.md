@@ -1,5 +1,10 @@
 # Firebase SMS OTP login
 
+> **Current UI:** the standalone **SMS code** tab has been removed from
+> `/login`. SMS OTP is now offered inside the runner and customer sign-in
+> flows via the "Send the code by" dropdown. The Firebase endpoints and admin
+> channel remain available for future password-less flows.
+
 Password-less phone sign-in using **Firebase Phone Authentication**. Firebase
 sends the SMS and verifies the code in the browser; Mzigo verifies the Firebase
 ID token on the server before creating a session.

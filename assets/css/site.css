@@ -149,9 +149,7 @@ select.mz-input { appearance: none; background-image: none; cursor: pointer; }
 }
 .mz-tabs--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .mz-tabs--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.mz-tabs--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.mz-tabs--4:has([data-login-tab="otp"][hidden]) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-@media (max-width: 420px) { .mz-tabs--4 .mz-tab { padding: 8px 6px; font-size: 11px; } }
+
 .mz-tab {
   display: flex;
   align-items: center;
