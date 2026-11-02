@@ -4069,20 +4069,23 @@ return '<div class="mz-mobile-card">' +
   }
 
   function initOtpChannelOptions() {
-    var selects = $$('[data-freelancer-otp-channel], [data-customer-otp-channel]');
-    if (!selects.length) return;
+    var groups = $$('[data-freelancer-otp-channel], [data-customer-otp-channel]');
+    if (!groups.length) return;
     api('auth-channels.php').then(function (res) {
       var channels = (res && res.channels) || [];
       if (!channels.length) return;
-      selects.forEach(function (select) {
-        var isRunner = select.hasAttribute('data-freelancer-otp-channel');
-        select.innerHTML = channels.map(function (channel) {
-          return '<option value="' + esc(channel.code) + '">' + esc(channel.label) + '</option>';
+      groups.forEach(function (group) {
+        var isRunner = group.hasAttribute('data-freelancer-otp-channel');
+        group.innerHTML = channels.map(function (channel) {
+          var label = channel.code === 'sms' ? 'SMS' : (channel.code === 'email' ? 'Email' : channel.label);
+          return '<label class="mz-otp-pill"><input type="radio" name="channel" value="' +
+            esc(channel.code) + '"><span>' + esc(label) + '</span></label>';
         }).join('');
         var preferred = isRunner && channels.some(function (c) { return c.code === 'sms'; })
           ? 'sms'
           : (channels.some(function (c) { return c.code === 'email'; }) ? 'email' : channels[0].code);
-        select.value = preferred;
+        var input = group.querySelector('input[value="' + preferred + '"]');
+        if (input) input.checked = true;
       });
     }).catch(function () {});
   }

@@ -149,6 +149,18 @@ select.mz-input { appearance: none; background-image: none; cursor: pointer; }
 }
 .mz-tabs--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .mz-tabs--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.mz-otp-pills { display: flex; gap: 8px; }
+.mz-otp-pill { position: relative; flex: 1; min-width: 0; }
+.mz-otp-pill input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+.mz-otp-pill span {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 42px; padding: 10px 14px; border: 1px solid var(--mz-border);
+  border-radius: 12px; background: #fff; color: var(--mz-hunter);
+  font-size: 13px; font-weight: 700; cursor: pointer;
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+.mz-otp-pill input:checked + span { background: var(--mz-hunter); border-color: var(--mz-hunter); color: var(--mz-tea); }
+.mz-otp-pill input:focus-visible + span { outline: 2px solid var(--mz-hunter); outline-offset: 2px; }
 
 .mz-tab {
   display: flex;
