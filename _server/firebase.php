@@ -17,13 +17,16 @@ function firebase_config(): array
         'auth_domain' => (string) ($cfg['auth_domain'] ?? ''),
         'project_id' => (string) ($cfg['project_id'] ?? ''),
         'app_id' => (string) ($cfg['app_id'] ?? ''),
+        'storage_bucket' => (string) ($cfg['storage_bucket'] ?? ''),
+        'messaging_sender_id' => (string) ($cfg['messaging_sender_id'] ?? ''),
+        'measurement_id' => (string) ($cfg['measurement_id'] ?? ''),
     ];
     // Admin -> Communications -> Firebase channel is the preferred source.
     if (function_exists('notification_channel_raw')) {
         $channel = notification_channel_raw('firebase');
         $chanCfg = $channel['config'] ?? [];
         if ($chanCfg) {
-            foreach (['api_key', 'auth_domain', 'project_id', 'app_id'] as $key) {
+            foreach (['api_key', 'auth_domain', 'project_id', 'app_id', 'storage_bucket', 'messaging_sender_id', 'measurement_id'] as $key) {
                 if (!empty($chanCfg[$key])) $out[$key] = (string) $chanCfg[$key];
             }
             if ($out['api_key'] !== '' && $out['project_id'] !== '' && $out['app_id'] !== '') {
@@ -44,12 +47,15 @@ function firebase_ready(): bool
 function firebase_web_config(): array
 {
     $c = firebase_config();
-    return [
+    return array_filter([
         'apiKey' => $c['api_key'],
         'authDomain' => $c['auth_domain'] ?: ($c['project_id'] . '.firebaseapp.com'),
         'projectId' => $c['project_id'],
+        'storageBucket' => $c['storage_bucket'],
+        'messagingSenderId' => $c['messaging_sender_id'],
         'appId' => $c['app_id'],
-    ];
+        'measurementId' => $c['measurement_id'],
+    ], static fn ($v) => $v !== '');
 }
 
 function firebase_b64url_decode(string $value): string

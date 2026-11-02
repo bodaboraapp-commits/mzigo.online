@@ -133,6 +133,9 @@ function channel_provider_catalog(): array
                 ['key' => 'auth_domain', 'label' => 'Auth domain', 'placeholder' => 'mzigo-xxxx.firebaseapp.com', 'required' => true],
                 ['key' => 'project_id', 'label' => 'Project ID', 'placeholder' => 'mzigo-xxxx', 'required' => true],
                 ['key' => 'app_id', 'label' => 'App ID', 'placeholder' => '1:123456789:web:abc123', 'required' => true],
+                ['key' => 'storage_bucket', 'label' => 'Storage bucket (optional)', 'placeholder' => 'mzigo-xxxx.firebasestorage.app'],
+                ['key' => 'messaging_sender_id', 'label' => 'Messaging sender ID (optional)', 'placeholder' => '123456789012'],
+                ['key' => 'measurement_id', 'label' => 'Measurement ID (optional)', 'placeholder' => 'G-XXXXXXXXXX'],
             ],
         ],
 
