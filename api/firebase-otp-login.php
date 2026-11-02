@@ -92,6 +92,6 @@ try {
     audit('auth.firebase_otp_login', 'user', (string) $userId, ['phone' => $phone, 'scope' => $scope]);
     json_out(['ok' => true, 'source' => 'mysql', 'provider' => 'firebase'] + $context);
 } catch (Throwable $e) {
-    error_log('firebase otp login failed: ' . $e->getMessage());
+    error_log('firebase otp login failed: ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine());
     fail_error('login_failed', 'Could not complete SMS sign-in. Please try again.', 500);
 }

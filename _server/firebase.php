@@ -148,11 +148,15 @@ function firebase_local_phone(string $e164): string
 function firebase_find_user_by_phone(string $phone): ?array
 {
     $key = phone_key($phone);
+    // Keep the SQL portable across MySQL/MariaDB versions: narrow by the last
+    // seven digits, then compare the full normalised number in PHP.
     $stmt = db()->prepare(
         'SELECT id, name, email, phone, role, status FROM users
-         WHERE RIGHT(REGEXP_REPLACE(phone, "[^0-9]", ""), 9) = ? LIMIT 1'
+         WHERE phone LIKE ? LIMIT 20'
     );
-    $stmt->execute([$key]);
-    $user = $stmt->fetch();
-    return $user ?: null;
+    $stmt->execute(['%' . substr($key, -7) . '%']);
+    foreach ($stmt->fetchAll() as $user) {
+        if (phone_key((string) $user['phone']) === $key) return $user;
+    }
+    return null;
 }
