@@ -4065,7 +4065,27 @@ return '<div class="mz-mobile-card">' +
       if (step1) step1.hidden = false;
       if (step2) step2.hidden = true;
     });
+    initOtpChannelOptions();
     initFirebaseOtp();
+  }
+
+  function initOtpChannelOptions() {
+    var selects = $$('[data-freelancer-otp-channel], [data-customer-otp-channel]');
+    if (!selects.length) return;
+    api('auth-channels.php').then(function (res) {
+      var channels = (res && res.channels) || [];
+      if (!channels.length) return;
+      selects.forEach(function (select) {
+        var isRunner = select.hasAttribute('data-freelancer-otp-channel');
+        select.innerHTML = channels.map(function (channel) {
+          return '<option value="' + esc(channel.code) + '">' + esc(channel.label) + '</option>';
+        }).join('');
+        var preferred = isRunner && channels.some(function (c) { return c.code === 'sms'; })
+          ? 'sms'
+          : (channels.some(function (c) { return c.code === 'email'; }) ? 'email' : channels[0].code);
+        select.value = preferred;
+      });
+    }).catch(function () {});
   }
 
   function initFirebaseOtp() {
