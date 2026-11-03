@@ -2032,3 +2032,63 @@ img[data-mz-hero-placeholder] { opacity: 0; }
   .mz-mpesa-wait { padding: 18px 14px 14px; }
   .mz-mpesa-wait__actions .mz-btn { flex: 1 1 100%; }
 }
+
+/* Runner onboarding horizontal timeline */
+.mz-runner-timeline {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  margin: 14px 0 2px;
+  padding: 2px 2px 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.mz-runner-timeline::-webkit-scrollbar { display: none; }
+.mz-runner-timeline__step {
+  position: relative;
+  flex: 1 0 104px;
+  min-width: 104px;
+  text-align: center;
+  padding: 0 4px;
+}
+.mz-runner-timeline__step::before {
+  content: '';
+  position: absolute;
+  top: 15px;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  background: #dcebd3;
+  z-index: 0;
+}
+.mz-runner-timeline__step:last-child::before { display: none; }
+.mz-runner-timeline__step.is-done::before { background: var(--mz-hunter); }
+.mz-runner-timeline__dot {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  margin: 0 auto 7px;
+  border: 2px solid #c7dbbd;
+  border-radius: 999px;
+  background: #fff;
+  color: #6b7b5b;
+  font-size: 11px;
+  font-weight: 800;
+}
+.mz-runner-timeline__step.is-done .mz-runner-timeline__dot {
+  border-color: var(--mz-hunter);
+  background: var(--mz-hunter);
+  color: var(--mz-tea);
+}
+.mz-runner-timeline__label {
+  display: block;
+  color: var(--mz-muted-fg);
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.mz-runner-timeline__step.is-done .mz-runner-timeline__label { color: var(--mz-hunter); }

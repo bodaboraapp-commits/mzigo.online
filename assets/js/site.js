@@ -4252,16 +4252,18 @@ return '<div class="mz-mobile-card">' +
         availability_window: 'Availability window', vehicle_type: 'Vehicle type',
         payout_phone: 'M-Pesa payout number', terms: 'Terms acceptance'
       };
-      var remaining = missing.map(function (key) {
-        return '<li style="display:flex;align-items:center;gap:9px;list-style:none;">' +
-          '<span aria-hidden="true" style="width:16px;height:16px;flex:none;border:2px solid #b9cfae;border-radius:50%;display:inline-block;"></span>' +
-          esc(labels[key] || key) + '</li>';
+      var stepOrder = Object.keys(labels);
+      var timeline = stepOrder.map(function (key, index) {
+        var done = missing.indexOf(key) === -1;
+        return '<div class="mz-runner-timeline__step ' + (done ? 'is-done' : 'is-pending') + '" role="listitem">' +
+          '<span class="mz-runner-timeline__dot" aria-hidden="true">' + (done ? '✓' : String(index + 1)) + '</span>' +
+          '<span class="mz-runner-timeline__label">' + esc(labels[key] || key) + '</span></div>';
       }).join('');
       onboarding =
         '<div class="mz-saas-card" style="margin-bottom:16px;" data-runner-onboarding>' +
           '<div class="mz-card__title">Get ready for jobs</div>' +
           '<p class="mz-hint">Finish these steps so we can match you with errands in your area.</p>' +
-          '<ul style="list-style:none;padding:0;margin:10px 0 0;">' + remaining + '</ul>' +
+          '<div class="mz-runner-timeline" role="list" aria-label="Runner onboarding steps">' + timeline + '</div>' +
           '<a class="mz-btn" style="margin-top:12px;" href="#runner-profile">Complete your runner profile</a>' +
         '</div>';
     }
