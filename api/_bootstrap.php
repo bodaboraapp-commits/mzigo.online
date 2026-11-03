@@ -723,6 +723,87 @@ function phone_key(string $phone): string
     return substr($digits, -9);
 }
 
+/**
+ * Return a canonical Kenyan phone number so the same person cannot be
+ * duplicated by entering 0712..., 254712..., or +254712....
+ */
+function normalize_phone(string $phone): string
+{
+    $digits = preg_replace('/\D+/', '', $phone) ?? '';
+    if (preg_match('/^(?:254|0)?(7\d{8})$/', $digits, $m)) {
+        return '+254' . $m[1];
+    }
+    return trim($phone);
+}
+
+/** Active users whose phone matches after normalisation (never exact-string only). */
+function find_users_by_phone_key(string $phone): array
+{
+    $tail = substr(phone_key($phone), -7);
+    if (strlen($tail) < 7) return [];
+    $stmt = db()->prepare(
+        'SELECT id, name, email, phone, role, status, created_at
+           FROM users
+          WHERE status = "active" AND phone LIKE ?
+          ORDER BY id ASC LIMIT 50'
+    );
+    $stmt->execute(['%' . $tail . '%']);
+    $key = phone_key($phone);
+    return array_values(array_filter($stmt->fetchAll(), function ($row) use ($key) {
+        return phone_key((string) ($row['phone'] ?? '')) === $key;
+    }));
+}
+
+/** Score duplicate phone accounts for a requested role, favouring real profiles. */
+function phone_user_score(array $user, string $preferRole, string $phone): int
+{
+    $score = 0;
+    $id = (int) $user['id'];
+    if ($preferRole !== '' && (string) $user['role'] === $preferRole) $score += 40;
+    if ($preferRole !== '' && in_array($preferRole, ['customer', 'freelancer'], true) && user_has_role($id, $preferRole)) {
+        $score += 25;
+    }
+    if (normalize_phone((string) $user['phone']) === normalize_phone($phone)) $score += 10;
+    if ($preferRole === 'freelancer') {
+        try {
+            $stmt = db()->prepare('SELECT onboarding_completed_at, kyc_status FROM freelancer_profiles WHERE user_id = ? LIMIT 1');
+            $stmt->execute([$id]);
+            $profile = $stmt->fetch();
+            if ($profile) {
+                $score += 30;
+                if (!empty($profile['onboarding_completed_at'])) $score += 5;
+                if ((string) ($profile['kyc_status'] ?? '') === 'approved') $score += 10;
+            }
+        } catch (Throwable $e) {
+            // Profile table unavailable during first install; still compare roles.
+        }
+    }
+    if ($preferRole === 'business') {
+        try {
+            if (user_tenants($id)) $score += 35;
+        } catch (Throwable $e) {
+        }
+    }
+    return $score;
+}
+
+/** Pick the best active account for a normalized phone; never create from a variant. */
+function find_best_phone_user(string $phone, string $preferRole = ''): ?array
+{
+    $rows = find_users_by_phone_key($phone);
+    if (!$rows) return null;
+    $best = null;
+    $bestScore = -1;
+    foreach ($rows as $row) {
+        $score = phone_user_score($row, $preferRole, $phone);
+        if ($score > $bestScore) {
+            $best = $row;
+            $bestScore = $score;
+        }
+    }
+    return $best;
+}
+
 function require_customer(): array
 {
     $user = require_user();

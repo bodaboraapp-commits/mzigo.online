@@ -41,7 +41,7 @@ try {
     fail_error('invalid_token', 'That SMS code could not be verified. Request a new code.', 401);
 }
 
-$user = firebase_find_user_by_phone($phone);
+$user = firebase_find_user_by_phone($phone, $scope);
 if ($user && ($user['status'] ?? 'active') !== 'active') {
     fail_error('account_suspended', 'This account is suspended. Contact Mzigo.online support.', 403);
 }
@@ -63,7 +63,7 @@ try {
     if ($scope === 'customer') {
         if (!$user) {
             $stmt = db()->prepare('INSERT INTO users (name, phone, role) VALUES (?, ?, "customer")');
-            $stmt->execute(['Customer ' . substr(phone_key($phone), -4), $phone]);
+            $stmt->execute(['Customer ' . substr(phone_key($phone), -4), normalize_phone($phone)]);
             $userId = (int) db()->lastInsertId();
         } else {
             if (!user_has_role((int) $user['id'], 'customer') && ($user['role'] ?? '') !== 'customer') {
@@ -81,9 +81,15 @@ try {
     // Freelancer / runner
     if (!$user) {
         $stmt = db()->prepare('INSERT INTO users (name, phone, role) VALUES (?, ?, "freelancer")');
-        $stmt->execute(['Runner ' . substr(phone_key($phone), -4), $phone]);
+        $stmt->execute(['Runner ' . substr(phone_key($phone), -4), normalize_phone($phone)]);
         $userId = (int) db()->lastInsertId();
     } else {
+        if (($user['role'] ?? '') === 'platform_admin') {
+            fail_error('account_type_mismatch', 'Use the admin console for this account.', 409);
+        }
+        if (($user['role'] ?? '') !== 'freelancer' && !user_has_role((int) $user['id'], 'freelancer')) {
+            user_grant_role((int) $user['id'], 'freelancer');
+        }
         $userId = (int) $user['id'];
     }
     set_session_user($userId, null, 'freelancer');

@@ -45,15 +45,13 @@ function freelancer_pin(): string
 
 function find_user_by_phone(string $phone): ?array
 {
-    $stmt = db()->prepare('SELECT id, name, phone, role, status FROM users WHERE phone = ? LIMIT 1');
-    $stmt->execute([$phone]);
-    $row = $stmt->fetch();
-    return $row ?: null;
+    return find_best_phone_user($phone);
 }
 
 function freelancer_user_for(string $phone): array
 {
-    $existing = find_user_by_phone($phone);
+    // Always resolve the same person across 0712…, 254712… and +254712….
+    $existing = find_best_phone_user($phone, 'freelancer');
     if ($existing !== null) {
         if (($existing['role'] ?? '') === 'platform_admin') {
             fail_error('account_type_mismatch', 'Use the admin console for this account.', 409);
@@ -63,11 +61,12 @@ function freelancer_user_for(string $phone): array
         }
         return $existing;
     }
-    $digits = preg_replace('/\D+/', '', $phone) ?? '';
+    $normalized = normalize_phone($phone);
+    $digits = preg_replace('/\D+/', '', $normalized) ?? '';
     $name = 'Freelancer ' . substr($digits, -4);
     $stmt = db()->prepare('INSERT INTO users (name, phone, role) VALUES (?, ?, "freelancer")');
-    $stmt->execute([$name, $phone]);
-    return ['id' => (int) db()->lastInsertId(), 'name' => $name, 'phone' => $phone, 'role' => 'freelancer'];
+    $stmt->execute([$name, $normalized]);
+    return ['id' => (int) db()->lastInsertId(), 'name' => $name, 'phone' => $normalized, 'role' => 'freelancer'];
 }
 
 if ($method === 'GET' && ($action === '' || $action === 'me')) {
@@ -246,7 +245,7 @@ switch ($action) {
     case 'customer-start':
         $phone = require_phone($data);
         rate_limit('customer-start:' . client_ip() . ':' . $phone, 10, 300);
-        $existing = find_user_by_phone($phone);
+        $existing = find_best_phone_user($phone, 'customer');
         if ($existing !== null && ($existing['status'] ?? 'active') !== 'active') {
             fail_error('account_suspended', 'This account is suspended. Contact Mzigo.online support.', 403);
         }
@@ -258,12 +257,13 @@ switch ($action) {
         }
         if ($existing === null) {
             $stmt = db()->prepare('INSERT INTO users (name, phone, role) VALUES (?, ?, "customer")');
-            $stmt->execute(['Customer ' . substr(phone_key($phone), -4), $phone]);
+            $stmt->execute(['Customer ' . substr(phone_key($phone), -4), normalize_phone($phone)]);
         }
         $demo = config()['app']['demo_mode'] === true;
         $channel = strtolower(trim((string) ($data['channel'] ?? 'sms'))) === 'email' ? 'email' : 'sms';
         $useVerify = !$demo && $channel === 'sms' && sms_twilio_verify_config() !== null;
         $code = $demo ? '1234' : str_pad((string) random_int(0, 9999), 4, '0', STR_PAD_LEFT);
+        $accountPhone = $existing !== null ? (string) $existing['phone'] : normalize_phone($phone);
         if ($useVerify) {
             $verifyStart = sms_twilio_verify_start($phone);
             if (empty($verifyStart['ok'])) {
@@ -271,10 +271,10 @@ switch ($action) {
                 fail_error('sms_delivery_failed', 'We could not send the sign-in code: ' . ($verifyStart['error'] ?? 'Twilio Verify failed'), 502);
             }
             db()->prepare('UPDATE users SET otp_hash = "twilio-verify", otp_expires_at = ? WHERE phone = ?')
-                ->execute([date('Y-m-d H:i:s', time() + 600), $phone]);
+                ->execute([date('Y-m-d H:i:s', time() + 600), $accountPhone]);
         } else {
             db()->prepare('UPDATE users SET otp_hash = ?, otp_expires_at = ? WHERE phone = ?')
-                ->execute([password_hash($code, PASSWORD_DEFAULT), date('Y-m-d H:i:s', time() + 600), $phone]);
+                ->execute([password_hash($code, PASSWORD_DEFAULT), date('Y-m-d H:i:s', time() + 600), $accountPhone]);
         }
         audit('auth.customer_code_issued', 'user', $phone, ['phone' => $phone, 'channel' => $channel, 'verify' => $useVerify]);
         $sentTo = $channel === 'email' ? 'email address on file' : 'your phone';
@@ -329,7 +329,7 @@ switch ($action) {
         $phone = require_phone($data);
         $code = param($data, 'code', 4, 8, 'code');
         rate_limit('customer-login:' . client_ip() . ':' . $phone, 6, 300);
-        $customer = find_user_by_phone($phone);
+        $customer = find_best_phone_user($phone, 'customer');
         $isCustomer = $customer !== null && (($customer['role'] ?? '') === 'customer' || user_has_role((int) $customer['id'], 'customer'));
         if (!$isCustomer) {
             fail_error('invalid_credentials', 'No customer account matches that phone number. Choose Freelancer or Business if that is your account type.', 401);
@@ -432,7 +432,7 @@ switch ($action) {
         $phone = require_phone($data);
         $pin = param($data, 'pin', 4, 8, 'PIN');
         rate_limit('freelancer-login:' . client_ip() . ':' . $phone, 6, 300);
-        $freelancer = find_user_by_phone($phone);
+        $freelancer = find_best_phone_user($phone, 'freelancer');
         $isFreelancer = $freelancer !== null && (($freelancer['role'] ?? '') === 'freelancer' || user_has_role((int) $freelancer['id'], 'freelancer'));
         if (!$isFreelancer) {
             fail_error('invalid_credentials', 'No freelancer account matches that phone number. Choose Customer or Business if that is your account type.', 401);

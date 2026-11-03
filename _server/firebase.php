@@ -145,18 +145,9 @@ function firebase_local_phone(string $e164): string
     return $digits;
 }
 
-function firebase_find_user_by_phone(string $phone): ?array
+function firebase_find_user_by_phone(string $phone, string $preferRole = ''): ?array
 {
-    $key = phone_key($phone);
-    // Keep the SQL portable across MySQL/MariaDB versions: narrow by the last
-    // seven digits, then compare the full normalised number in PHP.
-    $stmt = db()->prepare(
-        'SELECT id, name, email, phone, role, status FROM users
-         WHERE phone LIKE ? LIMIT 20'
-    );
-    $stmt->execute(['%' . substr($key, -7) . '%']);
-    foreach ($stmt->fetchAll() as $user) {
-        if (phone_key((string) $user['phone']) === $key) return $user;
-    }
-    return null;
+    // Use the shared normalised lookup so 0712…, 254712… and +254712…
+    // always resolve to the same account, preferring the requested role.
+    return find_best_phone_user($phone, $preferRole);
 }
