@@ -4402,17 +4402,18 @@ return '<div class="mz-mobile-card">' +
           stepField(key) + '</div>';
       }).join('');
       var currentIndex = onboardingSteps.indexOf(currentStep) + 1;
-      var currentLabel = onboardingLabels[currentStep] || currentStep;
+      var timeline = onboardingSteps.map(function (key, index) {
+        var done = missing.indexOf(key) === -1;
+        var current = key === currentStep;
+        return '<div class="mz-runner-timeline__step ' + (done ? 'is-done' : (current ? 'is-current' : 'is-pending')) + '" data-timeline-step="' + esc(key) + '" role="listitem"' + (current ? ' aria-current="step"' : '') + '>' +
+          '<span class="mz-runner-timeline__dot" aria-hidden="true">' + (done ? '✓' : String(index + 1)) + '</span>' +
+          '<span class="mz-runner-timeline__label">' + esc(onboardingLabels[key] || key) + '</span></div>';
+      }).join('');
       onboarding =
         '<div class="mz-saas-card" id="runner-onboarding" style="margin-bottom:16px;" data-runner-onboarding data-wizard-current="' + esc(currentStep) + '">' +
           '<div class="mz-card__title">Get ready for jobs</div>' +
-          '<p class="mz-hint">Step ' + currentIndex + ' of ' + onboardingSteps.length + ' · finish this step to continue.</p>' +
-          '<div class="mz-runner-timeline mz-runner-timeline--single" role="list" aria-label="Current runner onboarding step">' +
-            '<div class="mz-runner-timeline__step is-current" role="listitem">' +
-              '<span class="mz-runner-timeline__dot" aria-hidden="true">' + currentIndex + '</span>' +
-              '<span class="mz-runner-timeline__label">' + esc(currentLabel) + '</span>' +
-            '</div>' +
-          '</div>' +
+          '<p class="mz-hint" data-wizard-progress>Step ' + currentIndex + ' of ' + onboardingSteps.length + ' · finish this step to continue.</p>' +
+          '<div class="mz-runner-timeline" role="list" aria-label="Runner onboarding progress">' + timeline + '</div>' +
           '<form data-runner-wizard novalidate style="margin-top:10px;">' + stepMarkup +
             '<div class="mz-row" style="margin-top:12px;justify-content:flex-start;">' +
               '<button class="mz-btn" type="button" data-wizard-next>' + (pendingSteps.length === 1 ? 'Save profile' : 'Continue') + '</button>' +
@@ -4616,16 +4617,27 @@ return '<div class="mz-mobile-card">' +
         payout_phone: 'M-Pesa payout number', terms: 'Terms acceptance'
       };
       var wizardOrder = Object.keys(wizardLabels);
+      var wizardDoneKeys = wizardOrder.filter(function (key) { return missing.indexOf(key) === -1; });
       function wizardStepKey() { return wizardCard.getAttribute('data-wizard-current') || ''; }
+      function renderWizardTimeline(current) {
+        Array.prototype.forEach.call(wizardCard.querySelectorAll('[data-timeline-step]'), function (el) {
+          var key = el.getAttribute('data-timeline-step');
+          var done = wizardDoneKeys.indexOf(key) !== -1 && key !== current;
+          el.classList.toggle('is-done', done);
+          el.classList.toggle('is-current', key === current);
+          el.classList.toggle('is-pending', !done && key !== current);
+          if (key === current) el.setAttribute('aria-current', 'step');
+          else el.removeAttribute('aria-current');
+          var dot = el.querySelector('.mz-runner-timeline__dot');
+          if (dot) dot.textContent = done ? '✓' : String(wizardOrder.indexOf(key) + 1);
+        });
+      }
       function wizardShow(key) {
         wizardStepEls.forEach(function (el) { el.hidden = el.getAttribute('data-wizard-step') !== key; });
         wizardCard.setAttribute('data-wizard-current', key);
         var index = wizardOrder.indexOf(key) + 1;
-        var dot = wizardCard.querySelector('.mz-runner-timeline__dot');
-        var label = wizardCard.querySelector('.mz-runner-timeline__label');
+        renderWizardTimeline(key);
         var progress = wizardCard.querySelector('[data-wizard-progress]');
-        if (dot) dot.textContent = String(index);
-        if (label) label.textContent = wizardLabels[key] || key;
         if (progress) progress.textContent = 'Step ' + index + ' of ' + wizardOrder.length + ' · finish this step to continue.';
         var last = wizardStepEls[wizardStepEls.length - 1].getAttribute('data-wizard-step') === key;
         wizardNext.textContent = last ? 'Save profile' : 'Continue';
@@ -4684,6 +4696,8 @@ return '<div class="mz-mobile-card">' +
         var error = wizardValidate(step);
         if (error) { toast(error, 'error'); return; }
         var currentIndex = wizardStepEls.indexOf(step);
+        var currentKey = wizardStepEls[currentIndex].getAttribute('data-wizard-step');
+        if (wizardDoneKeys.indexOf(currentKey) === -1) wizardDoneKeys.push(currentKey);
         if (currentIndex < wizardStepEls.length - 1) {
           wizardShow(wizardStepEls[currentIndex + 1].getAttribute('data-wizard-step'));
         } else {
