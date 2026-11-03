@@ -8,6 +8,7 @@
 declare(strict_types=1);
 require __DIR__ . '/_bootstrap.php';
 require_once __DIR__ . '/_runner_jobs.php';
+require_once __DIR__ . '/_payouts.php';
 require_once __DIR__ . '/_growth.php';
 
 $admin = require_platform_admin();
