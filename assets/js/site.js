@@ -82,13 +82,15 @@
     x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>',
     info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"/></svg>',
     phone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z"/></svg>',
-    signout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9"/></svg>'
+    signout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9"/></svg>',
+    bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"/></svg>'
   };
 
   /* ------------------------------------------------------- API + app state */
   var pendingApiKey = '';
   var teamCredential = null;
   var pendingWebhookSecret = null;
+  var runnerBellState = { items: [], unread: 0 };
   var APP = {
     user: null, tenant: null, branding: null, tenants: [], role: null, usage: null, csrf: '', showDemoAccounts: true,
     partners: [], packageSizes: [], paymentMethods: [],
@@ -679,6 +681,71 @@
     });
   }
 
+  function runnerBellMarkup() {
+    return '<div class="mz-bell-wrap" data-mz-bell-wrap>' +
+      '<button type="button" class="mz-bell-btn" data-mz-bell aria-label="Updates" aria-haspopup="true" aria-expanded="false">' +
+        ICON.bell + '<span class="mz-bell-count" data-mz-bell-count hidden></span>' +
+      '</button>' +
+      '<div class="mz-bell-panel" data-mz-bell-panel hidden>' +
+        '<div class="mz-bell-head"><strong>Updates</strong><button type="button" data-mz-bell-read hidden>Mark all read</button></div>' +
+        '<div data-mz-bell-list></div>' +
+      '</div>' +
+    '</div>';
+  }
+  function updateRunnerBell(notes) {
+    runnerBellState = notes && typeof notes === 'object' ? notes : { items: [], unread: 0 };
+    var unread = Number(runnerBellState.unread || 0);
+    $$('[data-mz-bell]').forEach(function (bell) {
+      var count = bell.querySelector('[data-mz-bell-count]');
+      if (count) {
+        count.textContent = String(unread);
+        count.hidden = unread <= 0;
+      }
+    });
+    $$('[data-mz-bell-wrap]').forEach(function (wrap) {
+      var list = wrap.querySelector('[data-mz-bell-list]');
+      var read = wrap.querySelector('[data-mz-bell-read]');
+      if (read) read.hidden = unread <= 0;
+      if (!list) return;
+      var items = runnerBellState.items || [];
+      list.innerHTML = items.length ? items.map(function (n) {
+        return '<div class="mz-bell-item' + (n.read_at ? '' : ' is-unread') + '">' +
+          '<strong>' + esc(n.title || 'Update') + '</strong>' +
+          '<p>' + esc(n.body || '') + '</p>' +
+          '<small>' + esc(fmtDate(n.created_at)) + '</small></div>';
+      }).join('') : '<p class="mz-bell-empty">No updates yet.</p>';
+    });
+  }
+  function markRunnerBellRead() {
+    api('freelancer.php', { method: 'POST', body: { action: 'mark-notifications-read' } })
+      .then(function (fresh) { updateRunnerBell(fresh.notifications || { items: [], unread: 0 }); })
+      .catch(function (err) { toast(err.message, 'error'); });
+  }
+  function bindRunnerBell(wrap) {
+    if (!wrap || wrap.getAttribute('data-mz-bell-bound') === '1') return;
+    wrap.setAttribute('data-mz-bell-bound', '1');
+    var button = wrap.querySelector('[data-mz-bell]');
+    var panel = wrap.querySelector('[data-mz-bell-panel]');
+    var read = wrap.querySelector('[data-mz-bell-read]');
+    function close() {
+      if (!panel || !button) return;
+      panel.hidden = true;
+      button.setAttribute('aria-expanded', 'false');
+    }
+    if (button && panel) {
+      button.addEventListener('click', function (ev) {
+        ev.stopPropagation();
+        panel.hidden = !panel.hidden;
+        button.setAttribute('aria-expanded', String(!panel.hidden));
+      });
+      document.addEventListener('click', function (ev) {
+        if (!panel.hidden && !wrap.contains(ev.target)) close();
+      });
+      document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') close(); });
+    }
+    if (read) read.addEventListener('click', function () { markRunnerBellRead(); close(); });
+  }
+
   function initAuthUI() {
     var loggedIn = !!APP.user;
     applyTenantBranding();
@@ -728,9 +795,12 @@
         ['/refer', 'Refer &amp; earn'],
         ['/help', 'Help centre']
       ];
+      if (role === 'freelancer') menuLinks.push(['/freelancer#runner-profile', 'Profile & availability']);
       if (role !== 'freelancer' && role !== 'customer' && role !== 'admin') menuLinks.push(['/billing', 'Billing & invoices']);
       if (role !== 'freelancer' && role !== 'customer') menuLinks.push(['/settings', 'Settings']);
+      var isRunnerPage = document.body.getAttribute('data-page') === 'freelancer';
       slot.innerHTML =
+        (isRunnerPage ? runnerBellMarkup() : '') +
         '<div class="mz-account-wrap">' +
           '<button type="button" class="mz-tenant-chip" data-account-toggle aria-haspopup="true" aria-expanded="false" title="' + esc(label) + '">' +
             chipLogo + '<span class="mz-tenant-chip__name">' + esc(label) + '</span>' + ICON.chevron +
@@ -771,11 +841,19 @@
       if (header.className.indexOf('md:hidden') === -1) return;
       var profileLink = header.querySelector('a[aria-label="Profile"]');
       if (profileLink) {
+        if (isRunnerPage && !header.querySelector('[data-mz-bell]')) {
+          var holder = document.createElement('div');
+          holder.innerHTML = runnerBellMarkup();
+          var bell = holder.firstElementChild;
+          profileLink.parentNode.insertBefore(bell, profileLink);
+        }
         profileLink.setAttribute('href', !loggedIn ? '/login'
-          : APP.user.role === 'freelancer' ? '/freelancer'
+          : APP.user.role === 'freelancer' ? '/freelancer#runner-profile'
           : APP.user.role === 'customer' ? '/customer' : '/profile');
       }
     });
+    $$('[data-mz-bell-wrap]').forEach(bindRunnerBell);
+    if (isRunnerPage) updateRunnerBell(runnerBellState);
   }
 
   function initMobileNav() {
@@ -4258,6 +4336,7 @@ return '<div class="mz-mobile-card">' +
     var activeJobs = jobData.active || [];
     var completedJobs = jobData.completed || [];
     var notes = data.notifications || { items: [], unread: 0 };
+    updateRunnerBell(notes);
     var areas = data.matching_areas || [];
     var payouts = data.payouts || [];
     var statusLabel = { accepted: 'Accepted', picked_up: 'Picked up', delivered: 'Delivered' };
@@ -4341,21 +4420,6 @@ return '<div class="mz-mobile-card">' +
         }).join('')
       : '<div class="mz-hint">No completed jobs yet.</div>';
 
-    var notificationsCard = notes.items.length
-      ? '<div class="mz-saas-card" style="margin-bottom:16px;" data-runner-notifications>' +
-          '<div class="mz-row"><div class="mz-card__title" style="margin:0;">Updates' +
-            (notes.unread ? ' <span class="mz-badge mz-badge--warn">' + notes.unread + ' new</span>' : '') + '</div>' +
-            (notes.unread ? '<button type="button" class="mz-tab" data-notifications-read>Mark all read</button>' : '') +
-          '</div>' +
-          notes.items.map(function (n) {
-            return '<div style="border-bottom:1px solid rgba(60,82,35,.10);padding:9px 0;">' +
-              '<div style="font-size:13px;font-weight:' + (n.read_at ? '500' : '700') + ';">' + esc(n.title) + '</div>' +
-              '<div class="mz-hint">' + esc(n.body) + '</div>' +
-              '<div class="mz-hint">' + esc(fmtDate(n.created_at)) + '</div>' +
-            '</div>';
-          }).join('') +
-        '</div>'
-      : '';
 
     var vehicleOptions = (opts.vehicles || []).map(function (v) {
       return '<option value="' + esc(v) + '"' + (v === p.vehicle_type ? ' selected' : '') + '>' + esc(v) + '</option>';
@@ -4427,7 +4491,7 @@ return '<div class="mz-mobile-card">' +
       : 'No payout number saved yet — add one in your runner profile.';
 
     var profileForm =
-      '<div class="mz-saas-card" id="runner-profile" style="margin-top:16px;">' +
+      '<div class="mz-saas-card" id="runner-profile" data-runner-profile-panel hidden style="margin-top:16px;">' +
         '<div class="mz-card__title">Runner profile &amp; availability</div>' +
         '<p class="mz-hint">We use these details to match you with errands. Your payout number is where M-Pesa earnings are sent.</p>' +
         '<form data-runner-profile style="margin-top:10px;">' +
@@ -4547,7 +4611,6 @@ return '<div class="mz-mobile-card">' +
       '<p class="mz-hint" style="margin:-6px 0 16px;">' + payoutLabel + '. ' +
         (earn.rating_avg ? 'Rating <strong>' + esc(String(earn.rating_avg)) + '/5</strong> from ' + esc(String(earn.rating_count)) + ' rated jobs. ' : '') +
         '<a class="mz-link" href="/earn#pay">How earnings work</a></p>' +
-      notificationsCard +
       '<div class="mz-saas-card" style="margin-bottom:16px;" id="freelancer-jobs">' +
         '<div class="mz-row"><div class="mz-card__title" style="margin:0;">Jobs</div>' +
           '<button type="button" class="mz-tab" data-runner-refresh>Refresh</button></div>' +
@@ -4565,6 +4628,19 @@ return '<div class="mz-mobile-card">' +
         '<a class="mz-tab" href="/track-mzigo">Track a parcel</a>' +
         '<button type="button" class="mz-tab mz-signout-inline" data-freelancer-signout>Sign out</button>' +
       '</div>';
+
+    function syncRunnerProfilePanel() {
+      var panel = host.querySelector('[data-runner-profile-panel]');
+      if (!panel) return;
+      var show = window.location.hash === '#runner-profile';
+      panel.hidden = !show;
+      if (show) setTimeout(function () { panel.scrollIntoView({ block: 'start', behavior: 'smooth' }); }, 40);
+    }
+    syncRunnerProfilePanel();
+    if (!host.getAttribute('data-profile-hash-bound')) {
+      host.setAttribute('data-profile-hash-bound', '1');
+      window.addEventListener('hashchange', syncRunnerProfilePanel);
+    }
 
     var profile = host.querySelector('[data-runner-profile]');
     if (profile) profile.addEventListener('submit', function (ev) {
@@ -4826,14 +4902,6 @@ return '<div class="mz-mobile-card">' +
           .catch(function (err) { toast(err.message, 'error'); btn.disabled = false; });
       });
     });
-    var markRead = host.querySelector('[data-notifications-read]');
-    if (markRead) markRead.addEventListener('click', function () {
-      markRead.disabled = true;
-      api('freelancer.php', { method: 'POST', body: { action: 'mark-notifications-read' } })
-        .then(function (fresh) { renderFreelancer(host, fresh); })
-        .catch(function (err) { toast(err.message, 'error'); markRead.disabled = false; });
-    });
-
     var reset = host.querySelector('[data-freelancer-reset]');
     if (reset) reset.addEventListener('click', function () {
       reset.disabled = true;

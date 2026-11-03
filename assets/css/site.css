@@ -2121,3 +2121,38 @@ img[data-mz-hero-placeholder] { opacity: 0; }
 .mz-runner-wizard__step[hidden] { display: none; }
 .mz-runner-wizard__step .mz-label { margin-bottom: 6px; }
 .mz-runner-wizard__step .mz-input { width: 100%; }
+
+/* Runner header notifications */
+.mz-bell-wrap { position: relative; display: flex; align-items: center; }
+.mz-bell-btn {
+  position: relative; display: grid; place-items: center;
+  width: 36px; height: 36px; border: 1px solid var(--mz-border);
+  border-radius: 999px; background: var(--mz-card); color: var(--mz-hunter);
+  cursor: pointer;
+}
+.mz-bell-count {
+  position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px;
+  padding: 0 4px; display: grid; place-items: center;
+  border: 2px solid var(--mz-card); border-radius: 999px;
+  background: #b91c1c; color: #fff; font-size: 9px; font-weight: 800;
+}
+.mz-bell-count[hidden] { display: none; }
+.mz-bell-panel {
+  position: absolute; right: 0; top: calc(100% + 8px); z-index: 90;
+  width: min(340px, calc(100vw - 24px)); max-height: min(430px, 72vh); overflow: auto;
+  padding: 10px; border: 1px solid var(--mz-border); border-radius: 14px;
+  background: #fff; box-shadow: 0 16px 38px rgba(32, 54, 17, .16);
+}
+.mz-bell-panel[hidden] { display: none; }
+.mz-bell-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 2px 2px 8px; }
+.mz-bell-head strong { color: var(--mz-hunter); font-size: 13px; }
+.mz-bell-head button { border: 0; background: transparent; color: var(--mz-hunter); font: inherit; font-size: 11px; font-weight: 700; cursor: pointer; }
+.mz-bell-item { padding: 9px 6px; border-top: 1px solid var(--mz-border); border-radius: 8px; }
+.mz-bell-item.is-unread { background: #f2f9e9; }
+.mz-bell-item strong { display: block; color: var(--mz-hunter); font-size: 12px; }
+.mz-bell-item p { margin: 3px 0; color: var(--mz-muted-fg); font-size: 11px; line-height: 1.45; }
+.mz-bell-item small { color: var(--mz-muted-fg); font-size: 10px; }
+.mz-bell-empty { margin: 8px 4px; color: var(--mz-muted-fg); font-size: 12px; }
+@media (max-width: 767px) {
+  .mz-bell-panel { position: fixed; left: 12px; right: 12px; top: 66px; width: auto; max-height: 70vh; }
+}
