@@ -2092,3 +2092,32 @@ img[data-mz-hero-placeholder] { opacity: 0; }
   line-height: 1.3;
 }
 .mz-runner-timeline__step.is-done .mz-runner-timeline__label { color: var(--mz-hunter); }
+
+/* Runner onboarding: one current step, forms inside the card */
+.mz-runner-timeline--single {
+  margin: 10px 0 12px;
+  padding: 0;
+  overflow: visible;
+}
+.mz-runner-timeline--single .mz-runner-timeline__step {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 0;
+  text-align: left;
+}
+.mz-runner-timeline--single .mz-runner-timeline__step::before { display: none; }
+.mz-runner-timeline--single .mz-runner-timeline__dot { margin: 0; }
+.mz-runner-timeline--single .mz-runner-timeline__label { font-size: 12px; }
+.mz-runner-timeline__step.is-current .mz-runner-timeline__dot {
+  border-color: var(--mz-hunter);
+  background: var(--mz-tea);
+  color: var(--mz-hunter);
+  box-shadow: 0 0 0 4px rgba(60, 82, 35, .08);
+}
+.mz-runner-timeline__step.is-current .mz-runner-timeline__label { color: var(--mz-hunter); }
+.mz-runner-wizard__step[hidden] { display: none; }
+.mz-runner-wizard__step .mz-label { margin-bottom: 6px; }
+.mz-runner-wizard__step .mz-input { width: 100%; }

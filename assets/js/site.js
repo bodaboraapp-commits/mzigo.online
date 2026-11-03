@@ -4245,28 +4245,13 @@ return '<div class="mz-mobile-card">' +
       ? '<span class="mz-badge mz-badge--ok">Active</span>'
       : '<span class="mz-badge mz-badge--warn">Profile incomplete</span>';
 
+    var onboardingLabels = {
+      name: 'Your name', areas: 'Areas you serve', availability_days: 'Availability days',
+      availability_window: 'Availability window', vehicle_type: 'Vehicle type',
+      payout_phone: 'M-Pesa payout number', terms: 'Terms acceptance'
+    };
+    var onboardingSteps = Object.keys(onboardingLabels);
     var onboarding = '';
-    if (!complete) {
-      var labels = {
-        name: 'Your name', areas: 'Areas you serve', availability_days: 'Availability days',
-        availability_window: 'Availability window', vehicle_type: 'Vehicle type',
-        payout_phone: 'M-Pesa payout number', terms: 'Terms acceptance'
-      };
-      var stepOrder = Object.keys(labels);
-      var timeline = stepOrder.map(function (key, index) {
-        var done = missing.indexOf(key) === -1;
-        return '<div class="mz-runner-timeline__step ' + (done ? 'is-done' : 'is-pending') + '" role="listitem">' +
-          '<span class="mz-runner-timeline__dot" aria-hidden="true">' + (done ? '✓' : String(index + 1)) + '</span>' +
-          '<span class="mz-runner-timeline__label">' + esc(labels[key] || key) + '</span></div>';
-      }).join('');
-      onboarding =
-        '<div class="mz-saas-card" style="margin-bottom:16px;" data-runner-onboarding>' +
-          '<div class="mz-card__title">Get ready for jobs</div>' +
-          '<p class="mz-hint">Finish these steps so we can match you with errands in your area.</p>' +
-          '<div class="mz-runner-timeline" role="list" aria-label="Runner onboarding steps">' + timeline + '</div>' +
-          '<a class="mz-btn" style="margin-top:12px;" href="#runner-profile">Complete your runner profile</a>' +
-        '</div>';
-    }
 
     var jobData = data.jobs || {};
     var availableJobs = jobData.available || [];
@@ -4380,6 +4365,62 @@ return '<div class="mz-mobile-card">' +
         '<input type="checkbox" data-runner-day value="' + esc(key) + '"' + (days.indexOf(key) !== -1 ? ' checked' : '') + '> ' +
         esc((opts.days || {})[key]) + '</label>';
     }).join('');
+    if (!complete) {
+      var pendingSteps = onboardingSteps.filter(function (key) { return missing.indexOf(key) !== -1; });
+      if (!pendingSteps.length) pendingSteps = [onboardingSteps[0]];
+      var currentStep = pendingSteps[0];
+      var stepField = function (key) {
+        if (key === 'name') {
+          return '<label class="mz-field" style="display:block;"><span class="mz-label">Full name</span>' +
+            '<input class="mz-input" name="name" value="' + esc(p.name || u.name || '') + '" required autocomplete="name"></label>';
+        }
+        if (key === 'areas') {
+          return '<label class="mz-field" style="display:block;"><span class="mz-label">Areas you can serve</span>' +
+            '<input class="mz-input" name="areas" value="' + esc(p.areas || '') + '" placeholder="e.g. Nairobi CBD, Westlands, Kilimani" required></label>';
+        }
+        if (key === 'availability_days') {
+          return '<div class="mz-label">Days you can work</div><div style="display:flex;flex-wrap:wrap;margin-top:4px;">' + dayChecks + '</div>';
+        }
+        if (key === 'availability_window') {
+          return '<label class="mz-field" style="display:block;"><span class="mz-label">Availability window</span>' +
+            '<select class="mz-input" name="availability_window" required>' + runnerOptionList(opts.windows, p.availability_window, 'Choose window') + '</select></label>';
+        }
+        if (key === 'vehicle_type') {
+          return '<label class="mz-field" style="display:block;"><span class="mz-label">Vehicle</span>' +
+            '<select class="mz-input" name="vehicle_type" required><option value="">Choose vehicle</option>' + vehicleOptions + '</select></label>';
+        }
+        if (key === 'payout_phone') {
+          return '<label class="mz-field" style="display:block;"><span class="mz-label">M-Pesa payout number</span>' +
+            '<input class="mz-input" name="payout_phone" type="tel" value="' + esc(p.payout_phone || '') + '" placeholder="0712 345 678" required></label>';
+        }
+        return '<label style="display:flex;align-items:flex-start;gap:9px;font-size:12px;line-height:1.5;color:var(--mz-muted-fg);">' +
+          '<input type="checkbox" name="terms_accepted" style="margin-top:2px;" required>' +
+          '<span>I agree to the <a class="mz-link" href="/terms#runner-terms" target="_blank" rel="noopener">Runner Terms</a> and <a class="mz-link" href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>.</span></label>';
+      };
+      var stepMarkup = pendingSteps.map(function (key) {
+        return '<div class="mz-runner-wizard__step" data-wizard-step="' + esc(key) + '"' + (key === currentStep ? '' : ' hidden') + '>' +
+          stepField(key) + '</div>';
+      }).join('');
+      var currentIndex = onboardingSteps.indexOf(currentStep) + 1;
+      var currentLabel = onboardingLabels[currentStep] || currentStep;
+      onboarding =
+        '<div class="mz-saas-card" id="runner-onboarding" style="margin-bottom:16px;" data-runner-onboarding data-wizard-current="' + esc(currentStep) + '">' +
+          '<div class="mz-card__title">Get ready for jobs</div>' +
+          '<p class="mz-hint">Step ' + currentIndex + ' of ' + onboardingSteps.length + ' · finish this step to continue.</p>' +
+          '<div class="mz-runner-timeline mz-runner-timeline--single" role="list" aria-label="Current runner onboarding step">' +
+            '<div class="mz-runner-timeline__step is-current" role="listitem">' +
+              '<span class="mz-runner-timeline__dot" aria-hidden="true">' + currentIndex + '</span>' +
+              '<span class="mz-runner-timeline__label">' + esc(currentLabel) + '</span>' +
+            '</div>' +
+          '</div>' +
+          '<form data-runner-wizard novalidate style="margin-top:10px;">' + stepMarkup +
+            '<div class="mz-row" style="margin-top:12px;justify-content:flex-start;">' +
+              '<button class="mz-btn" type="button" data-wizard-next>' + (pendingSteps.length === 1 ? 'Save profile' : 'Continue') + '</button>' +
+            '</div>' +
+          '</form>' +
+        '</div>';
+    }
+
     var payoutLabel = p.payout_phone
       ? 'Payouts to <strong>' + esc(p.payout_phone) + '</strong>'
       : 'No payout number saved yet — add one in your runner profile.';
@@ -4449,7 +4490,7 @@ return '<div class="mz-mobile-card">' +
       onboarding +
       '<div data-runner-kyc style="margin-bottom:16px;"></div>' +
       '<div class="mz-row" style="gap:10px;margin-bottom:16px;justify-content:flex-start;flex-wrap:wrap;" data-freelancer-actions>' +
-        '<a class="mz-btn" href="#runner-profile">' + (complete ? 'Update profile &amp; availability' : 'Complete your profile') + '</a>' +
+        '<a class="mz-btn" href="' + (complete ? '#runner-profile' : '#runner-onboarding') + '">' + (complete ? 'Update profile &amp; availability' : 'Continue onboarding') + '</a>' +
         '<a class="mz-btn mz-btn--outline" href="#earnings">View earnings</a>' +
         '<a class="mz-tab" href="/earn#pay">How runners get paid</a>' +
         '<a class="mz-tab" href="/contact">Help &amp; support</a>' +
@@ -4518,7 +4559,7 @@ return '<div class="mz-mobile-card">' +
         '<div class="mz-card__title" style="font-size:14px;margin-top:18px;">Completed</div>' +
         completedBody +
       '</div>' +
-      profileForm +
+      (complete ? profileForm : '') +
       '<div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">' +
         '<a class="mz-tab" href="/track-mzigo">Track a parcel</a>' +
         '<button type="button" class="mz-tab mz-signout-inline" data-freelancer-signout>Sign out</button>' +
@@ -4563,6 +4604,93 @@ return '<div class="mz-mobile-card">' +
         btn.disabled = false;
       });
     });
+
+    var wizard = host.querySelector('[data-runner-wizard]');
+    if (wizard) {
+      var wizardCard = host.querySelector('[data-runner-onboarding]');
+      var wizardNext = wizard.querySelector('[data-wizard-next]');
+      var wizardStepEls = Array.prototype.slice.call(wizard.querySelectorAll('[data-wizard-step]'));
+      var wizardLabels = {
+        name: 'Your name', areas: 'Areas you serve', availability_days: 'Availability days',
+        availability_window: 'Availability window', vehicle_type: 'Vehicle type',
+        payout_phone: 'M-Pesa payout number', terms: 'Terms acceptance'
+      };
+      var wizardOrder = Object.keys(wizardLabels);
+      function wizardStepKey() { return wizardCard.getAttribute('data-wizard-current') || ''; }
+      function wizardShow(key) {
+        wizardStepEls.forEach(function (el) { el.hidden = el.getAttribute('data-wizard-step') !== key; });
+        wizardCard.setAttribute('data-wizard-current', key);
+        var index = wizardOrder.indexOf(key) + 1;
+        var dot = wizardCard.querySelector('.mz-runner-timeline__dot');
+        var label = wizardCard.querySelector('.mz-runner-timeline__label');
+        var progress = wizardCard.querySelector('[data-wizard-progress]');
+        if (dot) dot.textContent = String(index);
+        if (label) label.textContent = wizardLabels[key] || key;
+        if (progress) progress.textContent = 'Step ' + index + ' of ' + wizardOrder.length + ' · finish this step to continue.';
+        var last = wizardStepEls[wizardStepEls.length - 1].getAttribute('data-wizard-step') === key;
+        wizardNext.textContent = last ? 'Save profile' : 'Continue';
+        var active = wizard.querySelector('[data-wizard-step="' + key + '"] input:not([type=checkbox]), [data-wizard-step="' + key + '"] select');
+        if (active) setTimeout(function () { active.focus(); }, 30);
+      }
+      function wizardValidate(step) {
+        var controls = step.querySelectorAll('input, select');
+        for (var i = 0; i < controls.length; i++) {
+          var el = controls[i];
+          if (el.type === 'checkbox') {
+            if (el.name === 'terms_accepted' && !el.checked) return 'Accept the runner terms to continue.';
+            continue;
+          }
+          if (el.value.trim() === '') return 'Complete this field to continue.';
+        }
+        var days = step.querySelectorAll('[data-runner-day]:checked');
+        if (step.querySelector('[data-runner-day]') && !days.length) return 'Select at least one day you can work.';
+        return '';
+      }
+      function wizardSave() {
+        var nameEl = wizard.querySelector('[name="name"]');
+        var areasEl = wizard.querySelector('[name="areas"]');
+        var vehicleEl = wizard.querySelector('[name="vehicle_type"]');
+        var windowEl = wizard.querySelector('[name="availability_window"]');
+        var payoutEl = wizard.querySelector('[name="payout_phone"]');
+        var checkedDays = Array.prototype.map.call(wizard.querySelectorAll('[data-runner-day]:checked'), function (el) { return el.value; });
+        var termsEl = wizard.querySelector('[name="terms_accepted"]');
+        var payload = {
+          action: 'save-profile',
+          name: nameEl ? nameEl.value.trim() : (p.name || u.name || ''),
+          areas: areasEl ? areasEl.value.trim() : p.areas,
+          vehicle_type: vehicleEl ? vehicleEl.value : p.vehicle_type,
+          availability_window: windowEl ? windowEl.value : p.availability_window,
+          availability_days: checkedDays.length ? checkedDays : (p.availability_days || []),
+          payout_phone: payoutEl ? payoutEl.value.trim() : p.payout_phone,
+          id_number: p.id_number || '',
+          terms_accepted: termsEl ? termsEl.checked : !!p.terms_accepted_at,
+          available_now: !!(host.querySelector('[data-runner-available]') || {}).checked,
+          job_alerts: p.job_alerts !== false,
+          max_distance_km: p.max_distance_km || '',
+          preferred_sizes: p.preferred_sizes || ''
+        };
+        wizardNext.disabled = true;
+        api('freelancer.php', { method: 'POST', body: payload }).then(function (fresh) {
+          toast('Runner profile saved.');
+          renderFreelancer(host, fresh);
+        }).catch(function (err) {
+          toast(err.message, 'error');
+          wizardNext.disabled = false;
+        });
+      }
+      wizardNext.addEventListener('click', function () {
+        var key = wizardStepKey();
+        var step = wizard.querySelector('[data-wizard-step="' + key + '"]');
+        var error = wizardValidate(step);
+        if (error) { toast(error, 'error'); return; }
+        var currentIndex = wizardStepEls.indexOf(step);
+        if (currentIndex < wizardStepEls.length - 1) {
+          wizardShow(wizardStepEls[currentIndex + 1].getAttribute('data-wizard-step'));
+        } else {
+          wizardSave();
+        }
+      });
+    }
 
     var availability = host.querySelector('[data-runner-available]');
     if (availability) availability.addEventListener('change', function () {
