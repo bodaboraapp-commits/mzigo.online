@@ -4555,7 +4555,7 @@ return '<div class="mz-mobile-card">' +
       onboarding +
       '<div data-runner-kyc style="margin-bottom:16px;"></div>' +
       '<div class="mz-row" style="gap:10px;margin-bottom:16px;justify-content:flex-start;flex-wrap:wrap;" data-freelancer-actions>' +
-        '<a class="mz-btn" href="' + (complete ? '#runner-profile' : '#runner-onboarding') + '">' + (complete ? 'Update profile &amp; availability' : 'Continue onboarding') + '</a>' +
+        (complete ? '' : '<a class="mz-btn" href="#runner-onboarding">Continue onboarding</a>') +
         '<a class="mz-btn mz-btn--outline" href="#earnings">View earnings</a>' +
         '<a class="mz-tab" href="/earn#pay">How runners get paid</a>' +
         '<a class="mz-tab" href="/contact">Help &amp; support</a>' +
