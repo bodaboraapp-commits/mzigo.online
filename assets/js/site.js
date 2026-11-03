@@ -4491,7 +4491,7 @@ return '<div class="mz-mobile-card">' +
       : 'No payout number saved yet — add one in your runner profile.';
 
     var profileForm =
-      '<div class="mz-saas-card" id="runner-profile" data-runner-profile-panel hidden style="margin-top:16px;">' +
+      '<div class="mz-saas-card" id="runner-profile" style="margin-top:16px;">' +
         '<div class="mz-card__title">Runner profile &amp; availability</div>' +
         '<p class="mz-hint">We use these details to match you with errands. Your payout number is where M-Pesa earnings are sent.</p>' +
         '<form data-runner-profile style="margin-top:10px;">' +
@@ -4560,7 +4560,7 @@ return '<div class="mz-mobile-card">' +
         '<a class="mz-tab" href="/earn#pay">How runners get paid</a>' +
         '<a class="mz-tab" href="/contact">Help &amp; support</a>' +
       '</div>' +
-      '<div class="mz-saas-card" style="margin-bottom:16px;">' +
+      '<div class="mz-saas-card" style="margin-bottom:16px;" data-runner-availability-card>' +
         '<div class="mz-row">' +
           '<div><div class="mz-card__title" style="margin:0;">Availability</div>' +
             '<p class="mz-hint" style="margin:4px 0 0;">' +
@@ -4623,11 +4623,27 @@ return '<div class="mz-mobile-card">' +
         '<div class="mz-card__title" style="font-size:14px;margin-top:18px;">Completed</div>' +
         completedBody +
       '</div>' +
-      (complete ? profileForm : '') +
+      (complete ? '<div data-runner-profile-panel hidden>' + profileForm + '</div>' : '') +
       '<div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">' +
         '<a class="mz-tab" href="/track-mzigo">Track a parcel</a>' +
         '<button type="button" class="mz-tab mz-signout-inline" data-freelancer-signout>Sign out</button>' +
       '</div>';
+
+    var statsCard = host.querySelector('#earnings');
+    var jobsCard = host.querySelector('#freelancer-jobs');
+    var onboardingCard = host.querySelector('[data-runner-onboarding]');
+    var accountCard = host.querySelector('.mz-saas-grid');
+    var availabilityCard = host.querySelector('[data-runner-availability-card]');
+    var profilePanel = host.querySelector('[data-runner-profile-panel]');
+    var topAnchor = onboardingCard || accountCard;
+    if (statsCard && jobsCard && topAnchor) {
+      topAnchor.insertAdjacentElement('afterend', statsCard);
+      statsCard.insertAdjacentElement('afterend', jobsCard);
+    }
+    if (availabilityCard) {
+      if (complete && profilePanel) profilePanel.insertBefore(availabilityCard, profilePanel.firstChild);
+      else if (!complete) availabilityCard.remove();
+    }
 
     function syncRunnerProfilePanel() {
       var panel = host.querySelector('[data-runner-profile-panel]');
