@@ -5563,45 +5563,47 @@ return '<div class="mz-mobile-card">' +
     var paid = p.payment_status === 'paid';
     var fee = p.amount_due || (p.fee || {}).total || 0;
     var code = p.collect_code
-      ? '<div class="mz-customer-card__code"><span class="mz-cap">Collection code</span>' +
+      ? '<div class="mz-parcel-card__code"><span class="mz-cap">Collection code</span>' +
           '<span class="mz-mono">' + esc(p.collect_code) + '</span>' +
-          '<button type="button" class="mz-link" data-copy-code="' + esc(p.collect_code) + '">Copy</button>' +
-        '</div>'
+          '<button type="button" class="mz-link" data-copy-code="' + esc(p.collect_code) + '">Copy</button></div>'
       : '';
-    var summary = '<div class="mz-customer-card__summary">' +
-      '<div class="mz-customer-card__amount"><span class="mz-cap">Delivery fee</span><strong>' + money(fee) + '</strong></div>' +
-      '<span class="mz-badge ' + (paid ? 'mz-badge--ok' : 'mz-badge--warn') + '">' + (paid ? 'Paid' : 'Payment due') + '</span>' +
-      (paid ? code : '') +
-    '</div>';
     var actions = '';
+    var footerNote = '';
     if (paid) {
-      actions = '<div class="mz-customer-card__actions">' +
-        '<button type="button" class="mz-link" data-customer-receipt="' + esc(p.tracking) + '">Email receipt</button>' +
+      actions = '<button type="button" class="mz-link" data-customer-receipt="' + esc(p.tracking) + '">Email receipt</button>' +
         '<a class="mz-link" href="/contact?topic=payment">Contact support</a>' +
-        '<a class="mz-link" href="/claims">Open a claim</a>' +
-        (p.payment_ref ? '<span class="mz-customer-card__receipt">Receipt ' + esc(p.payment_ref) + (p.paid_at ? ' · ' + esc(fmtDate(p.paid_at)) : '') + '</span>' : '') +
-      '</div>' +
-      '<p class="mz-customer-card__note">Keep this code — it stays in My parcels until collection.</p>';
+        '<a class="mz-link" href="/claims">Open a claim</a>';
+      footerNote = 'Keep this code until collection.' +
+        (p.payment_ref ? ' <span class="mz-parcel-card__receipt">Receipt ' + esc(p.payment_ref) + (p.paid_at ? ' · ' + esc(fmtDate(p.paid_at)) : '') + '</span>' : '');
     } else if (p.can_pay) {
-      actions = '<div class="mz-customer-card__actions">' +
-        '<button type="button" class="mz-btn mz-btn--sm" data-customer-pay="' + esc(p.tracking) + '" data-customer-fee="' + fee + '">Pay ' + money(fee) + ' with M-Pesa' + ((APP.mpesaPayment && APP.mpesaPayment.mode === 'live') ? '' : ' (demo)') + '</button>' +
+      actions = '<button type="button" class="mz-btn mz-btn--sm" data-customer-pay="' + esc(p.tracking) + '" data-customer-fee="' + fee + '">Pay ' + money(fee) + ' with M-Pesa' + ((APP.mpesaPayment && APP.mpesaPayment.mode === 'live') ? '' : ' (demo)') + '</button>' +
         '<a class="mz-link" href="/contact?ref=' + encodeURIComponent(p.tracking) + '&topic=payment">Contact support</a>' +
-        '<a class="mz-link" href="/claims">Open a claim</a>' +
-      '</div>' +
-      '<p class="mz-customer-card__note">Your collection code appears after payment.</p>';
+        '<a class="mz-link" href="/claims">Open a claim</a>';
+      footerNote = 'Collection code appears after payment.';
     } else {
-      actions = '<div class="mz-customer-card__actions">' +
-        '<span class="mz-customer-card__note">Payment opens when this parcel is ready for collection.</span>' +
-        '<a class="mz-link" href="/contact?ref=' + encodeURIComponent(p.tracking) + '&topic=payment">Contact support</a>' +
-      '</div>';
+      actions = '<a class="mz-link" href="/contact?ref=' + encodeURIComponent(p.tracking) + '&topic=payment">Contact support</a>' +
+        '<span class="mz-parcel-card__hint">Payment opens when ready for collection.</span>';
+      footerNote = '';
     }
-    return '<div class="mz-customer-card">' +
-      '<div class="mz-customer-card__head">' +
-        '<div><div class="mz-mono mz-customer-card__tracking">' + esc(p.tracking) + '</div>' +
-          '<div class="mz-customer-card__route">' + esc(p.carrier) + ' · ' + esc(p.from) + ' → ' + esc(p.to) + '</div></div>' +
-        '<span class="mz-pill mz-pill--' + esc(meta.pill) + '">' + esc(meta.label) + '</span>' +
+    return '<div class="mz-parcel-card mz-parcel-card--' + esc(meta.pill) + '">' +
+      '<div class="mz-parcel-card__body">' +
+        '<div class="mz-parcel-card__identity">' +
+          '<div class="mz-parcel-card__topline">' +
+            '<span class="mz-mono mz-parcel-card__tracking">' + esc(p.tracking) + '</span>' +
+            '<span class="mz-pill mz-pill--' + esc(meta.pill) + '">' + esc(meta.label) + '</span>' +
+          '</div>' +
+          '<div class="mz-parcel-card__route">' + esc(p.carrier) + ' · ' + esc(p.from) + ' → ' + esc(p.to) + '</div>' +
+        '</div>' +
+        '<div class="mz-parcel-card__metrics">' +
+          '<div class="mz-parcel-card__amount"><span class="mz-cap">Delivery fee</span><strong>' + money(fee) + '</strong></div>' +
+          '<span class="mz-badge ' + (paid ? 'mz-badge--ok' : 'mz-badge--warn') + '">' + (paid ? 'Paid' : 'Payment due') + '</span>' +
+          code +
+        '</div>' +
       '</div>' +
-      summary + actions +
+      '<div class="mz-parcel-card__footer">' +
+        '<div class="mz-parcel-card__actions">' + actions + '</div>' +
+        (footerNote ? '<div class="mz-parcel-card__note">' + footerNote + '</div>' : '') +
+      '</div>' +
     '</div>';
   }
 
