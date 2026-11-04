@@ -49,7 +49,7 @@ if (isset($data['distance_km']) && $data['distance_km'] !== '' && is_numeric($da
 }
 $payment = strtoupper(param($data, 'payment', 1, 10, 'Payment method'));
 if (!in_array($payment, MZ_PAYMENT_METHODS, true)) {
-    fail('Choose CASH or M-PESA.', 422, ['payment' => 'Invalid payment method.']);
+    fail('Choose M-Pesa, Cash, Card or COD.', 422, ['payment' => 'Invalid payment method.']);
 }
 
 $fee = ['base' => 250, 'platform' => 50, 'total' => 300];

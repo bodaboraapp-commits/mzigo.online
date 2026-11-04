@@ -678,7 +678,7 @@ const MZ_PACKAGE_SIZES = [
     'Envelope', 'Small', 'Medium', 'Large',
     'Extra Large', 'Extra Extra Large', 'Extra Extra Extra Large',
 ];
-const MZ_PAYMENT_METHODS = ['CASH', 'M-PESA'];
+const MZ_PAYMENT_METHODS = ['CASH', 'M-PESA', 'CARD', 'COD'];
 const MZ_DEMO_PARCELS = ['11111111-1111-4111-8111-111111111111', '22222222-2222-4222-8222-222222222222'];
 
 function quote_for(string $size, int $valueKes): array

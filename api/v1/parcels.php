@@ -97,7 +97,7 @@ if ($value < 1 || $value > 1000000) {
 }
 $payment = strtoupper(param($data, 'payment', 1, 10, 'Payment method'));
 if (!in_array($payment, MZ_PAYMENT_METHODS, true)) {
-    fail('Choose CASH or M-PESA.', 422);
+    fail('Choose M-Pesa, Cash, Card or COD.', 422);
 }
 
 $quote = tenant_rate_quote($tenantId, (string) $partner['slug'], $from, $to, $size, $value);

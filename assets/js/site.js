@@ -3162,6 +3162,26 @@ return '<div class="mz-mobile-card">' +
     if (again) again.addEventListener('click', function () { window.location.reload(); });
   }
 
+  function initPaymentCards(scope) {
+    if (!scope) return;
+    var input = scope.querySelector('[data-mz-payment]');
+    var cards = Array.prototype.slice.call(scope.querySelectorAll('[data-payment-value]'));
+    if (!input || !cards.length) return;
+    function select(value, fire) {
+      cards.forEach(function (card) {
+        var active = card.getAttribute('data-payment-value') === value;
+        card.classList.toggle('is-active', active);
+        card.setAttribute('aria-checked', String(active));
+      });
+      input.value = value;
+      if (fire) input.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    cards.forEach(function (card) {
+      card.addEventListener('click', function () { select(card.getAttribute('data-payment-value'), true); });
+    });
+    select(input.value || 'M-PESA', false);
+  }
+
   function initSend() {
     var wizard = $('[data-mz-send-wizard]');
     if (!wizard) return;
@@ -3297,6 +3317,7 @@ return '<div class="mz-mobile-card">' +
       packagePhoto: step3.querySelector('[data-mz-package-photo]'),
       estimate: step3.querySelector('[data-mz-estimate]')
     };
+    initPaymentCards(step3);
 
     var photoState = {
       product: { file: null, previewUrl: '' },
@@ -3758,6 +3779,7 @@ return '<div class="mz-mobile-card">' +
       payment: step3.querySelector('[data-mz-payment]'),
       estimate: step3.querySelector('[data-mz-estimate]')
     };
+    initPaymentCards(step3);
     function refreshEstimate() {
       var total = 300;
       errandState.quote = { base: 250, platform: 50, total: total };
