@@ -688,6 +688,10 @@ function notify_customer_rating_prompt(array $parcel): array
             ], true);
     }
 
+    if ($userId > 0) {
+        notify_customer_in_app($parcel, $user, $subject, $body, 'delivery_rating');
+    }
+
     return ['ok' => true, 'push' => $push, 'email' => $email, 'link' => $link];
 }
 function notify_customer_status(array $parcel, string $template, string $label, string $note = ''): array

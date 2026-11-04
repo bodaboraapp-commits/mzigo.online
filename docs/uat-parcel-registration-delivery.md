@@ -54,6 +54,7 @@ Health: https://mzigo.online/api/health.php
   - **live sandbox** — Daraja sandbox
   - **production** — real M-Pesa
 - [ ] Admin credentials available
+- [ ] Migrations applied: `php _server\db\migrate.php`
 - [ ] Test receiver phone available
 - [ ] Test phone for STK (if live)
 
@@ -283,6 +284,8 @@ ORDER BY id DESC;
 - Collection scan recorded.
 - Push notification “Rate your delivery” fires immediately
 - Email backup “Rate your delivery” is sent when the customer has an email
+- Rating prompt remains visible on later logins until rated or cancelled
+- Pressing **Cancel** dismisses the prompt for that delivery only
 - Status cannot proceed without payment.
 - Public tracking shows collection complete.
 

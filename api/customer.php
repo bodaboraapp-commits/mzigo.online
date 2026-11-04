@@ -30,6 +30,8 @@ function customer_parcel_view(array $row): array
     $paid = ($parcel['payment_status'] ?? '') === 'paid';
     $parcel['amount_due'] = $paid ? 0 : (int) $parcel['fee']['total'];
     $parcel['can_pay'] = !$paid && ($parcel['status'] ?? '') !== 'COLLECTED_PAID';
+    $parcel['csat_dismissed_at'] = !empty($row['csat_dismissed_at'])
+        ? str_replace(' ', 'T', (string) $row['csat_dismissed_at']) : null;
     if (!$paid) {
         // Never expose the collection code before the delivery fee is paid.
         $parcel['collect_code'] = null;
@@ -376,10 +378,28 @@ if ($action === 'rate_parcel') {
         fail('You can rate a delivery after the delivery fee is paid or the parcel is collected.', 422);
     }
     db()->prepare('UPDATE parcels SET csat_rating = ?, csat_comment = ?, csat_at = NOW() WHERE id = ?')->execute([$rating, $comment, $parcel['id']]);
+    db()->prepare('UPDATE notifications SET read_at = NOW() WHERE recipient_user_id = ? AND template = "delivery_rating" AND related_type = "parcel" AND related_id = ?')
+        ->execute([(int) $user['id'], (string) $parcel['id']]);
     audit('customer.parcel_rated', 'parcel', (string) $parcel['id'], ['rating' => $rating]);
     json_out(['ok' => true, 'message' => 'Thanks — your delivery rating was saved.']);
 }
 
+if ($action === 'dismiss_rating') {
+    $tracking = (string) ($data['tracking'] ?? '');
+    if ($tracking === '') { fail('Choose a delivery first.', 422, ['tracking' => 'Required.']); }
+    $stmt = db()->prepare('SELECT id, csat_rating FROM parcels WHERE tracking = ? AND receiver_phone_key = ? LIMIT 1');
+    $stmt->execute([$tracking, $key]);
+    $parcel = $stmt->fetch();
+    if (!$parcel) fail_error('not_found', 'Parcel not found on this account.', 404);
+    if (!empty($parcel['csat_rating'])) {
+        json_out(['ok' => true, 'message' => 'This delivery is already rated.']);
+    }
+    db()->prepare('UPDATE parcels SET csat_dismissed_at = NOW() WHERE id = ?')->execute([$parcel['id']]);
+    db()->prepare('UPDATE notifications SET read_at = NOW() WHERE recipient_user_id = ? AND template = "delivery_rating" AND related_type = "parcel" AND related_id = ?')
+        ->execute([(int) $user['id'], (string) $parcel['id']]);
+    audit('customer.parcel_rating_dismissed', 'parcel', (string) $parcel['id'], []);
+    json_out(['ok' => true, 'message' => 'Rating prompt dismissed.']);
+}
 if ($action !== 'pay') {
     fail_error('unknown_action', 'Unknown action.', 422);
 }
