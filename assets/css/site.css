@@ -2332,5 +2332,5 @@ img[data-mz-hero-placeholder] { opacity: 0; }
   .mz-order-receipt { white-space: normal; font-size: 10px; }
 }
 
-.mz-order-pay { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 12px; text-align: center; }
+.mz-order-pay { display: inline-flex; flex-direction: column; align-items: center; align-self: flex-start; gap: 6px; margin-top: 12px; text-align: center; }
 .mz-order-pay__note { color: var(--mz-muted-fg); font-size: 11px; }

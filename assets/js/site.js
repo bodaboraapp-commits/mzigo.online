@@ -5710,20 +5710,24 @@ return '<div class="mz-mobile-card">' +
           '<a class="mz-btn mz-btn--outline" href="/track-mzigo">Track a parcel</a>' +
           '<a class="mz-tab" href="/help">Help centre</a>' +
         '</div></div>';
-    var rateable = parcels.filter(function (p) { return p.payment_status === 'paid' && !p.csat_rating; });
-    var csatCard = rateable.length
+    var lastCollected = parcels.filter(function (p) {
+      return (p.status === 'COLLECTED_PAID' || p.status === 'COLLECTED') && !p.csat_rating && !p.csat_dismissed_at;
+    })[0];
+    var csatCard = lastCollected
       ? '<div class="mz-saas-card" style="margin-top:16px;" data-customer-csat><div class="mz-card__title">Rate your delivery</div>' +
         '<p class="mz-hint">Your feedback helps us improve the collection experience.</p>' +
         '<label class="mz-field"><span class="mz-label">Parcel</span><select class="mz-input" data-csat-tracking>' +
-          rateable.map(function (p) { return '<option value="' + esc(p.tracking) + '">' + esc(p.tracking) + ' · ' + esc(p.carrier || '') + '</option>'; }).join('') +
+          '<option value="' + esc(lastCollected.tracking) + '">' + esc(lastCollected.tracking) + ' · ' + esc(lastCollected.carrier || '') + '</option>' +
         '</select></label>' +
         '<div class="mz-row" style="gap:6px;margin:8px 0;" data-csat-stars>' +
           [1,2,3,4,5].map(function (n) { return '<button type="button" class="mz-tab" data-csat-star="' + n + '">' + n + ' ★</button>'; }).join('') +
         '</div>' +
         '<label class="mz-field"><span class="mz-label">Comment (optional)</span><textarea class="mz-input" data-csat-comment rows="2" maxlength="500" placeholder="How was the delivery or collection?"></textarea></label>' +
-        '<button type="button" class="mz-btn mz-btn--sm" data-csat-submit>Submit rating</button></div>'
-      : '';
-    var payable = parcels.filter(function (p) { return p.can_pay && p.payment_status !== 'paid'; });
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+          '<button type="button" class="mz-btn mz-btn--sm" data-csat-submit>Submit rating</button>' +
+          '<button type="button" class="mz-tab" data-csat-dismiss>Cancel</button>' +
+        '</div></div>'
+      : '';    var payable = parcels.filter(function (p) { return p.can_pay && p.payment_status !== 'paid'; });
     var paybar = '';
     if (payable.length) {
       var first = payable[0];
@@ -5804,6 +5808,18 @@ return '<div class="mz-mobile-card">' +
       api('customer.php', { method: 'POST', body: { action: 'rate_parcel', tracking: tracking, rating: csatRating, comment: comment } })
         .then(function (res) { toast(res.message || 'Rating saved.'); loadCustomer(host); })
         .catch(function (err) { toast(err.message, 'error'); csatSubmit.disabled = false; });
+    });
+    var csatDismiss = host.querySelector('[data-csat-dismiss]');
+    if (csatDismiss) csatDismiss.addEventListener('click', function () {
+      var card = host.querySelector('[data-customer-csat]');
+      var tracking = (host.querySelector('[data-csat-tracking]') || {}).value || '';
+      csatDismiss.disabled = true;
+      api('customer.php', { method: 'POST', body: { action: 'dismiss_rating', tracking: tracking } })
+        .then(function () {
+          if (card) card.remove();
+          toast('Rating prompt dismissed.', 'info');
+        })
+        .catch(function (err) { toast(err.message, 'error'); csatDismiss.disabled = false; });
     });
     host.querySelectorAll('[data-customer-pay]').forEach(function (btn) {
       btn.addEventListener('click', function () {
