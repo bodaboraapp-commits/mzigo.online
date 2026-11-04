@@ -2288,10 +2288,11 @@ img[data-mz-hero-placeholder] { opacity: 0; }
 /* Customer order header with centred collection code */
 .mz-order-top {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
   gap: 10px 16px;
 }
+.mz-order-top > .mz-pill { justify-self: end; }
 .mz-order-top--nocode { grid-template-columns: minmax(0, 1fr) auto; }
 .mz-order-identity { min-width: 0; }
 .mz-order-code {
