@@ -5471,9 +5471,9 @@ return '<div class="mz-mobile-card">' +
               ? 'An M-Pesa prompt will be sent to your registered phone. Enter your PIN. Sandbox testing charges KES 1.'
               : 'An M-Pesa prompt will be sent to your registered phone. Enter your PIN. The full order amount after discounts will be charged to your M-Pesa account.')
           : 'Pay the delivery fee to receive your collection code. In demo mode no real money moves.') + '</div>' +
-        '<div class="mz-form-grid"><label class="mz-field"><span class="mz-label">Coupon code (optional)</span>' +
+        '<div class="mz-coupon-row"><label class="mz-field"><span class="mz-label">Coupon code (optional)</span>' +
           '<input class="mz-input" name="coupon_code" placeholder="e.g. MZIGO100"></label>' +
-          '<div style="display:flex;align-items:flex-end;"><button type="button" class="mz-btn mz-btn--outline mz-btn--sm" data-coupon-apply>Apply coupon</button></div></div>' +
+          '<button type="button" class="mz-btn mz-btn--outline" data-coupon-apply>Apply coupon</button></div>' +
         '<div class="mz-kv"><dt>Delivery fee</dt><dd>' + money(fee) + '</dd></div>' +
         '<div class="mz-kv"><dt>Coupon discount</dt><dd data-coupon-discount>' + money(0) + '</dd></div>' +
         '<div class="mz-kv"><dt>Referral credit</dt><dd data-credit-discount>' + money(0) + '</dd></div>' +
@@ -5562,42 +5562,46 @@ return '<div class="mz-mobile-card">' +
     var meta = STATUS_META[p.status] || { label: p.status, pill: '' };
     var paid = p.payment_status === 'paid';
     var fee = p.amount_due || (p.fee || {}).total || 0;
-    var action = '';
+    var code = p.collect_code
+      ? '<div class="mz-customer-card__code"><span class="mz-cap">Collection code</span>' +
+          '<span class="mz-mono">' + esc(p.collect_code) + '</span>' +
+          '<button type="button" class="mz-link" data-copy-code="' + esc(p.collect_code) + '">Copy</button>' +
+        '</div>'
+      : '';
+    var summary = '<div class="mz-customer-card__summary">' +
+      '<div class="mz-customer-card__amount"><span class="mz-cap">Delivery fee</span><strong>' + money(fee) + '</strong></div>' +
+      '<span class="mz-badge ' + (paid ? 'mz-badge--ok' : 'mz-badge--warn') + '">' + (paid ? 'Paid' : 'Payment due') + '</span>' +
+      (paid ? code : '') +
+    '</div>';
+    var actions = '';
     if (paid) {
-      action = '<div class="mz-row" style="margin-top:12px;align-items:flex-end;">' +
-          '<div class="mz-kv" style="margin:0;"><dt>Collection code</dt><dd class="mz-mono">' + esc(p.collect_code || '—') +
-            (p.collect_code ? ' <button type="button" class="mz-tab" data-copy-code="' + esc(p.collect_code) + '">Copy</button>' : '') +
-          '</dd></div>' +
-        '</div>' +
-        '<p style="font-size:12px;color:var(--mz-muted-fg);margin:6px 0 0;">Keep this code — it stays in My parcels until collection. ' +
-          '<button type="button" class="mz-link" data-customer-receipt="' + esc(p.tracking) + '">Email receipt</button></p>' +
-        '<div class="mz-row" style="gap:12px;margin-top:8px;justify-content:flex-start;flex-wrap:wrap;">' +
-          '<a class="mz-link" href="/contact?topic=payment">Contact support</a>' +
-          '<a class="mz-link" href="/claims">Open a claim</a>' +
-        '</div>' +
-        (p.payment_ref ? '<div style="font-size:11px;color:var(--mz-muted-fg);margin-top:6px;">Receipt ' + esc(p.payment_ref) + (p.paid_at ? ' · ' + esc(fmtDate(p.paid_at)) : '') + '</div>' : '');
+      actions = '<div class="mz-customer-card__actions">' +
+        '<button type="button" class="mz-link" data-customer-receipt="' + esc(p.tracking) + '">Email receipt</button>' +
+        '<a class="mz-link" href="/contact?topic=payment">Contact support</a>' +
+        '<a class="mz-link" href="/claims">Open a claim</a>' +
+        (p.payment_ref ? '<span class="mz-customer-card__receipt">Receipt ' + esc(p.payment_ref) + (p.paid_at ? ' · ' + esc(fmtDate(p.paid_at)) : '') + '</span>' : '') +
+      '</div>' +
+      '<p class="mz-customer-card__note">Keep this code — it stays in My parcels until collection.</p>';
     } else if (p.can_pay) {
-      action = '<button type="button" class="mz-btn" data-customer-pay="' + esc(p.tracking) + '" data-customer-fee="' + fee + '" style="margin-top:12px;">Pay ' + money(fee) + ' with M-Pesa' + ((APP.mpesaPayment && APP.mpesaPayment.mode === 'live') ? '' : ' (demo)') + '</button>' +
-        '<div style="font-size:11px;color:var(--mz-muted-fg);margin-top:6px;">Your collection code appears after payment.</div>' +
-        '<div class="mz-row" style="gap:12px;margin-top:8px;justify-content:flex-start;flex-wrap:wrap;">' +
-          '<span class="mz-hint" style="margin:0;">Parcel not as expected?</span>' +
-          '<a class="mz-link" href="/contact?ref=' + encodeURIComponent(p.tracking) + '&topic=payment">Contact support</a>' +
-          '<a class="mz-link" href="/claims">Open a claim</a>' +
-        '</div>';
+      actions = '<div class="mz-customer-card__actions">' +
+        '<button type="button" class="mz-btn mz-btn--sm" data-customer-pay="' + esc(p.tracking) + '" data-customer-fee="' + fee + '">Pay ' + money(fee) + ' with M-Pesa' + ((APP.mpesaPayment && APP.mpesaPayment.mode === 'live') ? '' : ' (demo)') + '</button>' +
+        '<a class="mz-link" href="/contact?ref=' + encodeURIComponent(p.tracking) + '&topic=payment">Contact support</a>' +
+        '<a class="mz-link" href="/claims">Open a claim</a>' +
+      '</div>' +
+      '<p class="mz-customer-card__note">Your collection code appears after payment.</p>';
     } else {
-      action = '<div class="mz-hint" style="margin-top:12px;">Payment opens when the parcel is ready for collection.</div>';
+      actions = '<div class="mz-customer-card__actions">' +
+        '<span class="mz-customer-card__note">Payment opens when this parcel is ready for collection.</span>' +
+        '<a class="mz-link" href="/contact?ref=' + encodeURIComponent(p.tracking) + '&topic=payment">Contact support</a>' +
+      '</div>';
     }
-    return '<div class="mz-list-card" style="margin-bottom:12px;">' +
-      '<div class="mz-row">' +
-        '<div style="min-width:0;"><div class="mz-mono" style="font-weight:700;">' + esc(p.tracking) + '</div>' +
-        '<div style="font-size:12px;color:var(--mz-muted-fg);">' + esc(p.carrier) + ' · ' + esc(p.from) + ' → ' + esc(p.to) + '</div></div>' +
+    return '<div class="mz-customer-card">' +
+      '<div class="mz-customer-card__head">' +
+        '<div><div class="mz-mono mz-customer-card__tracking">' + esc(p.tracking) + '</div>' +
+          '<div class="mz-customer-card__route">' + esc(p.carrier) + ' · ' + esc(p.from) + ' → ' + esc(p.to) + '</div></div>' +
         '<span class="mz-pill mz-pill--' + esc(meta.pill) + '">' + esc(meta.label) + '</span>' +
       '</div>' +
-      '<div class="mz-row" style="margin-top:10px;align-items:flex-end;">' +
-        '<div><div class="mz-cap">Delivery fee</div><div style="font-size:18px;font-weight:800;">' + money(fee) + '</div></div>' +
-        '<span class="mz-badge ' + (paid ? 'mz-badge--ok' : 'mz-badge--warn') + '">' + (paid ? 'Paid' : 'Payment due') + '</span>' +
-      '</div>' +
-      action +
+      summary + actions +
     '</div>';
   }
 
@@ -5958,8 +5962,8 @@ return '<div class="mz-mobile-card">' +
       submitLabel: 'Pay ' + money(Math.max(0, amount - credit)),
       body:
         '<div class="mz-alert" style="margin-bottom:12px;">Demo payment mode — no real money moves. Coupons and referral bill credit are applied here.</div>' +
-        '<label class="mz-field"><span class="mz-label">Coupon code (optional)</span><input class="mz-input" name="coupon_code" placeholder="e.g. MZIGO100"></label>' +
-        '<button type="button" class="mz-btn mz-btn--outline mz-btn--sm" data-invoice-coupon-apply>Apply coupon</button>' +
+        '<div class="mz-coupon-row"><label class="mz-field"><span class="mz-label">Coupon code (optional)</span><input class="mz-input" name="coupon_code" placeholder="e.g. MZIGO100"></label>' +
+        '<button type="button" class="mz-btn mz-btn--outline" data-invoice-coupon-apply>Apply coupon</button></div>' +
         '<div class="mz-kv" style="margin-top:12px;"><dt>Invoice amount</dt><dd>' + money(amount) + '</dd></div>' +
         '<div class="mz-kv"><dt>Coupon discount</dt><dd data-invoice-discount>' + money(0) + '</dd></div>' +
         '<div class="mz-kv"><dt>Referral bill credit</dt><dd data-invoice-credit>' + money(credit) + '</dd></div>' +
