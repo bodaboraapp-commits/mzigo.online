@@ -2223,3 +2223,21 @@ img[data-mz-hero-placeholder] { opacity: 0; }
     padding-bottom: 0;
   }
 }
+
+/* ------------------------------------------------ app-wide card rhythm */
+:root { --mz-card-gap: 16px; }
+.mz-saas-wrap { gap: var(--mz-card-gap); }
+.mz-saas-wrap > .mz-saas-card,
+.mz-saas-wrap > .mz-saas-grid,
+.mz-saas-wrap > .mz-stats,
+.mz-saas-wrap > .mz-stack {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+.mz-list-card + .mz-list-card { margin-top: var(--mz-card-gap); }
+.mz-job-task { margin-bottom: var(--mz-card-gap); }
+.mz-stats { gap: var(--mz-card-gap); margin-bottom: 0; }
+@media (max-width: 767px) {
+  .mz-saas-wrap { gap: var(--mz-card-gap); }
+  .mz-stats { gap: var(--mz-card-gap); }
+}
