@@ -2216,3 +2216,10 @@ img[data-mz-hero-placeholder] { opacity: 0; }
 .mz-delivery-note .mz-label { display: block; margin-top: 8px; }
 .mz-delivery-note .mz-input { margin-top: 4px; }
 .mz-delivery-note .mz-job-task__actions { margin-top: 10px; }
+
+/* Tighten the gap between the desktop hero and the send form card. */
+@media (min-width: 1024px) {
+  [data-mz-home-content] > section[class*="lg:pb-20"] {
+    padding-bottom: 0;
+  }
+}
