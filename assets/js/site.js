@@ -1606,6 +1606,17 @@
     var form = $('[data-mz-track-page-form]');
     if (!form) return;
     var input = form.querySelector('input');
+    var phone = form.querySelector('[data-mz-track-phone]');
+    if (!phone) {
+      var phoneWrap = doc.createElement('div');
+      phoneWrap.className = 'mz-field';
+      phoneWrap.style.maxWidth = '420px';
+      phoneWrap.style.marginTop = '10px';
+      phoneWrap.innerHTML = '<span class="mz-label">Phone used for this parcel</span>' +
+        '<input class="mz-input" type="tel" inputmode="tel" autocomplete="tel" placeholder="0712 345 678" data-mz-track-phone>';
+      form.parentNode.insertBefore(phoneWrap, form.nextSibling);
+      phone = phoneWrap.querySelector('input');
+    }
     var panel = doc.createElement('div');
     panel.className = 'mz-suggest';
     panel.hidden = true;
@@ -1644,25 +1655,32 @@
 
     function run() {
       var value = input.value.trim();
-      if (!value) { toast('Enter a tracking number first.', 'error'); return; }
+      var phoneValue = (phone && phone.value || '').trim();
+      if (!value) { toast('Enter a tracking number first.', 'error'); input.focus(); return; }
+      if (!phoneValue) { toast('Enter the phone number used for this parcel.', 'error'); phone.focus(); return; }
       if (history.replaceState) history.replaceState(null, '', '/track-mzigo?num=' + encodeURIComponent(value));
-      renderTrackResult(value);
+      renderTrackResult(value, phoneValue);
       var res = $('[data-mz-track-result]');
       if (res) res.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
     var submitBtn = form.querySelector('button[type="submit"]');
     function syncSubmit() {
       if (!submitBtn) return;
-      var has = !!(input.value || '').trim();
+      var has = !!(input.value || '').trim() && !!((phone && phone.value) || '').trim();
       submitBtn.disabled = !has;
       submitBtn.setAttribute('aria-disabled', String(!has));
     }
     input.addEventListener('input', syncSubmit);
+    if (phone) phone.addEventListener('input', syncSubmit);
     syncSubmit();
     form.addEventListener('submit', function (ev) { ev.preventDefault(); panel.hidden = true; run(); syncSubmit(); });
 
     var num = qs('num') || qs('tracking');
-    if (num) { input.value = num; renderTrackResult(num); }
+    if (num) {
+      input.value = num;
+      if (phone && phone.value.trim()) renderTrackResult(num, phone.value.trim());
+      else if (phone) phone.focus();
+    }
   }
 
   /* ---------------------------------------------------------------- profile */
@@ -5582,24 +5600,32 @@ return '<div class="mz-mobile-card">' +
     var meta = STATUS_META[p.status] || { label: p.status, pill: '' };
     var paid = p.payment_status === 'paid';
     var fee = p.amount_due || (p.fee || {}).total || 0;
+    var code = paid && p.collect_code
+      ? '<div class="mz-order-code"><span class="mz-cap">Collection code</span><span class="mz-mono">' +
+          esc(p.collect_code) + '</span><button type="button" class="mz-tab" data-copy-code="' +
+          esc(p.collect_code) + '">Copy</button></div>'
+      : '';
     var action = '';
     if (paid) {
-      action = '<div class="mz-row" style="margin-top:12px;align-items:flex-end;">' +
-          '<div class="mz-kv" style="margin:0;"><dt>Collection code</dt><dd class="mz-mono">' + esc(p.collect_code || '—') +
-            (p.collect_code ? ' <button type="button" class="mz-tab" data-copy-code="' + esc(p.collect_code) + '">Copy</button>' : '') +
-          '</dd></div>' +
-        '</div>' +
-        (p.payment_ref ? '<div style="font-size:11px;color:var(--mz-muted-fg);margin-top:6px;">Receipt ' + esc(p.payment_ref) + (p.paid_at ? ' · ' + esc(fmtDate(p.paid_at)) : '') + '</div>' : '');
+      action = p.payment_ref
+        ? '<div style="font-size:11px;color:var(--mz-muted-fg);margin-top:6px;">Receipt ' +
+            esc(p.payment_ref) + (p.paid_at ? ' · ' + esc(fmtDate(p.paid_at)) : '') + '</div>'
+        : '';
     } else if (p.can_pay) {
-      action = '<button type="button" class="mz-btn" data-customer-pay="' + esc(p.tracking) + '" data-customer-fee="' + fee + '" style="margin-top:12px;">Pay ' + money(fee) + ' with M-Pesa' + ((APP.mpesaPayment && APP.mpesaPayment.mode === 'live') ? '' : ' (demo)') + '</button>' +
-        '<div style="font-size:11px;color:var(--mz-muted-fg);margin-top:6px;">Your collection code appears after payment.</div>' +
-        '';    } else {
+      action = '<button type="button" class="mz-btn" data-customer-pay="' + esc(p.tracking) +
+        '" data-customer-fee="' + fee + '" style="margin-top:12px;">Pay ' + money(fee) + ' with M-Pesa' +
+        ((APP.mpesaPayment && APP.mpesaPayment.mode === 'live') ? '' : ' (demo)') + '</button>' +
+        '<div style="font-size:11px;color:var(--mz-muted-fg);margin-top:6px;">Your collection code appears after payment.</div>';
+    } else {
       action = '<div class="mz-hint" style="margin-top:12px;">Payment opens when the parcel is ready for collection.</div>';
     }
     return '<div class="mz-list-card" style="margin-bottom:12px;">' +
-      '<div class="mz-row">' +
-        '<div style="min-width:0;"><div class="mz-mono" style="font-weight:700;">' + esc(p.tracking) + '</div>' +
-        '<div style="font-size:12px;color:var(--mz-muted-fg);">' + esc(p.carrier) + ' · ' + esc(p.from) + ' → ' + esc(p.to) + '</div></div>' +
+      '<div class="mz-order-top' + (code ? '' : ' mz-order-top--nocode') + '">' +
+        '<div class="mz-order-identity">' +
+          '<div class="mz-mono" style="font-weight:700;">' + esc(p.tracking) + '</div>' +
+          '<div style="font-size:12px;color:var(--mz-muted-fg);">' + esc(p.carrier) + ' · ' + esc(p.from) + ' → ' + esc(p.to) + '</div>' +
+        '</div>' +
+        code +
         '<span class="mz-pill mz-pill--' + esc(meta.pill) + '">' + esc(meta.label) + '</span>' +
       '</div>' +
       '<div class="mz-row" style="margin-top:10px;align-items:flex-end;">' +

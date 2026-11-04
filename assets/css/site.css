@@ -2284,3 +2284,30 @@ img[data-mz-hero-placeholder] { opacity: 0; }
   margin: 0 7px;
   border-top: 2px dashed rgba(60, 82, 35, .35);
 }
+
+/* Customer order header with centred collection code */
+.mz-order-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px 16px;
+}
+.mz-order-top--nocode { grid-template-columns: minmax(0, 1fr) auto; }
+.mz-order-identity { min-width: 0; }
+.mz-order-code {
+  display: inline-flex;
+  align-items: center;
+  justify-self: center;
+  gap: 7px;
+  padding: 5px 9px;
+  border-radius: 10px;
+  background: #f2f9e9;
+  white-space: nowrap;
+}
+.mz-order-code .mz-mono { font-size: 13px; font-weight: 800; color: var(--mz-hunter); }
+.mz-order-code .mz-tab { padding: 2px 6px; font-size: 10px; }
+@media (max-width: 520px) {
+  .mz-order-top { gap: 8px; }
+  .mz-order-code { padding: 4px 7px; gap: 5px; }
+  .mz-order-code .mz-cap { display: none; }
+}
