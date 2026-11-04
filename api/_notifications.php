@@ -649,6 +649,47 @@ function notify_customer_payment(array $parcel, string $reference): array
     return $result;
 }
 
+function notify_customer_rating_prompt(array $parcel): array
+{
+    $tracking = (string) ($parcel['tracking'] ?? '');
+    if ($tracking === '') {
+        return ['ok' => false, 'error' => 'Missing tracking number.'];
+    }
+    $customer = notification_customer_for((string) ($parcel['receiver_phone'] ?? ''), (string) ($parcel['receiver_name'] ?? 'Customer'));
+    $user = $customer['user'];
+    $userId = (int) ($user['id'] ?? 0);
+    $link = rtrim((string) (config()['app']['base_url'] ?? ''), '/') . '/customer';
+    $subject = 'Rate your delivery for ' . $tracking;
+    $body = 'Hi ' . ($parcel['receiver_name'] ?? 'there') . ', your parcel ' . $tracking .
+        ' was collected. How was the delivery or collection? Rate your delivery in your MziGO.Online account: ' . $link;
+
+    $push = ['sent' => 0, 'failed' => 0];
+    if ($userId > 0 && firebase_messaging_ready()) {
+        $push = firebase_push_user($userId, 'Rate your delivery', $body, $link, [
+            'template' => 'delivery_rating',
+            'tracking' => $tracking,
+            'parcel_id' => (string) ($parcel['id'] ?? ''),
+        ]);
+    }
+
+    $email = ['status' => 'skipped', 'error' => 'No email address on file.'];
+    if ($userId > 0 && !empty($user['email'])) {
+        $provider = 'log';
+        foreach (notification_channels(true) as $channel) {
+            if ((string) ($channel['code'] ?? '') === 'email') {
+                $provider = (string) ($channel['provider'] ?? 'log');
+                break;
+            }
+        }
+        $email = notification_send('email', $user, $subject, $body, 'delivery_rating', $parcel,
+            $provider, 'parcel', (string) ($parcel['id'] ?? ''), [
+                'tracking' => $tracking,
+                'rating_link' => $link,
+            ], true);
+    }
+
+    return ['ok' => true, 'push' => $push, 'email' => $email, 'link' => $link];
+}
 function notify_customer_status(array $parcel, string $template, string $label, string $note = ''): array
 {
     $tracking = (string) ($parcel['tracking'] ?? '');

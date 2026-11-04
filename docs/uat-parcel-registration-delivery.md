@@ -281,6 +281,8 @@ ORDER BY id DESC;
 
 - Parcel status: `COLLECTED_PAID`
 - Collection scan recorded.
+- Push notification “Rate your delivery” fires immediately
+- Email backup “Rate your delivery” is sent when the customer has an email
 - Status cannot proceed without payment.
 - Public tracking shows collection complete.
 

@@ -308,6 +308,13 @@ try {
 } catch (Throwable $e) {
     error_log('point scan customer notification failed: ' . $e->getMessage());
 }
+if ($newStatus === 'COLLECTED_PAID') {
+    try {
+        notify_customer_rating_prompt($parcel);
+    } catch (Throwable $e) {
+        error_log('delivery rating prompt failed: ' . $e->getMessage());
+    }
+}
 if ($parcel['tenant_id'] !== null) {
     try {
         dispatch_webhooks((int) $parcel['tenant_id'], 'parcel.status_updated', [
