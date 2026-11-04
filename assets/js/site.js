@@ -1188,6 +1188,9 @@
 
   function initTrackForms() {
     $$('[data-mz-track-form]').forEach(function (form) {
+      // The public tracking page has its own handler that also collects the
+      // receiver phone; do not bind the quick search handler there.
+      if (form.hasAttribute('data-mz-track-page-form')) return;
       var input = form.querySelector('input[type="text"], input:not([type])');
       var submit = form.querySelector('[type="submit"]');
       if (!input) return;
@@ -5605,18 +5608,17 @@ return '<div class="mz-mobile-card">' +
           esc(p.collect_code) + '</span><button type="button" class="mz-tab" data-copy-code="' +
           esc(p.collect_code) + '">Copy</button></div>'
       : '';
+    var receipt = p.payment_ref
+      ? '<div class="mz-order-receipt">Receipt ' + esc(p.payment_ref) +
+          (p.paid_at ? ' · ' + esc(fmtDate(p.paid_at)) : '') + '</div>'
+      : '';
     var action = '';
-    if (paid) {
-      action = p.payment_ref
-        ? '<div style="font-size:11px;color:var(--mz-muted-fg);margin-top:6px;">Receipt ' +
-            esc(p.payment_ref) + (p.paid_at ? ' · ' + esc(fmtDate(p.paid_at)) : '') + '</div>'
-        : '';
-    } else if (p.can_pay) {
+    if (!paid && p.can_pay) {
       action = '<button type="button" class="mz-btn" data-customer-pay="' + esc(p.tracking) +
         '" data-customer-fee="' + fee + '" style="margin-top:12px;">Pay ' + money(fee) + ' with M-Pesa' +
         ((APP.mpesaPayment && APP.mpesaPayment.mode === 'live') ? '' : ' (demo)') + '</button>' +
         '<div style="font-size:11px;color:var(--mz-muted-fg);margin-top:6px;">Your collection code appears after payment.</div>';
-    } else {
+    } else if (!paid) {
       action = '<div class="mz-hint" style="margin-top:12px;">Payment opens when the parcel is ready for collection.</div>';
     }
     return '<div class="mz-list-card" style="margin-bottom:12px;">' +
@@ -5628,8 +5630,9 @@ return '<div class="mz-mobile-card">' +
         code +
         '<span class="mz-pill mz-pill--' + esc(meta.pill) + '">' + esc(meta.label) + '</span>' +
       '</div>' +
-      '<div class="mz-row" style="margin-top:10px;align-items:flex-end;">' +
+      '<div class="mz-order-fee">' +
         '<div><div class="mz-cap">Delivery fee</div><div style="font-size:18px;font-weight:800;">' + money(fee) + '</div></div>' +
+        receipt +
         '<span class="mz-badge ' + (paid ? 'mz-badge--ok' : 'mz-badge--warn') + '">' + (paid ? 'Paid' : 'Payment due') + '</span>' +
       '</div>' +
       action +

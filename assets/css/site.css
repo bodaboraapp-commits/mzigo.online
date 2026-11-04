@@ -2312,3 +2312,22 @@ img[data-mz-hero-placeholder] { opacity: 0; }
   .mz-order-code { padding: 4px 7px; gap: 5px; }
   .mz-order-code .mz-cap { display: none; }
 }
+
+.mz-order-fee {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: end;
+  gap: 10px 16px;
+  margin-top: 10px;
+}
+.mz-order-receipt {
+  justify-self: center;
+  color: var(--mz-muted-fg);
+  font-size: 11px;
+  text-align: center;
+  white-space: nowrap;
+}
+.mz-order-fee > .mz-badge { justify-self: end; }
+@media (max-width: 520px) {
+  .mz-order-receipt { white-space: normal; font-size: 10px; }
+}
