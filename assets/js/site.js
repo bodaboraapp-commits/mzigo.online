@@ -4599,15 +4599,6 @@ return '<div class="mz-mobile-card">' +
 
     var profileForm =
       '<div class="mz-saas-card" id="runner-profile" style="margin-top:16px;">' +
-        '<div class="mz-row" style="margin-bottom:14px;">' +
-          '<div style="display:flex;align-items:center;gap:12px;min-width:0;">' + avatar(u.name, 'lg') +
-            '<div style="min-width:0;"><div class="mz-cap">Runner account</div>' +
-            '<div style="font-size:18px;font-weight:700;">' + esc(p.name || u.name) + '</div>' +
-            '<div style="font-size:13px;color:var(--mz-muted-fg);">' + esc(u.phone || '') + '</div></div>' +
-          '</div>' + statusBadge +
-        '</div>' +
-        '<div class="mz-hint" style="margin:-6px 0 14px;">Joined ' +
-          esc(fmtDate(u.created_at || nowISO())) + ' · phone + PIN sign-in</div>' +
         '<div class="mz-card__title">Runner profile &amp; availability</div>' +
         '<p class="mz-hint">We use these details to match you with errands. Your payout number is where M-Pesa earnings are sent.</p>' +
         '<form data-runner-profile style="margin-top:10px;">' +
@@ -4647,146 +4638,143 @@ return '<div class="mz-mobile-card">' +
           '<button class="mz-btn" type="submit" style="margin-top:12px;">Save runner profile</button>' +
         '</form>' +
         '<div style="border-top:1px solid rgba(60,82,35,.12);margin-top:16px;padding-top:14px;">' +
-          '<div class="mz-card__title" style="margin:0 0 4px;">Your PIN</div>' +
+          '<div class="mz-card__title" style="margin:0 0 4px;">Account &amp; security</div>' +
+          '<div class="mz-hint" style="margin:0 0 8px;">Your PIN and terms acceptance are managed here.</div>' +
+          '<div class="mz-card__title" style="margin:0 0 4px;font-size:14px;">Your PIN</div>' +
           '<p class="mz-hint" data-freelancer-pin-note>Your 4-digit PIN is system generated. In this demo the PIN is <strong>1234</strong>.</p>' +
           '<button type="button" class="mz-btn mz-btn--outline" data-freelancer-reset>Reset PIN</button>' +
         '</div>' +
         '<p class="mz-hint" style="margin-top:10px;">How payouts work: <a class="mz-link" href="/earn#pay">see runner payouts</a> · <a class="mz-link" href="/contact">Get help</a></p>' +
       '</div>';
 
-    host.innerHTML =
-      onboarding +
-      '<div data-runner-kyc style="margin-bottom:16px;"></div>' +
-      '<div class="mz-row" style="gap:10px;margin-bottom:16px;justify-content:flex-start;flex-wrap:wrap;" data-freelancer-actions>' +
-        (complete ? '' : '<a class="mz-btn" href="#runner-onboarding">Continue onboarding</a>') +
-        '<a class="mz-btn mz-btn--outline" href="#earnings">View earnings</a>' +
-        '<a class="mz-tab" href="/earn#pay">How runners get paid</a>' +
-        '<a class="mz-tab" href="/contact">Help &amp; support</a>' +
-      '</div>' +
-      '<div class="mz-saas-card" style="margin-bottom:16px;" data-runner-availability-card>' +
+    var kycLabel = kycApproved ? 'Verified' : ((p.kyc_status === 'pending') ? 'Under review' : 'Not verified');
+    var kycBadgeClass = kycApproved ? 'mz-badge--ok' : 'mz-badge--warn';
+    var availabilityLabel = p.available_now ? 'Available' : 'Offline';
+    var headerCard =
+      '<div class="mz-saas-card" style="margin-bottom:16px;" data-runner-header>' +
         '<div class="mz-row">' +
-          '<div><div class="mz-card__title" style="margin:0;">Availability</div>' +
-            '<p class="mz-hint" style="margin:4px 0 0;">' +
-              (complete
-                ? (p.available_now ? 'You are available for jobs.' : 'You are offline. Switch on to receive errands.')
-                : 'Complete your profile to switch availability on.') +
-            '</p></div>' +
-          '<label style="display:flex;align-items:center;gap:8px;font-weight:600;">' +
-            '<input type="checkbox" data-runner-available' + (p.available_now ? ' checked' : '') + (complete ? '' : ' disabled') + '> Available' +
-          '</label>' +
+          '<div style="display:flex;align-items:center;gap:12px;min-width:0;">' + avatar(u.name, 'lg') +
+            '<div style="min-width:0;"><div class="mz-cap">Runner account</div>' +
+              '<div style="font-size:18px;font-weight:700;">' + esc(p.name || u.name) + '</div>' +
+              '<div style="font-size:13px;color:var(--mz-muted-fg);">' + esc(u.phone || '') + '</div></div>' +
+          '</div>' +
+          '<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">' + statusBadge +
+            '<span class="mz-badge ' + kycBadgeClass + '">' + kycLabel + '</span></div>' +
         '</div>' +
-        (dayText ? '<p class="mz-hint" style="margin-top:10px;">' + esc(dayText) + (windowText ? ' · ' + esc(windowText) : '') + '</p>' : '') +
-      '</div>' +
-      '<div class="mz-stats" id="performance" style="margin-bottom:16px;">' +
-        '<div class="mz-stat"><div class="mz-cap">Earnings this month</div><div class="mz-stat__value">' + money(earn.this_month_kes || 0) + '</div></div>' +
-        '<div class="mz-stat"><div class="mz-cap">Pending payout</div><div class="mz-stat__value">' + money(earn.pending_kes || 0) + '</div></div>' +
-        '<div class="mz-stat"><div class="mz-cap">Bonus available</div><div class="mz-stat__value">' + money(earn.bonus_pending_kes || 0) + '</div></div>' +
-        '<div class="mz-stat"><div class="mz-cap">Paid to date</div><div class="mz-stat__value">' + money(earn.paid_kes || 0) + '</div></div>' +
-      '</div>' +
-      '<div class="mz-saas-card" style="margin-bottom:16px;" data-runner-earnings-card>' +
-        '<div class="mz-row"><div class="mz-card__title" style="margin:0;">Earnings &amp; payouts</div>' +
-          '<span class="mz-badge">M-Pesa · ' + esc(p.payout_phone || 'not set') + '</span></div>' +
-        '<p class="mz-hint">' + esc(String(earn.completed_jobs || 0)) + ' completed jobs. Completed job fees are added to your pending payout; request a payout to your M-Pesa number below.</p>' +
-        (earn.tier && earn.tier.label ? '<p class="mz-hint" style="margin:4px 0 0;color:var(--mz-hunter);font-weight:600;">' + esc(earn.tier.label) + ' tier · ' + earn.tier.rate + '% quality bonus · ' + (earn.tier.stats && earn.tier.stats.rating !== null ? earn.tier.stats.rating + '★' : 'no ratings yet') + (earn.tier.next ? ' · ' + esc(earn.tier.next.jobs_needed) + ' jobs to ' + esc(earn.tier.next.label) : ' · top tier') + ' · cap ' + money(earn.tier.cap_kes || 0) + '/month</p>' : '') +
-        (earn.bonus_pending_kes > 0 ? '<p class="mz-hint" style="margin:4px 0 0;color:var(--mz-hunter);font-weight:600;">Includes ' + money(earn.bonus_pending_kes) + ' incentive bonus for rated and volume-eligible jobs.</p>' : '') +
-        '<div class="mz-row" style="gap:10px;justify-content:flex-start;flex-wrap:wrap;">' +
-          '<button type="button" class="mz-btn" data-runner-payout' + (complete && earn.pending_kes >= payoutMin ? '' : ' disabled') + '>Request M-Pesa payout' + (payoutMode === 'demo' ? ' (demo)' : '') + '</button>' +
-          '<span class="mz-hint" style="margin:0;align-self:center;">Minimum KES ' + payoutMin + ' · ' + esc(payoutMode === 'demo' ? 'demo M-Pesa transfer' : 'live M-Pesa transfer') + ' · ' + esc(payoutCfg.schedule || 'instant') + '</span>' +
+        '<div class="mz-row" style="margin-top:14px;gap:10px;">' +
+          '<span class="mz-hint">Joined ' + esc(fmtDate(u.created_at || nowISO())) + ' · phone + PIN sign-in</span>' +
+          '<label class="mz-check" style="margin-left:auto;"><input type="checkbox" data-runner-available' + (p.available_now ? ' checked' : '') + (complete ? '' : ' disabled') + '> Available for jobs</label>' +
         '</div>' +
-        (earn.pending_kes > 0 && earn.pending_kes < 50
-          ? '<p class="mz-hint" style="margin:8px 0 0;">Complete a few more jobs to reach the KES 50 minimum.</p>'
-          : '') +
-        '<div style="margin-top:14px;">' +
-          '<div class="mz-card__title" style="font-size:14px;">Payout history</div>' +
-          (payouts.length
-            ? payouts.map(function (po) {
-                return '<div class="mz-list-card" style="margin-bottom:8px;padding:10px 12px;">' +
-                  '<div class="mz-row"><div><div class="mz-mono" style="font-weight:700;">' + esc(po.ref) + '</div>' +
-                    '<div class="mz-hint">' + esc(fmtDate(po.paid_at || po.requested_at)) + ' · ' + esc(po.phone) + (po.bonus_kes ? ' · bonus ' + money(po.bonus_kes) : '') + '</div></div>' +
-                    '<div style="text-align:right;"><strong>' + money(po.amount_kes) + '</strong>' +
-                      '<div class="mz-badge mz-badge--ok" style="margin-top:2px;">' + esc(po.status) + '</div></div></div>' +
-                  (po.provider_ref ? '<div class="mz-hint">M-Pesa ref ' + esc(po.provider_ref) + '</div>' : '') +
-                '</div>';
-              }).join('')
-            : '<div class="mz-hint">No payouts yet. Completed jobs will show here after you request a payout.</div>') +
+      '</div>';
+    var statusStrip =
+      '<div class="mz-saas-grid mz-saas-grid--3" style="margin-bottom:16px;" data-runner-status-strip>' +
+        '<div class="mz-saas-card"><div class="mz-row"><div class="mz-card__title" style="margin:0;">ID verification</div>' +
+          '<span class="mz-badge ' + kycBadgeClass + '">' + kycLabel + '</span></div>' +
+          '<p class="mz-hint">' + (kycApproved ? 'Verified — ready to accept jobs.' : 'Complete verification in your profile to accept jobs.') + '</p>' +
+          '<a class="mz-link" href="#runner-profile" data-runner-goto="profile">Manage in profile</a></div>' +
+        '<div class="mz-saas-card"><div class="mz-row"><div class="mz-card__title" style="margin:0;">Availability</div>' +
+          '<span class="mz-badge ' + (p.available_now ? 'mz-badge--ok' : 'mz-badge--warn') + '">' + availabilityLabel + '</span></div>' +
+          '<p class="mz-hint">' + (complete ? (dayText ? esc(dayText) + (windowText ? ' · ' + esc(windowText) : '') : 'Set your days and window in profile.') : 'Complete your profile to switch availability on.') + '</p></div>' +
+        '<div class="mz-saas-card"><div class="mz-row"><div class="mz-card__title" style="margin:0;">Payout number</div>' +
+          '<span class="mz-badge">M-Pesa</span></div>' +
+          '<p class="mz-hint">' + (p.payout_phone ? 'Payouts to <strong>' + esc(p.payout_phone) + '</strong>' : 'No payout number saved yet.') + '</p>' +
+          '<a class="mz-link" href="#runner-profile" data-runner-goto="profile">Edit in profile</a></div>' +
+      '</div>';
+    var tabsBar =
+      '<div class="mz-tabs mz-tabs--3" data-runner-tabs style="margin-bottom:16px;">' +
+        '<button type="button" class="mz-tab is-active" data-runner-tab="work">My work</button>' +
+        '<button type="button" class="mz-tab" data-runner-tab="earnings">Earnings &amp; referral</button>' +
+        '<button type="button" class="mz-tab" data-runner-tab="profile">Profile</button>' +
+      '</div>';
+    var workView =
+      '<div data-runner-view="work">' +
+        '<div class="mz-saas-card" style="margin-bottom:16px;" id="freelancer-jobs">' +
+          '<div class="mz-row"><div class="mz-card__title" style="margin:0;">Jobs</div>' +
+            '<button type="button" class="mz-tab" data-runner-refresh>Refresh</button></div>' +
+          '<div class="mz-card__title" style="font-size:14px;margin-top:14px;">Available errands' +
+            (availableJobs.length ? ' <span class="mz-badge">' + availableJobs.length + '</span>' : '') + '</div>' +
+          areaNote + availableBody +
+          '<div class="mz-card__title" style="font-size:14px;margin-top:18px;">Active jobs</div>' + activeBody +
+          '<div class="mz-card__title" style="font-size:14px;margin-top:18px;">Completed</div>' + completedBody +
         '</div>' +
-      '</div>' +
-      '<p class="mz-hint" style="margin:-6px 0 16px;">' + payoutLabel + '. ' +
-        (earn.rating_avg ? 'Rating <strong>' + esc(String(earn.rating_avg)) + '/5</strong> from ' + esc(String(earn.rating_count)) + ' rated jobs. ' : '') +
-        '<a class="mz-link" href="/earn#pay">How earnings work</a></p>' +
-      '<div class="mz-saas-card" style="margin-bottom:16px;" id="freelancer-jobs">' +
-        '<div class="mz-row"><div class="mz-card__title" style="margin:0;">Jobs</div>' +
-          '<button type="button" class="mz-tab" data-runner-refresh>Refresh</button></div>' +
-        '<div class="mz-card__title" style="font-size:14px;margin-top:14px;">Available errands' +
-          (availableJobs.length ? ' <span class="mz-badge">' + availableJobs.length + '</span>' : '') + '</div>' +
-        areaNote +
-        availableBody +
-        '<div class="mz-card__title" style="font-size:14px;margin-top:18px;">Active jobs</div>' +
-        activeBody +
-        '<div class="mz-card__title" style="font-size:14px;margin-top:18px;">Completed</div>' +
-        completedBody +
-      '</div>' +
-      '<div data-runner-earnings hidden>' +
-        '<div class="mz-saas-card" style="margin-bottom:16px;">' +
-          '<div class="mz-cap">Runner</div>' +
-          '<h1 style="margin-top:4px;">Earnings &amp; referral</h1>' +
-          '<p class="mz-hint">Track your payouts and invite other runners to Mzigo.</p>' +
+      '</div>';
+    var earningsViewHTML =
+      '<div data-runner-view="earnings" hidden>' +
+        '<div class="mz-stats" id="performance" style="margin-bottom:16px;">' +
+          '<div class="mz-stat"><div class="mz-cap">Earnings this month</div><div class="mz-stat__value">' + money(earn.this_month_kes || 0) + '</div></div>' +
+          '<div class="mz-stat"><div class="mz-cap">Pending payout</div><div class="mz-stat__value">' + money(earn.pending_kes || 0) + '</div></div>' +
+          '<div class="mz-stat"><div class="mz-cap">Bonus available</div><div class="mz-stat__value">' + money(earn.bonus_pending_kes || 0) + '</div></div>' +
+          '<div class="mz-stat"><div class="mz-cap">Paid to date</div><div class="mz-stat__value">' + money(earn.paid_kes || 0) + '</div></div>' +
         '</div>' +
-      '</div>' +
-      '<div data-runner-profile-panel hidden>' + profileForm + '</div>' +
+        '<div class="mz-saas-card" style="margin-bottom:16px;" data-runner-earnings-card>' +
+          '<div class="mz-row"><div class="mz-card__title" style="margin:0;">Earnings &amp; payouts</div>' +
+            '<span class="mz-badge">M-Pesa · ' + esc(p.payout_phone || 'not set') + '</span></div>' +
+          '<p class="mz-hint">' + esc(String(earn.completed_jobs || 0)) + ' completed jobs. Completed job fees are added to your pending payout; request a payout to your M-Pesa number below.</p>' +
+          (earn.tier && earn.tier.label ? '<p class="mz-hint" style="margin:4px 0 0;color:var(--mz-hunter);font-weight:600;">' + esc(earn.tier.label) + ' tier · ' + earn.tier.rate + '% quality bonus · ' + (earn.tier.stats && earn.tier.stats.rating !== null ? earn.tier.stats.rating + '★' : 'no ratings yet') + (earn.tier.next ? ' · ' + esc(earn.tier.next.jobs_needed) + ' jobs to ' + esc(earn.tier.next.label) : ' · top tier') + ' · cap ' + money(earn.tier.cap_kes || 0) + '/month</p>' : '') +
+          (earn.bonus_pending_kes > 0 ? '<p class="mz-hint" style="margin:4px 0 0;color:var(--mz-hunter);font-weight:600;">Includes ' + money(earn.bonus_pending_kes) + ' incentive bonus for rated and volume-eligible jobs.</p>' : '') +
+          '<div class="mz-row" style="gap:10px;justify-content:flex-start;flex-wrap:wrap;">' +
+            '<button type="button" class="mz-btn" data-runner-payout' + (complete && earn.pending_kes >= payoutMin ? '' : ' disabled') + '>Request M-Pesa payout' + (payoutMode === 'demo' ? ' (demo)' : '') + '</button>' +
+            '<span class="mz-hint" style="margin:0;align-self:center;">Minimum KES ' + payoutMin + ' · ' + esc(payoutMode === 'demo' ? 'demo M-Pesa transfer' : 'live M-Pesa transfer') + ' · ' + esc(payoutCfg.schedule || 'instant') + '</span>' +
+          '</div>' +
+          (earn.pending_kes > 0 && earn.pending_kes < 50 ? '<p class="mz-hint" style="margin:8px 0 0;">Complete a few more jobs to reach the KES 50 minimum.</p>' : '') +
+          '<div style="margin-top:14px;"><div class="mz-card__title" style="font-size:14px;">Payout history</div>' +
+            (payouts.length ? payouts.map(function (po) {
+              return '<div class="mz-list-card" style="margin-bottom:8px;padding:10px 12px;">' +
+                '<div class="mz-row"><div><div class="mz-mono" style="font-weight:700;">' + esc(po.ref) + '</div>' +
+                  '<div class="mz-hint">' + esc(fmtDate(po.paid_at || po.requested_at)) + ' · ' + esc(po.phone) + (po.bonus_kes ? ' · bonus ' + money(po.bonus_kes) : '') + '</div></div>' +
+                  '<div style="text-align:right;"><strong>' + money(po.amount_kes) + '</strong>' +
+                    '<div class="mz-badge mz-badge--ok" style="margin-top:2px;">' + esc(po.status) + '</div></div></div>' +
+                (po.provider_ref ? '<div class="mz-hint">M-Pesa ref ' + esc(po.provider_ref) + '</div>' : '') +
+              '</div>';
+            }).join('') : '<div class="mz-hint">No payouts yet. Completed jobs will show here after you request a payout.</div>') +
+          '</div>' +
+        '</div>' +
+        '<p class="mz-hint" style="margin:-6px 0 16px;">' + payoutLabel + '. ' +
+          (earn.rating_avg ? 'Rating <strong>' + esc(String(earn.rating_avg)) + '/5</strong> from ' + esc(String(earn.rating_count)) + ' rated jobs. ' : '') +
+          '<a class="mz-link" href="/earn#pay">How earnings work</a></p>' +
+        '<div data-runner-earnings></div>' +
+      '</div>';
+    var profileViewHTML =
+      '<div data-runner-view="profile" hidden>' +
+        '<div data-runner-kyc style="margin-bottom:16px;"></div>' +
+        profileForm +
+      '</div>';
+    var bottomActions =
       '<div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">' +
         '<a class="mz-tab" href="/track-mzigo">Track a parcel</a>' +
         '<button type="button" class="mz-tab mz-signout-inline" data-freelancer-signout>Sign out</button>' +
       '</div>';
+    host.innerHTML = headerCard + onboarding + statusStrip + tabsBar + workView + earningsViewHTML + profileViewHTML + bottomActions;
 
-    var statsCard = host.querySelector('#performance');
-    var jobsCard = host.querySelector('#freelancer-jobs');
-    var onboardingCard = host.querySelector('[data-runner-onboarding]');
-    var availabilityCard = host.querySelector('[data-runner-availability-card]');
-    var profilePanel = host.querySelector('[data-runner-profile-panel]');
-    var topAnchor = onboardingCard;
-    if (statsCard && jobsCard && topAnchor) {
-      topAnchor.insertAdjacentElement('afterend', statsCard);
-      statsCard.insertAdjacentElement('afterend', jobsCard);
-    }
-    if (availabilityCard) {
-      if (complete && profilePanel) profilePanel.insertBefore(availabilityCard, profilePanel.firstChild);
-      else if (!complete) availabilityCard.remove();
-    }
-
-    var kycMount = host.querySelector('[data-runner-kyc]');
-    if (kycMount && profilePanel) profilePanel.insertBefore(kycMount, profilePanel.firstChild);
-
-    var earningsView = host.querySelector('[data-runner-earnings]');
-    var earningsCard = host.querySelector('[data-runner-earnings-card]');
-    if (earningsView && earningsCard) earningsView.appendChild(earningsCard);
-    function syncRunnerEarningsView() {
-      if (!earningsView) return;
-      var show = window.location.hash === '#earnings';
-      Array.prototype.forEach.call(host.children, function (child) {
-        if (child !== earningsView) child.hidden = show;
+    function activateRunnerTab(tab) {
+      var currentHost = document.querySelector('[data-app="freelancer"]') || host;
+      var tabs = Array.prototype.slice.call(currentHost.querySelectorAll('[data-runner-tab]'));
+      var views = Array.prototype.slice.call(currentHost.querySelectorAll('[data-runner-view]'));
+      var hash = window.location.hash;
+      if (!tab) tab = hash === '#earnings' ? 'earnings' : (hash === '#runner-profile' || hash === '#profile') ? 'profile' : 'work';
+      tabs.forEach(function (btn) {
+        var on = btn.getAttribute('data-runner-tab') === tab;
+        btn.classList.toggle('is-active', on);
+        btn.setAttribute('aria-selected', String(on));
       });
-      earningsView.hidden = !show;
-      if (show) setTimeout(function () { earningsView.scrollIntoView({ block: 'start', behavior: 'smooth' }); }, 30);
+      views.forEach(function (view) { view.hidden = view.getAttribute('data-runner-view') !== tab; });
     }
-    syncRunnerEarningsView();
-    if (!host.getAttribute('data-earnings-hash-bound')) {
-      host.setAttribute('data-earnings-hash-bound', '1');
-      window.addEventListener('hashchange', syncRunnerEarningsView);
+    window.__mzRunnerTabActivate = activateRunnerTab;
+    Array.prototype.forEach.call(host.querySelectorAll('[data-runner-tab]'), function (btn) {
+      btn.addEventListener('click', function () {
+        var tab = btn.getAttribute('data-runner-tab');
+        var hash = tab === 'earnings' ? '#earnings' : (tab === 'profile' ? '#runner-profile' : '#my-work');
+        if (window.location.hash !== hash) window.location.hash = hash;
+        activateRunnerTab(tab);
+      });
+    });
+    if (!window.__mzRunnerTabBound) {
+      window.__mzRunnerTabBound = true;
+      window.addEventListener('hashchange', function () {
+        if (typeof window.__mzRunnerTabActivate === 'function') window.__mzRunnerTabActivate();
+      });
     }
-
-    function syncRunnerProfilePanel() {
-      var panel = host.querySelector('[data-runner-profile-panel]');
-      if (!panel) return;
-      var show = window.location.hash === '#runner-profile';
-      panel.hidden = !show;
-      if (show) setTimeout(function () { panel.scrollIntoView({ block: 'start', behavior: 'smooth' }); }, 40);
-    }
-    syncRunnerProfilePanel();
-    if (!host.getAttribute('data-profile-hash-bound')) {
-      host.setAttribute('data-profile-hash-bound', '1');
-      window.addEventListener('hashchange', syncRunnerProfilePanel);
-    }
+    activateRunnerTab();
 
     var profile = host.querySelector('[data-runner-profile]');
     if (profile) profile.addEventListener('submit', function (ev) {
