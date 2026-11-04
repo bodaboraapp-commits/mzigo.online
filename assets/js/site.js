@@ -381,8 +381,8 @@
         '<form class="mz-dialog__form" novalidate>' +
           '<div class="mz-dialog__body">' + cfg.body + '</div>' +
           '<div class="mz-dialog__error" data-dialog-error hidden></div>' +
-          '<div class="mz-dialog__actions">' +
-            '<button type="button" class="mz-btn mz-btn--outline" data-dialog-close>' + esc(cfg.cancelLabel || 'Cancel') + '</button>' +
+          '<div class="mz-dialog__actions' + (cfg.centerActions ? ' mz-dialog__actions--center' : '') + '">' +
+            (cfg.hideCancel ? '' : '<button type="button" class="mz-btn mz-btn--outline" data-dialog-close>' + esc(cfg.cancelLabel || 'Cancel') + '</button>') +
             '<button type="submit" class="mz-btn" data-dialog-submit>' + esc(cfg.submitLabel || 'Save') + '</button>' +
           '</div>' +
         '</form>' +
@@ -1658,7 +1658,9 @@
       openDialog({
         title: 'Phone used for this parcel',
         sub: 'Confirm the phone number used when ' + term + ' was registered. This keeps tracking private.',
-        submitLabel: 'Track parcel',
+        submitLabel: 'Verify number',
+        hideCancel: true,
+        centerActions: true,
         body: '<label class="mz-field"><span class="mz-label">Phone number</span>' +
           '<input class="mz-input" type="tel" inputmode="tel" autocomplete="tel" name="track_phone" placeholder="0712 345 678" value="' + esc(savedPhone) + '"></label>' +
           '<p class="mz-hint" style="margin:-4px 0 0;">Use the sender or receiver phone number on the parcel.</p>',

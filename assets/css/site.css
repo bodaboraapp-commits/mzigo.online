@@ -2339,3 +2339,5 @@ img[data-mz-hero-placeholder] { opacity: 0; }
 .mz-order-pay { display: flex; flex-direction: column; gap: 6px; width: 100%; margin-top: 12px; }
 .mz-order-pay .mz-btn { width: 100%; }
 .mz-order-pay__note { color: var(--mz-muted-fg); font-size: 11px; text-align: left; }
+
+.mz-dialog__actions--center { justify-content: center; }
