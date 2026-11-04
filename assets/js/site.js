@@ -10707,16 +10707,13 @@ return '<div class="mz-mobile-card">' +
             '<div class="mz-saas-card" data-admin-users></div>' +
           '</section>' +
           '<section class="mz-admin-section" data-admin-section="communications" hidden>' +
-            adminSectionHead('Communications', 'Channel controls, SMTP delivery testing and the outbound customer message log.') +
+            adminSectionHead('Communications', 'Channel controls, provider credentials and SMTP delivery testing.') +
             '<div class="mz-saas-card" data-admin-email-test style="margin-bottom:16px;"></div>' +
             '<div class="mz-saas-card" data-admin-sms-test style="margin-bottom:16px;"></div>' +
             '<div class="mz-saas-card" data-admin-firebase-push style="margin-bottom:16px;"></div>' +
             '<div class="mz-saas-card" data-admin-deliverability style="margin-bottom:16px;"></div>' +
-            '<div class="mz-saas-grid mz-saas-grid--2 mz-comms-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));">' +
-              '<div class="mz-saas-card" data-admin-channels></div>' +
-              '<div class="mz-saas-card" data-admin-notifications></div>' +
-            '</div>' +
-            '<div class="mz-saas-card" data-admin-comms-templates style="margin-top:16px;"></div>' +
+            '<div class="mz-saas-card" data-admin-channels style="margin-bottom:16px;"></div>' +
+            '<div class="mz-saas-card" data-admin-comms-templates></div>' +
           '</section>' +
           '<section class="mz-admin-section" data-admin-section="whatsapp" hidden>' +
             adminSectionHead('WhatsApp', 'Phase 1 AI assistant — FAQs, parcel tracking and human handoff.') +
@@ -10731,8 +10728,9 @@ return '<div class="mz-mobile-card">' +
             '<div class="mz-saas-card" data-admin-points></div>' +
           '</section>' +
           '<section class="mz-admin-section" data-admin-section="activities" hidden>' +
-            adminSectionHead('Activities', 'Operational alerts plus the audit trail of authentication, billing and admin actions.') +
+            adminSectionHead('Activities', 'Operational alerts, the outbound notification log and the audit trail of authentication, billing and admin actions.') +
             '<div class="mz-saas-card" data-admin-alerts style="margin-bottom:16px;"></div>' +
+            '<div class="mz-saas-card" data-admin-notifications style="margin-bottom:16px;"></div>' +
             '<div class="mz-saas-card" data-audit-card></div>' +
           '</section>' +
           '<section class="mz-admin-section" data-admin-section="growth" hidden>' +
