@@ -2284,3 +2284,46 @@ img[data-mz-hero-placeholder] { opacity: 0; }
   margin: 0 7px;
   border-top: 2px dashed rgba(60, 82, 35, .35);
 }
+
+/* Coupon entry row: input + apply button aligned to the control height */
+.mz-coupon-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+.mz-coupon-row .mz-field { flex: 1; min-width: 0; margin-bottom: 0; }
+.mz-coupon-row .mz-btn {
+  flex: none;
+  height: var(--mz-control-h);
+  padding: 0 16px;
+  white-space: nowrap;
+}
+@media (max-width: 430px) {
+  .mz-coupon-row { align-items: stretch; flex-direction: column; }
+  .mz-coupon-row .mz-btn { width: 100%; }
+}
+
+/* Compact customer parcel cards */
+#pay { display: flex; flex-direction: column; gap: var(--mz-card-gap); }
+.mz-customer-card {
+  border: 1px solid var(--mz-border); border-radius: 16px; background: var(--mz-card);
+  padding: 14px 16px;
+}
+.mz-customer-card__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.mz-customer-card__tracking { font-weight: 800; font-size: 13px; color: var(--mz-hunter); }
+.mz-customer-card__route { margin-top: 3px; color: var(--mz-muted-fg); font-size: 11px; }
+.mz-customer-card__summary { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 18px; margin-top: 11px; }
+.mz-customer-card__amount { min-width: 84px; }
+.mz-customer-card__amount strong { display: block; color: var(--mz-hunter); font-size: 19px; line-height: 1.15; }
+.mz-customer-card__code { display: flex; align-items: center; gap: 7px; margin-left: auto; padding: 6px 10px; border-radius: 10px; background: #f2f9e9; }
+.mz-customer-card__code .mz-mono { font-size: 14px; font-weight: 800; color: var(--mz-hunter); }
+.mz-customer-card__actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--mz-border); }
+.mz-customer-card__actions .mz-link { font-size: 12px; }
+.mz-customer-card__receipt { margin-left: auto; color: var(--mz-muted-fg); font-size: 10px; }
+.mz-customer-card__note { margin: 0; color: var(--mz-muted-fg); font-size: 10.5px; line-height: 1.4; }
+.mz-customer-card__actions .mz-btn { min-height: 36px; }
+@media (max-width: 640px) {
+  .mz-customer-card__code { margin-left: 0; width: 100%; }
+  .mz-customer-card__summary { gap: 8px 12px; }
+  .mz-customer-card__receipt { margin-left: 0; width: 100%; }
+}
