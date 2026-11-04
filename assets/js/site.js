@@ -648,7 +648,7 @@
   function appLinks() {
     if (!APP.user) return [['/send-mzigo', 'Send'], ['/track-mzigo', 'Track'], ['/earn', 'Earn'], ['/partners', 'Partners'], ['/help', 'Help']];
     if (APP.user.role === 'platform_admin') return [['/admin', 'Admin']];
-    if (APP.user.role === 'freelancer') return [['/freelancer', 'My work']];
+    if (APP.user.role === 'freelancer') return [['/freelancer', 'My work'], ['/freelancer#earnings', 'Earnings &amp; referral']];
     if (APP.user.role === 'customer') return [['/customer', 'My parcels']];
     var links = [['/profile', 'Dashboard'], ['/orders', 'Orders'], ['/claims', 'Claims'], ['/billing', 'Billing'], ['/settings', 'Settings']];
     if (APP.user.role === 'platform_admin') links.push(['/admin', 'Admin']);
@@ -669,9 +669,10 @@
     if (links.length < 2) { host.innerHTML = ''; return; }
     var path = window.location.pathname;
     var canGoBack = path !== '/' && window.history.length > 1;
+    var current = path + (location.hash || '');
     host.innerHTML = (canGoBack ? '<button type="button" class="mz-tab" data-mz-back aria-label="Go back">← Back</button>' : '') +
       links.map(function (link) {
-        var active = path === link[0] ? ' is-active' : '';
+        var active = current === link[0] || (link[0].indexOf('#') === -1 && path === link[0]) ? ' is-active' : '';
         return '<a class="mz-tab' + active + '" href="' + link[0] + '">' + link[1] + '</a>';
       }).join('');
     var back = host.querySelector('[data-mz-back]');
@@ -754,7 +755,8 @@
     if (nav) {
       var path = window.location.pathname;
       nav.innerHTML = appLinks().map(function (link) {
-        var active = path === link[0] ? ' style="background:rgba(184,237,191,.6);"' : '';
+        var current = path + (location.hash || '');
+        var active = current === link[0] || (link[0].indexOf('#') === -1 && path === link[0]) ? ' style="background:rgba(184,237,191,.6);"' : '';
         return '<a class="mz-navlink" href="' + link[0] + '"' + active + '>' + link[1] + '</a>';
       }).join('');
     }
@@ -1729,7 +1731,7 @@
             '<div style="font-size:11.5px;color:var(--mz-muted-fg);margin-top:6px;">' + pct + '% of plan used</div>'
           : '') +
       '</div>' +
-      '<div class="mz-stats" id="earnings" style="margin-bottom:16px;">' +
+      '<div class="mz-stats" id="performance" style="margin-bottom:16px;">' +
         '<div class="mz-stat"><div class="mz-cap">Parcels this month</div><div class="mz-stat__value">' + used + ' / ' + limit + '</div></div>' +
         '<div class="mz-stat"><div class="mz-cap">Remaining quota</div><div class="mz-stat__value">' + (u.parcels_remaining || 0) + '</div></div>' +
         '<div class="mz-stat"><div class="mz-cap">Team members</div><div class="mz-stat__value">' + (u.staff_used || 0) + ' / ' + (plan.staff_limit || 0) + '</div></div>' +
@@ -4378,7 +4380,7 @@ return '<div class="mz-mobile-card">' +
   }
 
   function renderFreelancer(host, data) {
-    setTimeout(function () { mountReferralCard(host, 'runner'); }, 0);
+    setTimeout(function () { mountReferralCard(host.querySelector('[data-runner-earnings]') || host, 'runner'); }, 0);
     var u = APP.user;
     var p = data.profile || {};
     var opts = data.options || {};
@@ -4679,13 +4681,13 @@ return '<div class="mz-mobile-card">' +
         '</div>' +
         (dayText ? '<p class="mz-hint" style="margin-top:10px;">' + esc(dayText) + (windowText ? ' · ' + esc(windowText) : '') + '</p>' : '') +
       '</div>' +
-      '<div class="mz-stats" id="earnings" style="margin-bottom:16px;">' +
+      '<div class="mz-stats" id="performance" style="margin-bottom:16px;">' +
         '<div class="mz-stat"><div class="mz-cap">Earnings this month</div><div class="mz-stat__value">' + money(earn.this_month_kes || 0) + '</div></div>' +
         '<div class="mz-stat"><div class="mz-cap">Pending payout</div><div class="mz-stat__value">' + money(earn.pending_kes || 0) + '</div></div>' +
         '<div class="mz-stat"><div class="mz-cap">Bonus available</div><div class="mz-stat__value">' + money(earn.bonus_pending_kes || 0) + '</div></div>' +
         '<div class="mz-stat"><div class="mz-cap">Paid to date</div><div class="mz-stat__value">' + money(earn.paid_kes || 0) + '</div></div>' +
       '</div>' +
-      '<div class="mz-saas-card" style="margin-bottom:16px;">' +
+      '<div class="mz-saas-card" style="margin-bottom:16px;" data-runner-earnings-card>' +
         '<div class="mz-row"><div class="mz-card__title" style="margin:0;">Earnings &amp; payouts</div>' +
           '<span class="mz-badge">M-Pesa · ' + esc(p.payout_phone || 'not set') + '</span></div>' +
         '<p class="mz-hint">' + esc(String(earn.completed_jobs || 0)) + ' completed jobs. Completed job fees are added to your pending payout; request a payout to your M-Pesa number below.</p>' +
@@ -4728,13 +4730,20 @@ return '<div class="mz-mobile-card">' +
         '<div class="mz-card__title" style="font-size:14px;margin-top:18px;">Completed</div>' +
         completedBody +
       '</div>' +
+      '<div data-runner-earnings hidden>' +
+        '<div class="mz-saas-card" style="margin-bottom:16px;">' +
+          '<div class="mz-cap">Runner</div>' +
+          '<h1 style="margin-top:4px;">Earnings &amp; referral</h1>' +
+          '<p class="mz-hint">Track your payouts and invite other runners to Mzigo.</p>' +
+        '</div>' +
+      '</div>' +
       '<div data-runner-profile-panel hidden>' + profileForm + '</div>' +
       '<div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">' +
         '<a class="mz-tab" href="/track-mzigo">Track a parcel</a>' +
         '<button type="button" class="mz-tab mz-signout-inline" data-freelancer-signout>Sign out</button>' +
       '</div>';
 
-    var statsCard = host.querySelector('#earnings');
+    var statsCard = host.querySelector('#performance');
     var jobsCard = host.querySelector('#freelancer-jobs');
     var onboardingCard = host.querySelector('[data-runner-onboarding]');
     var accountCard = host.querySelector('.mz-saas-grid');
@@ -4748,6 +4757,24 @@ return '<div class="mz-mobile-card">' +
     if (availabilityCard) {
       if (complete && profilePanel) profilePanel.insertBefore(availabilityCard, profilePanel.firstChild);
       else if (!complete) availabilityCard.remove();
+    }
+
+    var earningsView = host.querySelector('[data-runner-earnings]');
+    var earningsCard = host.querySelector('[data-runner-earnings-card]');
+    if (earningsView && earningsCard) earningsView.appendChild(earningsCard);
+    function syncRunnerEarningsView() {
+      if (!earningsView) return;
+      var show = window.location.hash === '#earnings';
+      Array.prototype.forEach.call(host.children, function (child) {
+        if (child !== earningsView) child.hidden = show;
+      });
+      earningsView.hidden = !show;
+      if (show) setTimeout(function () { earningsView.scrollIntoView({ block: 'start', behavior: 'smooth' }); }, 30);
+    }
+    syncRunnerEarningsView();
+    if (!host.getAttribute('data-earnings-hash-bound')) {
+      host.setAttribute('data-earnings-hash-bound', '1');
+      window.addEventListener('hashchange', syncRunnerEarningsView);
     }
 
     function syncRunnerProfilePanel() {
