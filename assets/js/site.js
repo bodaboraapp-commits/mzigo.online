@@ -3096,7 +3096,14 @@ return '<div class="mz-mobile-card">' +
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
   function summaryHTML(idPrefix) {
-    return '<div class="mz-summary">' +
+    return '<div class="mz-route-timeline" aria-hidden="true">' +
+        '<span class="mz-route-timeline__dot"></span>' +
+        '<span class="mz-route-timeline__track"></span>' +
+        '<span class="mz-route-timeline__dot"></span>' +
+        '<span class="mz-route-timeline__track"></span>' +
+        '<span class="mz-route-timeline__dot is-dest"></span>' +
+      '</div>' +
+      '<div class="mz-summary">' +
       '<div class="mz-summary__item">' + avatar('mzigo', 'sm') + '<div style="min-width:0;"><div class="mz-summary__key">Courier</div><div class="mz-summary__val" data-mz-sum="' + idPrefix + '-carrier">—</div></div></div>' +
       '<div class="mz-summary__item">' + '<div style="min-width:0;"><div class="mz-summary__key">From</div><div class="mz-summary__val" data-mz-sum="' + idPrefix + '-from">—</div></div></div>' +
       '<div class="mz-summary__item">' + '<div style="min-width:0;"><div class="mz-summary__key">To</div><div class="mz-summary__val" data-mz-sum="' + idPrefix + '-to">—</div></div></div>' +
