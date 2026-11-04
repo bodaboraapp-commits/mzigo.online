@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — workspace settings: business profile, team members, API keys.
+ * MziGO.Online — workspace settings: business profile, team members, API keys.
  *
  * GET  -> tenant, members, api keys, usage, role
  * POST verify_csrf + owner/admin:

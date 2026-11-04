@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — public contact form endpoint.
+ * MziGO.Online — public contact form endpoint.
  *
  * POST { name, email, phone?, subject, message, company? }
  * Stores the submission in contact_messages for the platform admin inbox and
@@ -19,7 +19,7 @@ if ($method === 'GET') {
         'ok' => true,
         'source' => 'mysql',
         'support_email' => (string) (config()['app']['support_email'] ?? 'hello@mzigo.online'),
-        'app_name' => (string) (config()['app']['name'] ?? 'Mzigo.online'),
+        'app_name' => (string) (config()['app']['name'] ?? 'MziGO.Online'),
     ]);
 }
 

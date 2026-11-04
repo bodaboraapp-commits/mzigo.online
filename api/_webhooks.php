@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — outbound webhooks (tenant integrations).
+ * MziGO.Online — outbound webhooks (tenant integrations).
  *
  * dispatch_webhooks($tenantId, $event, $payload) posts a signed JSON payload to
  * every active tenant webhook subscribed to the event. Secrets are encrypted at
@@ -72,7 +72,7 @@ function webhook_post(string $url, string $event, string $body, string $secret, 
         'Content-Type: application/json',
         'X-Mzigo-Event: ' . $event,
         'X-Mzigo-Signature: ' . $signature,
-        'User-Agent: Mzigo.online-Webhooks/1.0',
+        'User-Agent: MziGO.Online-Webhooks/1.0',
     ];
     if (is_array($decodedBody) && !empty($decodedBody['event_id'])) { $headers[] = 'X-Mzigo-Event-Id: ' . $decodedBody['event_id']; }
     if (is_array($decodedBody) && !empty($decodedBody['idempotency_key'])) { $headers[] = 'X-Mzigo-Idempotency-Key: ' . $decodedBody['idempotency_key']; }

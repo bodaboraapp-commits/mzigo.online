@@ -25,10 +25,10 @@ function newsletter_defaults(): array
         'frequency_days' => 7,
         'dismiss_days' => 60,
         'title' => 'Get parcel tips and launch alerts',
-        'body' => 'Join the Mzigo.online list for delivery tips, route updates and new services. No spam.',
+        'body' => 'Join the MziGO.Online list for delivery tips, route updates and new services. No spam.',
         'cta' => 'Keep me posted',
         'dismiss' => 'Not now',
-        'consent_label' => 'I agree to receive the Mzigo.online newsletter and product alerts. I can unsubscribe at any time.',
+        'consent_label' => 'I agree to receive the MziGO.Online newsletter and product alerts. I can unsubscribe at any time.',
         'consent_version' => '2026-10-26',
         'artwork_url' => '',
         'lead_magnet_url' => '',
@@ -212,8 +212,8 @@ function newsletter_send_confirmation(array $row, string $confirmUrl, string $ar
         'phone' => (string) ($row['phone'] ?? ''),
         'comm_channel' => null,
     ];
-    $subject = 'Confirm your Mzigo.online updates';
-    $body = "Hi,\n\nPlease confirm that you want to receive Mzigo.online news and alerts.\n\nConfirm: " . $confirmUrl . "\n\nThis link expires in 48 hours. If you did not request this, ignore this message.";
+    $subject = 'Confirm your MziGO.Online updates';
+    $body = "Hi,\n\nPlease confirm that you want to receive MziGO.Online news and alerts.\n\nConfirm: " . $confirmUrl . "\n\nThis link expires in 48 hours. If you did not request this, ignore this message.";
     try {
         notification_send($channel, $user, $subject, $body, 'newsletter_confirm', [], $channels[$channel]['provider'],
             'newsletter', (string) ($row['id'] ?? ''), ['confirm_url' => $confirmUrl, 'channel' => $channel,
@@ -430,13 +430,13 @@ function newsletter_html_page(string $title, string $message, bool $ok = true, s
     $safeTitle = htmlspecialchars($title, ENT_QUOTES, 'UTF-8');
     $safeMessage = nl2br(htmlspecialchars($message, ENT_QUOTES, 'UTF-8'));
     return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
-        . '<meta name="robots" content="noindex,nofollow"><title>' . $safeTitle . ' | Mzigo.online</title>'
+        . '<meta name="robots" content="noindex,nofollow"><title>' . $safeTitle . ' | MziGO.Online</title>'
         . '<style>body{font-family:Outfit,Segoe UI,sans-serif;background:#eef5e6;color:#26331a;margin:0;padding:32px;}'
         . '.card{max-width:560px;margin:24px auto;background:#fff;border:1px solid #dfe8d3;border-radius:18px;padding:28px;}'
         . 'h1{font-size:24px;margin:0 0 12px;color:' . $color . ';}p{font-size:14px;line-height:1.65;color:#46523a;}'
         . 'a{color:#3c5223;font-weight:700;} .brand{font-weight:800;font-size:18px;color:#3c5223;margin-bottom:16px;}.cta{display:inline-block;background:#3c5223;color:#fff;padding:11px 18px;border-radius:999px;text-decoration:none;}'
-        . '</style></head><body><div class="card"><div class="brand">Mzigo.online</div><h1>' . $safeTitle . '</h1><p>'
+        . '</style></head><body><div class="card"><div class="brand">MziGO.Online</div><h1>' . $safeTitle . '</h1><p>'
         . $safeMessage . '</p>' .
         ($ctaUrl !== '' ? '<p><a class="cta" href="' . htmlspecialchars($ctaUrl, ENT_QUOTES, 'UTF-8') . '">' . htmlspecialchars($ctaLabel !== '' ? $ctaLabel : 'Continue', ENT_QUOTES, 'UTF-8') . '</a></p>' : '') .
-        '<p><a href="/">Back to Mzigo.online</a></p></div></body></html>';
+        '<p><a href="/">Back to MziGO.Online</a></p></div></body></html>';
 }

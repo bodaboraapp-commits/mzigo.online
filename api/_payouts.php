@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — payout configuration + demo/live M-Pesa disbursement helpers.
+ * MziGO.Online — payout configuration + demo/live M-Pesa disbursement helpers.
  *
  * Payout configuration is stored in platform_settings.payout_config as JSON so
  * admin can switch demo/live, set minimums/schedule and supply Daraja credentials

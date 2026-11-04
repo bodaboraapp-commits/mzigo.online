@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — tracking lookup against MySQL.
+ * MziGO.Online — tracking lookup against MySQL.
  * Accepts a tracking number (TRK-…), a Locker ID (LK-…-…) or an errand ref (ERD-…).
  */
 declare(strict_types=1);

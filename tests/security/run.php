@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online security regression suite.
+ * MziGO.Online security regression suite.
  *
  * Usage:
  *   php tests/security/run.php
@@ -131,7 +131,7 @@ function sec_cleanup_rate_limit(string $identifier): void
 }
 
 try {
-    echo "Mzigo.online security regression suite\n";
+    echo "MziGO.Online security regression suite\n";
     echo "Target: {$BASE}\n\n";
 
     foreach (['amina@example.com', 'sokoni@example.com', 'admin@mzigo.online'] as $testAccount) {

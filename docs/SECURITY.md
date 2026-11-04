@@ -1,4 +1,4 @@
-# Mzigo.online security review & hardening
+# MziGO.Online security review & hardening
 
 Review date: 2026-10-26  
 Scope: PHP API, static frontend, MySQL schema, Apache configuration, authentication, sessions, multi-tenant access, uploads, webhooks, email delivery and platform administration.

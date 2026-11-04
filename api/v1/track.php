@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — public API v1: track a parcel inside the key's workspace.
+ * MziGO.Online — public API v1: track a parcel inside the key's workspace.
  * GET /api/v1/track.php?q=TRK-…   (X-API-Key)
  */
 declare(strict_types=1);

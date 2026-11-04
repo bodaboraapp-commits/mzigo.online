@@ -1,5 +1,5 @@
 <?php
-/** Mzigo.online — book an errand (route, contacts, item) into MySQL, tenant-scoped. */
+/** MziGO.Online — book an errand (route, contacts, item) into MySQL, tenant-scoped. */
 declare(strict_types=1);
 require __DIR__ . '/_bootstrap.php';
 require_once __DIR__ . '/_runner_jobs.php';
@@ -94,7 +94,7 @@ $scan = $pdo->prepare(
      VALUES (\'errand\', ?, ?, ?, ?, ?, NOW())'
 );
 $scan->execute([
-    $id, 'CREATED', 'Errand requested', 'Mzigo.online',
+    $id, 'CREATED', 'Errand requested', 'MziGO.Online',
     'A runner will be assigned and you will be notified.',
 ]);
 

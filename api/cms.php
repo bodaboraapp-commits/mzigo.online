@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — public website CMS payload.
+ * MziGO.Online — public website CMS payload.
  *
  * GET -> active FAQs (landing-page accordion), current brand assets and the
  *        configured support address. Edited from the admin console (Website).

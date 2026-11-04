@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — runner proof-of-delivery photo upload (RN-06).
+ * MziGO.Online — runner proof-of-delivery photo upload (RN-06).
  * POST /api/runner-proof.php multipart { job_id, file }
  */
 declare(strict_types=1);

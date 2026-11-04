@@ -1,4 +1,4 @@
-﻿# Mzigo.online â€” production runbook
+﻿# MziGO.Online â€” production runbook
 
 This document covers taking the local SaaS build to a real deployment.
 
@@ -386,7 +386,7 @@ Callback endpoint: `POST /api/claim-rail-callback.php` with `X-Mzigo-Signature: 
 
 ## Per-tenant branding & carrier rate cards
 
-Workspace owners/admins can set branding in Settings: logo (PNG/JPG/WebP, max 2 MB), primary/secondary/accent colours, support email/phone and invoice footer. Branding applies to the authenticated tenant menu/dashboard and invoice documents; the public Mzigo.online homepage keeps the platform brand. Public-safe branding is available at `GET /api/tenant-branding.php?slug=<workspace-slug>` (rate-limited).
+Workspace owners/admins can set branding in Settings: logo (PNG/JPG/WebP, max 2 MB), primary/secondary/accent colours, support email/phone and invoice footer. Branding applies to the authenticated tenant menu/dashboard and invoice documents; the public MziGO.Online homepage keeps the platform brand. Public-safe branding is available at `GET /api/tenant-branding.php?slug=<workspace-slug>` (rate-limited).
 
 Rate cards override platform quote components per tenant by carrier, route and/or package size. The most specific active match wins; unset components fall back to the platform quote. Parcel creation uses `tenant_rate_quote()` so overrides apply immediately. Manage cards under Workspace Settings → Carrier rate cards.
 
@@ -499,7 +499,7 @@ All branded HTML communications use a shared white header with the Mzigo wordmar
 
 ## Workspace document branding
 
-Print documents generated from a workspace use that workspace's name and logo, with the exact tagline `Powered By Mzigo.online`. This covers shipping labels, payment receipts, workspace invoices/credit notes and settlement statements. Platform-admin documents retain Mzigo.online branding. If a workspace has not uploaded a logo, the document falls back to the workspace name without inventing or substituting another logo.
+Print documents generated from a workspace use that workspace's name and logo, with the exact tagline `Powered By MziGO.Online`. This covers shipping labels, payment receipts, workspace invoices/credit notes and settlement statements. Platform-admin documents retain MziGO.Online branding. If a workspace has not uploaded a logo, the document falls back to the workspace name without inventing or substituting another logo.
 
 
 ## Workspace logo updates during approval

@@ -20,28 +20,28 @@ $alert = fn (string $text, string $color = '#f0fdf4', string $border = '#bbf0c4'
 
 $templates = [
     'email_verification' => [
-        'subject' => 'Verify your Mzigo.online email',
-        'text' => "Hi {{name}},\nWelcome to Mzigo.online. Confirm your email address:\n{{link}}\nThis link expires in 24 hours.",
-        'html' => $greet . $p('Welcome to Mzigo.online. Confirm your email address so we can send parcel updates, receipts and account notices.') .
+        'subject' => 'Verify your MziGO.Online email',
+        'text' => "Hi {{name}},\nWelcome to MziGO.Online. Confirm your email address:\n{{link}}\nThis link expires in 24 hours.",
+        'html' => $greet . $p('Welcome to MziGO.Online. Confirm your email address so we can send parcel updates, receipts and account notices.') .
             $info('Account email', '{{email}}') . $btn('{{link}}', 'Verify my email') .
             $p('This link expires in 24 hours. If you did not create this account, you can ignore this email.'),
     ],
     'password_reset' => [
-        'subject' => 'Reset your Mzigo.online password',
+        'subject' => 'Reset your MziGO.Online password',
         'text' => "Hi {{name}},\nReset your password using this single-use link:\n{{link}}\nIt expires in 60 minutes.",
-        'html' => $greet . $p('We received a request to reset the password for your Mzigo.online account.') .
+        'html' => $greet . $p('We received a request to reset the password for your MziGO.Online account.') .
             $p('This single-use link expires in 60 minutes. If you did not request it, no action is needed.') .
             $btn('{{link}}', 'Choose a new password'),
     ],
     'password_changed' => [
-        'subject' => 'Your Mzigo.online password was changed',
-        'text' => "Hi {{name}},\nYour Mzigo.online password was changed. If this was not you, reset it immediately.",
+        'subject' => 'Your MziGO.Online password was changed',
+        'text' => "Hi {{name}},\nYour MziGO.Online password was changed. If this was not you, reset it immediately.",
         'html' => $greet . $alert('Your password was changed.') .
             $p('If this was not you, reset your password immediately and contact support at {{support_email}}.') .
             $btn('{{login_url}}', 'Sign in'),
     ],
     'email_verified' => [
-        'subject' => 'Your Mzigo.online email is verified',
+        'subject' => 'Your MziGO.Online email is verified',
         'text' => "Hi {{name}},\nYour email address is now verified.\n{{profile_url}}",
         'html' => $greet . $alert('Your email address is now verified.') .
             $p('You can now receive password-reset links, parcel notices and account updates.') .
@@ -56,8 +56,8 @@ $templates = [
     ],
     'parcel_created_new_customer' => [
         'subject' => 'Your first Mzigo parcel {{tracking}}',
-        'text' => "Hi {{name}},\nWelcome to Mzigo.online. A parcel is on its way to you.\nTracking: {{tracking}}\nTrack: {{track_url}}",
-        'html' => $greet . $p('Welcome to Mzigo.online. A parcel is on its way to you.') .
+        'text' => "Hi {{name}},\nWelcome to MziGO.Online. A parcel is on its way to you.\nTracking: {{tracking}}\nTrack: {{track_url}}",
+        'html' => $greet . $p('Welcome to MziGO.Online. A parcel is on its way to you.') .
             $info('Tracking number', '{{tracking}}') . $info('Route', '{{from}} → {{to}}') . $info('Delivery fee', 'KES {{fee}}') .
             $p('Track and pay the delivery fee from your customer account. The collection code appears after payment.') .
             $btn('{{track_url}}', 'Track parcel'),
@@ -155,16 +155,16 @@ $templates = [
             $p('Your workspace remains active.') . $btn('{{billing_url}}', 'Open billing'),
     ],
     'team_invite' => [
-        'subject' => 'You are invited to {{business}} on Mzigo.online',
+        'subject' => 'You are invited to {{business}} on MziGO.Online',
         'text' => "Hi {{name}},\nYou have been invited to the {{business}} workspace.\nEmail: {{email}}\nTemporary password: {{password}}\nSign in: {{login_url}}",
         'html' => $greet . $p('You have been invited to join the <strong>{{business}}</strong> workspace.') .
             $info('Email', '{{email}}') . $info('Temporary password', '{{password}}') .
             $p('Sign in and change your password from Settings.') . $btn('{{login_url}}', 'Sign in'),
     ],
     'smtp_test' => [
-        'subject' => 'Mzigo.online SMTP test',
-        'text' => "This is a test email from your Mzigo.online SMTP configuration. Delivery is working.\nSent: {{date}}\nRecipient: {{email}}",
-        'html' => $greet . $alert('SMTP test successful.') . $p('This is a test email from your Mzigo.online SMTP configuration. Delivery is working.') .
+        'subject' => 'MziGO.Online SMTP test',
+        'text' => "This is a test email from your MziGO.Online SMTP configuration. Delivery is working.\nSent: {{date}}\nRecipient: {{email}}",
+        'html' => $greet . $alert('SMTP test successful.') . $p('This is a test email from your MziGO.Online SMTP configuration. Delivery is working.') .
             $info('Sent at', '{{date}}') . $info('Recipient', '{{email}}') . $btn('{{admin_url}}', 'Open communications'),
     ],
 ];
@@ -188,7 +188,7 @@ foreach ($templates as $key => $template) {
 /* Fill any catalogue template that is missing content. */
 foreach ($catalog as $key => $meta) {
     if (isset($templates[$key])) { continue; }
-    $update->execute(['Mzigo.online · ' . $meta['label'], 'Hi {{name}}, ' . $meta['label'] . ' for {{tracking}}.', $greet . $p($meta['label']) . $btn('{{login_url}}', 'Open Mzigo.online'), $key]);
+    $update->execute(['MziGO.Online · ' . $meta['label'], 'Hi {{name}}, ' . $meta['label'] . ' for {{tracking}}.', $greet . $p($meta['label']) . $btn('{{login_url}}', 'Open MziGO.Online'), $key]);
     $updated++;
 }
 echo "Seeded/updated {$updated} template(s) with subject, plain-text and HTML content.\n";

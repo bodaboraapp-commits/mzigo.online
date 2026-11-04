@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — website CMS helpers (FAQs + brand assets).
+ * MziGO.Online — website CMS helpers (FAQs + brand assets).
  *
  * Shared by the public api/cms.php payload and the admin console endpoints.
  */

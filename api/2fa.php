@@ -40,7 +40,7 @@ if ($action === 'setup') {
         ON DUPLICATE KEY UPDATE secret = VALUES(secret), enabled_at = NULL')
         ->execute([(int) $user['id'], $secret]);
     audit('auth.2fa_setup_started', 'user', (string) $user['id'], []);
-    $issuer = 'Mzigo.online';
+    $issuer = 'MziGO.Online';
     $label = rawurlencode($issuer . ':' . ($user['email'] ?? $user['phone'] ?? ('user-' . $user['id'])));
     json_out(['ok' => true, 'source' => 'mysql', 'secret' => $secret,
         'otpauth' => 'otpauth://totp/' . $label . '?secret=' . $secret . '&issuer=' . rawurlencode($issuer) . '&digits=6&period=30',

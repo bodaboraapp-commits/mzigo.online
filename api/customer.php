@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — customer portal API.
+ * MziGO.Online — customer portal API.
  *
  * A customer is the receiver of a parcel. Sign-in is phone + a 4-digit code
  * (demo code 1234). The portal lists parcels addressed to the customer's phone,

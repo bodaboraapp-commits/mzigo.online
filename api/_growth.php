@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — growth engine: runner ratings/tiers/bonuses, referrals, coupons.
+ * MziGO.Online — growth engine: runner ratings/tiers/bonuses, referrals, coupons.
  */
 declare(strict_types=1);
 
@@ -50,8 +50,8 @@ function referral_config(): array
         'ab_test' => [
             'enabled' => true,
             'variants' => [
-                'A' => 'I use Mzigo.online to send parcels across Kenya. Join with my code {code}: ',
-                'B' => 'Sending parcels should be easy. I use Mzigo.online - register, drop off once, track to collection. Use my code {code}: ',
+                'A' => 'I use MziGO.Online to send parcels across Kenya. Join with my code {code}: ',
+                'B' => 'Sending parcels should be easy. I use MziGO.Online - register, drop off once, track to collection. Use my code {code}: ',
             ],
         ],
     ];
@@ -73,8 +73,8 @@ function referral_config_save(array $input): array
     $clean['ab_test'] = [
         'enabled' => !empty($ab['enabled']),
         'variants' => [
-            'A' => mb_substr(trim((string) (($ab['variants']['A'] ?? '') ?: 'I use Mzigo.online to send parcels across Kenya. Join with my code {code}: ')), 0, 500),
-            'B' => mb_substr(trim((string) (($ab['variants']['B'] ?? '') ?: 'Sending parcels should be easy. I use Mzigo.online - register, drop off once, track to collection. Use my code {code}: ')), 0, 500),
+            'A' => mb_substr(trim((string) (($ab['variants']['A'] ?? '') ?: 'I use MziGO.Online to send parcels across Kenya. Join with my code {code}: ')), 0, 500),
+            'B' => mb_substr(trim((string) (($ab['variants']['B'] ?? '') ?: 'Sending parcels should be easy. I use MziGO.Online - register, drop off once, track to collection. Use my code {code}: ')), 0, 500),
         ],
     ];
     db()->prepare('INSERT INTO platform_settings (setting_key, setting_value) VALUES ("referral_config", ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)')
@@ -386,7 +386,7 @@ function growth_campaign_message(array $campaign, string $code): string
 {
     $link = rtrim((string) (config()['app']['url'] ?? 'https://mzigo.online'), '/') . '/refer?ref=' . rawurlencode($code) . '&src=campaign';
     $message = (string) ($campaign['message'] ?? '');
-    return str_replace(['{code}', '{link}'], [$code, $link], $message !== '' ? $message : 'Share your Mzigo.online code {code} and earn when a friend activates. {link}');
+    return str_replace(['{code}', '{link}'], [$code, $link], $message !== '' ? $message : 'Share your MziGO.Online code {code} and earn when a friend activates. {link}');
 }
 
 function growth_campaign_send(int $campaignId): array

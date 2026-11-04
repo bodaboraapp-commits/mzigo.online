@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — subscription billing.
+ * MziGO.Online — subscription billing.
  *
  * GET  -> current plan, usage, invoices, available plans
  * POST action=change_plan   { plan_code }

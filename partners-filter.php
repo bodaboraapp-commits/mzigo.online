@@ -30,8 +30,8 @@ $stmt->execute([$slug]);
 $destinations = array_map(fn ($r) => (string) $r['name'], $stmt->fetchAll());
 $origin = in_array('Nairobi', $destinations, true) ? 'Nairobi' : ($destinations[0] ?? 'Kenya');
 $name = (string) $partner['name'];
-$title = 'Send a Parcel with ' . $name . ' | Routes & Tracking | Mzigo.online';
-$desc = 'Compare ' . $name . ' parcel routes in Kenya. Register online, drop off at a partner office, track every scan and pay on collection by M-Pesa with Mzigo.online.';
+$title = 'Send a Parcel with ' . $name . ' | Routes & Tracking | MziGO.Online';
+$desc = 'Compare ' . $name . ' parcel routes in Kenya. Register online, drop off at a partner office, track every scan and pay on collection by M-Pesa with MziGO.Online.';
 $canonical = 'https://mzigo.online/partners/' . rawurlencode($slug);
 $routeTokens = implode(', ', array_slice($destinations, 0, 12));
 $routeCards = '';
@@ -44,7 +44,7 @@ $content = '
   <div class="mz-saas-head">
     <span class="mz-cap">Courier partner</span>
     <h1>Send a parcel with ' . htmlspecialchars($name, ENT_QUOTES, 'UTF-8') . '</h1>
-    <p>Book ' . htmlspecialchars($name, ENT_QUOTES, 'UTF-8') . ' parcel delivery across Kenya through Mzigo.online. Compare routes, register online, drop off at a partner office and track every scan to collection.</p>
+    <p>Book ' . htmlspecialchars($name, ENT_QUOTES, 'UTF-8') . ' parcel delivery across Kenya through MziGO.Online. Compare routes, register online, drop off at a partner office and track every scan to collection.</p>
   </div>
   <div class="mz-saas-card">
     <div class="mz-card__title">Routes served by ' . htmlspecialchars($name, ENT_QUOTES, 'UTF-8') . '</div>
@@ -53,7 +53,7 @@ $content = '
   </div>
   <div class="mz-saas-grid mz-saas-grid--2">
     <div class="mz-saas-card">
-      <div class="mz-card__title">Why send with Mzigo.online?</div>
+      <div class="mz-card__title">Why send with MziGO.Online?</div>
       <ul class="mz-check-list">
         <li>Compare trusted courier partners and routes</li>
         <li>Parcel insurance based on the declared value</li>

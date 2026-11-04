@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — growth API: referral summary, ratings, coupon validation.
+ * MziGO.Online — growth API: referral summary, ratings, coupon validation.
  *
  * GET  /api/growth.php                        public config + leaderboard; owner summary
  * POST actions: validate_coupon, rate_runner, referral_click

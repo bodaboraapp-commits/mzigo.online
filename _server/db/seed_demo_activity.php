@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — demo activity seed for the admin analytics dashboard.
+ * MziGO.Online — demo activity seed for the admin analytics dashboard.
  *
  * Creates ~120 days of realistic parcel/scan/invoice/errand history for the two
  * seeded demo workspaces so the BI charts are meaningful on a fresh install.
@@ -87,7 +87,7 @@ $statusForAge = function (int $daysAgo): string {
 
 $timelineFor = function (string $status, string $registeredAt, string $carrier, string $from, string $to): array {
     $steps = [
-        ['CREATED', 'Parcel registered', 'Mzigo.online', 'QR label and Locker ID issued to sender.'],
+        ['CREATED', 'Parcel registered', 'MziGO.Online', 'QR label and Locker ID issued to sender.'],
         ['AT_ORIGIN_POINT', 'Dropped off at origin', $carrier . ' office, ' . $from, 'Scanned in by the partner office.'],
         ['HANDED_TO_TRANSPORTER', 'Handed to transporter', $from . ' terminus', 'Loaded on the ' . $to . '-bound vehicle.'],
         ['IN_TRANSIT', 'In transit', 'En route', 'Scanned at a stop.'],
@@ -214,7 +214,7 @@ for ($i = 0; $i < 9; $i++) {
         pick($receiverNames), '07' . random_int(10, 99) . random_int(100000, 999999),
         'Demo errand — collect documents', 'Call on arrival', 'M-PESA', $status, $createdAt,
     ]);
-    $insertScan->execute(['errand', $id, 'CREATED', 'Errand requested', 'Mzigo.online', 'Runner assigned.', $createdAt]);
+    $insertScan->execute(['errand', $id, 'CREATED', 'Errand requested', 'MziGO.Online', 'Runner assigned.', $createdAt]);
 }
 
 echo "demo activity seeded: " . count($demoPlan) . " workspaces, demo platform fees KES " . $platformPaid . "\n";

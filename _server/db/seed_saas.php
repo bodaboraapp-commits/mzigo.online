@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — SaaS seed.
+ * MziGO.Online — SaaS seed.
  *
  * Idempotent: plans, the platform admin, two demo tenants with subscriptions and
  * invoices, and a hidden "sandbox" plan (1 parcel) used for quota tests.

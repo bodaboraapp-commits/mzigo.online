@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — page bootstrap.
+ * MziGO.Online — page bootstrap.
  * Returns the SaaS session context (user, workspace, role, plan usage), the MySQL
  * catalog, CSRF token, and this workspace/browser's parcels, errands and senders.
  */

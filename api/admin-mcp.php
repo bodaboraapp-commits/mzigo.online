@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — admin controls for the MCP microservice privacy policy.
+ * MziGO.Online — admin controls for the MCP microservice privacy policy.
  *
  * GET  /api/admin-mcp.php        current policy (platform admin only)
  * POST /api/admin-mcp.php        { action: save | regenerate_token, ... }

@@ -1,4 +1,4 @@
-# Mzigo.online security regression suite
+# MziGO.Online security regression suite
 
 Run against the local seeded demo instance:
 

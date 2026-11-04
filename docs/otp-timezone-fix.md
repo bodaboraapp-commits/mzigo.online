@@ -7,7 +7,7 @@
 A customer receives:
 
 ```text
-Mzigo.online: your sign-in code is 7683. It expires in 10 minutes.
+MziGO.Online: your sign-in code is 7683. It expires in 10 minutes.
 ```
 
 but entering the code immediately returns:

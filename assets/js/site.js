@@ -1,7 +1,7 @@
-/* Mzigo.online — interaction layer.
+/* MziGO.Online — interaction layer.
    Carrier/destination pickers, send + errand wizards, scan-based tracking
    timeline, partner filters, dashboards and phone/PIN auth, backed by the
-   Mzigo.online API. Data model follows the parcel-network design doc:
+   MziGO.Online API. Data model follows the parcel-network design doc:
    Locker IDs, QR labels, fee quotes, pay-at-collection, tier A/B. */
 (function () {
   'use strict';
@@ -218,7 +218,7 @@
         banner.id = 'mz-db-offline';
         banner.className = 'mz-alert';
         banner.style.cssText = 'position:fixed;left:16px;right:16px;bottom:16px;z-index:2000;margin:0;background:#fef3c7;border-color:#f0d68a;';
-        banner.innerHTML = '<strong>Live database unavailable.</strong> Mzigo.online only displays records from the live database, so this page cannot load catalog or workspace data until the connection is restored.';
+        banner.innerHTML = '<strong>Live database unavailable.</strong> MziGO.Online only displays records from the live database, so this page cannot load catalog or workspace data until the connection is restored.';
         doc.body.appendChild(banner);
       }
     });
@@ -1499,7 +1499,7 @@
         '<div class="mz-row">' +
           '<div style="display:flex;align-items:center;gap:10px;min-width:0;">' + avatar(r.carrier || (isErrand ? 'Errand' : 'mzigo'), 'md') +
             '<div style="min-width:0;"><div class="mz-cap">' + (isErrand ? 'Errand' : 'Parcel') + '</div>' +
-            '<div style="font-weight:700;font-size:15px;">' + esc(r.carrier || 'Mzigo.online') + '</div></div></div>' +
+            '<div style="font-weight:700;font-size:15px;">' + esc(r.carrier || 'MziGO.Online') + '</div></div></div>' +
           '<span class="mz-pill mz-pill--' + st.pill + '">' + esc(st.label) + '</span>' +
         '</div>' +
         '<div class="mz-receipt-grid">' +
@@ -1687,7 +1687,7 @@
         '<p>Usage, recent parcels and errands across your workspace.</p>';
     }
     initAppNav();
-    document.title = 'Dashboard · Mzigo.online';
+    document.title = 'Dashboard · MziGO.Online';
     if (!body) return;
     var u = APP.usage || {};
     var plan = u.plan || {};
@@ -1805,7 +1805,7 @@
     } catch (e) {}
     var tiktokCaptions = {
       0: 'POV: you sent a parcel across Kenya without queuing at three offices. Register online, drop off once, track to collection. Use my code {code}.',
-      1: 'How I earn with Mzigo.online as a runner: pick errands, deliver, get paid by M-Pesa. Join with my code {code}.',
+      1: 'How I earn with MziGO.Online as a runner: pick errands, deliver, get paid by M-Pesa. Join with my code {code}.',
       2: 'Receiving a parcel? Pay the delivery fee by M-Pesa at collection, keep the code, collect. Track it here. Code {code}.'
     };
     api('growth.php').then(function (data) {
@@ -1837,8 +1837,8 @@
       var intro = $('[data-refer-intro]');
       if (intro) intro.textContent = 'Share your link. Rewards are credited when your invite activates.';
       var defaultCopy = variant === 'A'
-        ? 'I use Mzigo.online to send parcels across Kenya. Join with my code {code}: '
-        : 'Sending parcels should be easy. I use Mzigo.online - register, drop off once, track to collection. Use my code {code}: ';
+        ? 'I use MziGO.Online to send parcels across Kenya. Join with my code {code}: '
+        : 'Sending parcels should be easy. I use MziGO.Online - register, drop off once, track to collection. Use my code {code}: ';
       var copyTemplate = ab.variants && ab.variants[variant] ? ab.variants[variant] : defaultCopy;
       var copyText = String(copyTemplate).replace(/\{code\}/g, code);
       var wa = $('[data-refer-whatsapp]');
@@ -1878,7 +1878,7 @@
         });
         kit.querySelector('[data-tiktok-share]').addEventListener('click', function () {
           trackEvent('referral_share', { label: 'tiktok', meta: { variant: variant } });
-          if (navigator.share) { navigator.share({ title: 'Mzigo.online', text: caption.value }); }
+          if (navigator.share) { navigator.share({ title: 'MziGO.Online', text: caption.value }); }
           else if (navigator.clipboard) { navigator.clipboard.writeText(caption.value); toast('Caption copied — paste it in TikTok.', 'info'); }
           else toast('Select the caption to copy it.', 'info');
         });
@@ -1899,9 +1899,9 @@
       return;
     }
     var titles = {
-      runner: 'Earn with Mzigo.online',
-      business: 'Send parcels with Mzigo.online',
-      customer: 'Track your parcel with Mzigo.online'
+      runner: 'Earn with MziGO.Online',
+      business: 'Send parcels with MziGO.Online',
+      customer: 'Track your parcel with MziGO.Online'
     };
     var subs = {
       runner: 'Scan to join as a runner, pick local errands and get paid by M-Pesa.',
@@ -2947,7 +2947,7 @@ return '<div class="mz-mobile-card">' +
   function workspaceDocumentBrand() {
     var tenant = (typeof APP !== 'undefined' && APP.tenant) ? APP.tenant : null;
     var branding = (typeof APP !== 'undefined' && APP.branding) ? APP.branding : {};
-    var name = tenant && tenant.name ? String(tenant.name) : 'Mzigo.online';
+    var name = tenant && tenant.name ? String(tenant.name) : 'MziGO.Online';
     return {
       workspace: !!tenant,
       name: name,
@@ -2955,7 +2955,7 @@ return '<div class="mz-mobile-card">' +
       primary: branding.primary_color || '#3c5223',
       support: branding.support_email || 'hello@mzigo.online',
       footer: branding.document_footer || '',
-      tagline: tenant ? 'Powered By Mzigo.online' : 'Parcel network'
+      tagline: tenant ? 'Powered By MziGO.Online' : 'Parcel network'
     };
   }
 
@@ -3017,7 +3017,7 @@ return '<div class="mz-mobile-card">' +
     var brandMark = brand.logo
       ? '<div class="brand-tenant">' + esc(brand.name) + '</div><img class="brand-logo" src="' + esc(brand.logo) + '" alt="' + esc(brand.name) + '">'
       : '<div class="brand-mark">' + esc(brand.name) + '</div>';
-    var brandTagline = brand.workspace ? 'Powered By Mzigo.online' : 'Parcel network';
+    var brandTagline = brand.workspace ? 'Powered By MziGO.Online' : 'Parcel network';
     var qr = ref ? qrSVG(trackUrl) : '';
     var barcode = code39SVG(ref);
     var target = fromLine + ' to ' + toLine;
@@ -3058,7 +3058,7 @@ return '<div class="mz-mobile-card">' +
       '<div class="label-page"><div class="label">' +
         '<div class="label-top"><div class="label-brand">' + brandMark + '<div class="brand-sub">' + esc(brandTagline) + '</div></div><div class="label-product"><div class="product-kicker">PARCEL LABEL</div><div class="product-name">' + esc(size) + '</div><div class="product-meta">' + esc(carrier) + ' &middot; ' + esc(target) + '</div></div></div>' +
         '<div class="label-mid">' +
-          '<div class="addr"><div class="addr-label">FROM</div><div class="addr-name">' + esc(fromName) + '</div><div class="addr-line">' + esc(fromLine) + '</div><div class="addr-meta">Kenya &middot; Mzigo.online</div></div>' +
+          '<div class="addr"><div class="addr-label">FROM</div><div class="addr-name">' + esc(fromName) + '</div><div class="addr-line">' + esc(fromLine) + '</div><div class="addr-meta">Kenya &middot; MziGO.Online</div></div>' +
           '<div class="addr"><div class="addr-label">TO</div><div class="addr-name">' + esc(toName) + '</div><div class="addr-line">' + esc(toLine) + '</div><div class="addr-meta">' + esc(phoneLine || 'Contact on arrival') + '</div></div>' +
           '<div class="qr-panel"><div class="qr">' + qr + '</div><div class="qr-label">SCAN TO TRACK</div><div class="qr-code">' + esc(ref) + '</div></div>' +
         '</div>' +
@@ -3144,7 +3144,7 @@ return '<div class="mz-mobile-card">' +
         '<div style="font-size:11px;color:var(--mz-muted-fg);margin:8px 0 18px;">Scan to open the tracking page</div>' +
         '<div style="text-align:left;max-width:520px;margin:0 auto;">' +
           '<dl style="margin:0;">' + rows +
-            '<div class="mz-kv"><dt>Courier</dt><dd>' + esc(item.carrier || 'Mzigo.online') + '</dd></div>' +
+            '<div class="mz-kv"><dt>Courier</dt><dd>' + esc(item.carrier || 'MziGO.Online') + '</dd></div>' +
             '<div class="mz-kv"><dt>Registered</dt><dd>' + esc(fmtDate(item.registered_at)) + '</dd></div>' +
             '<div class="mz-kv"><dt>Payment</dt><dd>' + esc(item.payment || 'M-PESA') + '</dd></div>' +
           '</dl>' +
@@ -3985,6 +3985,55 @@ return '<div class="mz-mobile-card">' +
     });
   }
 
+  var firebaseSmsPromise = null;
+  function firebaseSmsLoad() {
+    if (firebaseSmsPromise) return firebaseSmsPromise;
+    firebaseSmsPromise = api('firebase-config.php').then(function (res) {
+      if (!res || !res.enabled || !res.config || !res.config.apiKey) return null;
+      function load(src) {
+        return new Promise(function (resolve, reject) {
+          var s = doc.createElement('script');
+          s.src = src; s.async = true;
+          s.onload = resolve;
+          s.onerror = function () { reject(new Error('Could not load Firebase SMS sign-in.')); };
+          doc.head.appendChild(s);
+        });
+      }
+      return load('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js')
+        .then(function () {
+          return load('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js');
+        }).then(function () {
+        if (!window.firebase) throw new Error('Firebase SDK did not load.');
+        if (!window.firebase.apps.length) window.firebase.initializeApp(res.config);
+        var wrap = doc.getElementById('firebase-recaptcha');
+        if (!wrap) {
+          wrap = doc.createElement('div');
+          wrap.id = 'firebase-recaptcha';
+          wrap.style.display = 'none';
+          doc.body.appendChild(wrap);
+        }
+        var auth = window.firebase.auth();
+        auth.useDeviceLanguage();
+        return { auth: auth, recaptcha: new window.firebase.auth.RecaptchaVerifier('firebase-recaptcha', { size: 'invisible' }) };
+      });
+    }).catch(function () { return null; });
+    return firebaseSmsPromise;
+  }
+  function firebaseSmsPhone(value) {
+    var d = String(value || '').replace(/\D/g, '');
+    if (d.indexOf('254') === 0) return '+' + d;
+    if (d.indexOf('0') === 0) return '+254' + d.slice(1);
+    if (d.length === 9 && d.charAt(0) === '7') return '+254' + d;
+    return '';
+  }
+  function firebaseSmsVerify(confirmation, code, scope) {
+    return confirmation.confirm(code).then(function (result) {
+      return result.user.getIdToken();
+    }).then(function (idToken) {
+      return api('firebase-otp-login.php', { method: 'POST', body: { id_token: idToken, scope: scope } });
+    });
+  }
+
   function initLoginPage() {
     var demoBox = $('.mz-demo-box');
     if (demoBox) {
@@ -4034,9 +4083,40 @@ return '<div class="mz-mobile-card">' +
       });
     });
 
-    /* freelancer: phone -> system-generated PIN/code -> verify */
+    /* freelancer: phone -> Firebase SMS or server PIN/email -> verify */
     var freelancerPhone = '';
     var freelancerChannel = 'sms';
+    var freelancerFirebaseConfirmation = null;
+    function showFreelancerCodeStep(message, label) {
+      var hint = $('[data-freelancer-hint]');
+      if (hint) hint.textContent = message;
+      var step1 = $('[data-freelancer-step="1"]');
+      var step2 = $('[data-freelancer-step="2"]');
+      if (step1) step1.hidden = true;
+      if (step2) step2.hidden = false;
+      var fieldLabel = step2 && step2.querySelector('.mz-field .mz-label');
+      if (fieldLabel) fieldLabel.textContent = label;
+      var pinInput = $('[data-freelancer-form="login"] [name="pin"]');
+      if (pinInput) { pinInput.value = ''; pinInput.focus(); }
+    }
+    function serverFreelancerStart(btn, phone) {
+      api('auth.php', { method: 'POST', body: { action: 'freelancer-start', phone: phone, channel: freelancerChannel } })
+        .then(function (res) {
+          freelancerPhone = res.phone || phone;
+          freelancerChannel = res.channel || freelancerChannel;
+          freelancerFirebaseConfirmation = null;
+          trackEvent('runner_phone_submitted', { label: 'Runner phone submitted' });
+          var where = freelancerChannel === 'email' ? (res.sent_to || 'your email') : 'your phone';
+          showFreelancerCodeStep(res.demo_pin
+            ? 'Demo PIN: ' + res.demo_pin + '. In production this PIN is sent by ' + (freelancerChannel === 'email' ? 'email' : 'SMS') + '.'
+            : 'Enter the 4-digit code sent to ' + where + '.', '4-digit PIN');
+          toast(res.demo_pin ? 'PIN issued for ' + freelancerPhone + ' — demo PIN ' + res.demo_pin : 'Code sent via ' + (freelancerChannel === 'email' ? 'email' : 'SMS') + ' to ' + where, 'info');
+          btn.disabled = false;
+        }).catch(function (err) {
+          toast(err.message, 'error');
+          btn.disabled = false;
+        });
+    }
     var startForm = $('[data-freelancer-form="start"]');
     if (startForm) startForm.addEventListener('submit', function (ev) {
       ev.preventDefault();
@@ -4049,30 +4129,23 @@ return '<div class="mz-mobile-card">' +
       var phone = formValue(startForm, 'phone');
       freelancerChannel = formValue(startForm, 'channel') || 'sms';
       btn.disabled = true;
-      api('auth.php', { method: 'POST', body: { action: 'freelancer-start', phone: phone, channel: freelancerChannel } })
-        .then(function (res) {
-          freelancerPhone = res.phone || phone;
-          freelancerChannel = res.channel || freelancerChannel;
+      if (freelancerChannel !== 'sms') { serverFreelancerStart(btn, phone); return; }
+      firebaseSmsLoad().then(function (fb) {
+        if (!fb) return serverFreelancerStart(btn, phone);
+        var normalized = firebaseSmsPhone(phone);
+        if (!normalized) throw new Error('Enter a valid Kenyan phone number, e.g. 0712 345 678.');
+        return fb.auth.signInWithPhoneNumber(normalized, fb.recaptcha).then(function (confirmation) {
+          freelancerPhone = phone;
+          freelancerFirebaseConfirmation = confirmation;
           trackEvent('runner_phone_submitted', { label: 'Runner phone submitted' });
-          var hint = $('[data-freelancer-hint]');
-          var where = freelancerChannel === 'email' ? (res.sent_to || 'your email') : 'your phone';
-          if (hint) {
-            hint.innerHTML = res.demo_pin
-              ? 'Demo PIN: <strong>' + esc(res.demo_pin) + '</strong>. In production this PIN is sent by ' + esc(freelancerChannel === 'email' ? 'email' : 'SMS') + '.'
-              : 'Enter the 4-digit code sent to ' + esc(where) + '.';
-          }
-          var step1 = $('[data-freelancer-step="1"]');
-          var step2 = $('[data-freelancer-step="2"]');
-          if (step1) step1.hidden = true;
-          if (step2) step2.hidden = false;
-          var pinInput = $('[data-freelancer-form="login"] [name="pin"]');
-          if (pinInput) { pinInput.value = ''; pinInput.focus(); }
-          toast(res.demo_pin ? 'PIN issued for ' + freelancerPhone + ' — demo PIN ' + res.demo_pin : 'Code sent via ' + (freelancerChannel === 'email' ? 'email' : 'SMS') + ' to ' + where, 'info');
-          btn.disabled = false;
-        }).catch(function (err) {
-          toast(err.message, 'error');
+          showFreelancerCodeStep('Enter the 6-digit SMS code sent to ' + phone + '.', '6-digit SMS code');
+          toast('SMS code sent to ' + phone + '.', 'info');
           btn.disabled = false;
         });
+      }).catch(function (err) {
+        toast(err.message || 'Could not send the SMS code.', 'error');
+        btn.disabled = false;
+      });
     });
 
     var resendPin = $('[data-freelancer-resend]');
@@ -4081,13 +4154,29 @@ return '<div class="mz-mobile-card">' +
       resendPin.disabled = true;
       var original = resendPin.textContent;
       resendPin.textContent = 'Sending…';
+      if (freelancerFirebaseConfirmation) {
+        firebaseSmsLoad().then(function (fb) {
+          if (!fb) throw new Error('Firebase SMS is unavailable.');
+          return fb.auth.signInWithPhoneNumber(firebaseSmsPhone(freelancerPhone), fb.recaptcha);
+        }).then(function (confirmation) {
+          freelancerFirebaseConfirmation = confirmation;
+          toast('A new SMS code was sent to ' + freelancerPhone + '.', 'info');
+          resendPin.textContent = 'Code sent';
+          setTimeout(function () { resendPin.textContent = original; resendPin.disabled = false; }, 6000);
+        }).catch(function (err) {
+          toast(err.message, 'error');
+          resendPin.textContent = original;
+          resendPin.disabled = false;
+        });
+        return;
+      }
       api('auth.php', { method: 'POST', body: { action: 'freelancer-start', phone: freelancerPhone, channel: freelancerChannel } })
         .then(function (res) {
           freelancerChannel = res.channel || freelancerChannel;
           var where = freelancerChannel === 'email' ? (res.sent_to || 'your email') : 'your phone';
           if (res.demo_pin) {
             var hint = $('[data-freelancer-hint]');
-            if (hint) hint.innerHTML = 'New demo PIN: <strong>' + esc(res.demo_pin) + '</strong>. In production this PIN is sent by ' + esc(freelancerChannel === 'email' ? 'email' : 'SMS') + '.';
+            if (hint) hint.textContent = 'New demo PIN: ' + res.demo_pin + '. In production this PIN is sent by ' + (freelancerChannel === 'email' ? 'email' : 'SMS') + '.';
           }
           toast(res.demo_pin ? 'New PIN issued — demo PIN ' + res.demo_pin : 'A new code was sent via ' + (freelancerChannel === 'email' ? 'email' : 'SMS') + ' to ' + where, 'info');
           resendPin.textContent = 'PIN sent';
@@ -4106,56 +4195,83 @@ return '<div class="mz-mobile-card">' +
       var pin = formValue(freelancerForm, 'pin');
       if (!freelancerPhone) { toast('Enter your phone number first.', 'error'); showLoginPanel('freelancer'); return; }
       btn.disabled = true;
-      api('auth.php', { method: 'POST', body: { action: 'freelancer-login', phone: freelancerPhone, pin: pin } })
-        .then(function (res) {
-          trackEvent('runner_pin_verified', { label: 'Runner PIN verified' });
-          toast('Signed in as a freelancer.');
-          window.location.href = res.redirect || '/freelancer';
-        }).catch(function (err) {
-          toast(err.message, 'error');
-          btn.disabled = false;
-        });
+      (freelancerFirebaseConfirmation
+        ? firebaseSmsVerify(freelancerFirebaseConfirmation, pin, 'freelancer')
+        : api('auth.php', { method: 'POST', body: { action: 'freelancer-login', phone: freelancerPhone, pin: pin } })
+      ).then(function (res) {
+        trackEvent('runner_pin_verified', { label: 'Runner PIN verified' });
+        toast('Signed in as a freelancer.');
+        window.location.href = res.redirect || '/freelancer';
+      }).catch(function (err) {
+        toast(err.message, 'error');
+        btn.disabled = false;
+      });
     });
 
     var back = $('[data-freelancer-back]');
     if (back) back.addEventListener('click', function () {
+      freelancerFirebaseConfirmation = null;
       var step1 = $('[data-freelancer-step="1"]');
       var step2 = $('[data-freelancer-step="2"]');
       if (step1) step1.hidden = false;
       if (step2) step2.hidden = true;
     });
 
-    /* customer: phone -> system-generated code -> verify */
+    /* customer: phone -> Firebase SMS or server email/code -> verify */
     var customerPhone = '';
-    var cStart = $('[data-customer-form="start"]');
-    if (cStart) cStart.addEventListener('submit', function (ev) {
-      ev.preventDefault();
-      var btn = cStart.querySelector('[type="submit"]');
-      var phone = formValue(cStart, 'phone');
-      var channel = formValue(cStart, 'channel') || 'sms';
-      btn.disabled = true;
-      api('auth.php', { method: 'POST', body: { action: 'customer-start', phone: phone, channel: channel } })
+    var customerChannel = 'email';
+    var customerFirebaseConfirmation = null;
+    function showCustomerCodeStep(message, label) {
+      var hint = $('[data-customer-hint]');
+      if (hint) hint.textContent = message;
+      var step1 = $('[data-customer-step="1"]');
+      var step2 = $('[data-customer-step="2"]');
+      if (step1) step1.hidden = true;
+      if (step2) step2.hidden = false;
+      var fieldLabel = step2 && step2.querySelector('.mz-field .mz-label');
+      if (fieldLabel) fieldLabel.textContent = label;
+      var codeInput = $('[data-customer-form="login"] [name="code"]');
+      if (codeInput) { codeInput.value = ''; codeInput.focus(); }
+    }
+    function serverCustomerStart(btn, phone) {
+      api('auth.php', { method: 'POST', body: { action: 'customer-start', phone: phone, channel: customerChannel } })
         .then(function (res) {
           customerPhone = res.phone || phone;
-          var hint = $('[data-customer-hint]');
+          customerFirebaseConfirmation = null;
           var where = res.channel === 'email' ? (res.sent_to || 'your email') : 'your phone';
-          if (hint) {
-            hint.innerHTML = res.demo_code
-              ? 'Demo code: <strong>' + esc(res.demo_code) + '</strong>. In production this code is sent by ' + esc(res.channel === 'email' ? 'email' : 'SMS') + '.'
-              : 'Enter the 4-digit code sent to ' + esc(where) + '.';
-          }
-          var step1 = $('[data-customer-step="1"]');
-          var step2 = $('[data-customer-step="2"]');
-          if (step1) step1.hidden = true;
-          if (step2) step2.hidden = false;
-          var codeInput = $('[data-customer-form="login"] [name="code"]');
-          if (codeInput) { codeInput.value = ''; codeInput.focus(); }
+          showCustomerCodeStep(res.demo_code
+            ? 'Demo code: ' + res.demo_code + '. In production this code is sent by ' + (res.channel === 'email' ? 'email' : 'SMS') + '.'
+            : 'Enter the 4-digit code sent to ' + where + '.', '4-digit code');
           toast(res.demo_code ? 'Code issued for ' + customerPhone + ' — demo code ' + res.demo_code : 'Code sent via ' + (res.channel === 'email' ? 'email' : 'SMS') + ' to ' + where, 'info');
           btn.disabled = false;
         }).catch(function (err) {
           toast(err.message, 'error');
           btn.disabled = false;
         });
+    }
+    var cStart = $('[data-customer-form="start"]');
+    if (cStart) cStart.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var btn = cStart.querySelector('[type="submit"]');
+      var phone = formValue(cStart, 'phone');
+      customerChannel = formValue(cStart, 'channel') || 'sms';
+      btn.disabled = true;
+      if (customerChannel !== 'sms') { serverCustomerStart(btn, phone); return; }
+      firebaseSmsLoad().then(function (fb) {
+        if (!fb) return serverCustomerStart(btn, phone);
+        var normalized = firebaseSmsPhone(phone);
+        if (!normalized) throw new Error('Enter a valid Kenyan phone number, e.g. 0712 345 678.');
+        return fb.auth.signInWithPhoneNumber(normalized, fb.recaptcha).then(function (confirmation) {
+          customerPhone = phone;
+          customerFirebaseConfirmation = confirmation;
+          showCustomerCodeStep('Enter the 6-digit SMS code sent to ' + phone + '.', '6-digit SMS code');
+          toast('SMS code sent to ' + phone + '.', 'info');
+          btn.disabled = false;
+        });
+      }).catch(function (err) {
+        toast(err.message || 'Could not send the SMS code.', 'error');
+        btn.disabled = false;
+      });
     });
     var cLogin = $('[data-customer-form="login"]');
     if (cLogin) cLogin.addEventListener('submit', function (ev) {
@@ -4163,12 +4279,15 @@ return '<div class="mz-mobile-card">' +
       var btn = cLogin.querySelector('[type="submit"]');
       if (!customerPhone) { toast('Enter your phone number first.', 'error'); showLoginPanel('customer'); return; }
       btn.disabled = true;
-      api('auth.php', { method: 'POST', body: { action: 'customer-login', phone: customerPhone, code: formValue(cLogin, 'code') } })
-        .then(function (res) { window.location.href = res.redirect || '/customer'; })
+      (customerFirebaseConfirmation
+        ? firebaseSmsVerify(customerFirebaseConfirmation, formValue(cLogin, 'code'), 'customer')
+        : api('auth.php', { method: 'POST', body: { action: 'customer-login', phone: customerPhone, code: formValue(cLogin, 'code') } })
+      ).then(function (res) { window.location.href = res.redirect || '/customer'; })
         .catch(function (err) { toast(err.message, 'error'); btn.disabled = false; });
     });
     var cBack = $('[data-customer-back]');
     if (cBack) cBack.addEventListener('click', function () {
+      customerFirebaseConfirmation = null;
       var step1 = $('[data-customer-step="1"]');
       var step2 = $('[data-customer-step="2"]');
       if (step1) step1.hidden = false;
@@ -4208,7 +4327,7 @@ return '<div class="mz-mobile-card">' +
     card.setAttribute('data-push-card', '');
     card.innerHTML =
       '<div class="mz-card__title">Push notifications</div>' +
-      '<p class="mz-hint">Get order status updates on this device, and opt in to occasional Mzigo.online offers.</p>' +
+      '<p class="mz-hint">Get order status updates on this device, and opt in to occasional MziGO.Online offers.</p>' +
       '<label style="display:flex;align-items:center;gap:8px;margin:10px 0 12px;font-size:13px;">' +
         '<input type="checkbox" data-push-marketing> Send me marketing messages (optional)' +
       '</label>' +
@@ -4348,7 +4467,7 @@ return '<div class="mz-mobile-card">' +
     if (!form) return;
     if (APP.pricingMode === 'free') {
       form.parentElement.insertAdjacentHTML('beforebegin',
-        '<div class="mz-alert" style="margin-bottom:16px;">Mzigo.online is free to use right now — create an account and start sending. No trial or payment required.</div>');
+        '<div class="mz-alert" style="margin-bottom:16px;">MziGO.Online is free to use right now — create an account and start sending. No trial or payment required.</div>');
     }
     form.addEventListener('submit', function (ev) {
       ev.preventDefault();
@@ -4365,7 +4484,7 @@ return '<div class="mz-mobile-card">' +
           password: formValue(form, 'password')
         }
       }).then(function (res) {
-        toast('Workspace created — welcome to Mzigo.online!');
+        toast('Workspace created — welcome to MziGO.Online!');
         window.location.href = res.redirect || '/profile';
       }).catch(function (err) {
         toast(err.message, 'error');
@@ -5099,7 +5218,7 @@ return '<div class="mz-mobile-card">' +
       var link = location.origin + '/refer?ref=' + encodeURIComponent(code);
       body.innerHTML = '<div class="mz-mono" style="font-size:18px;font-weight:800;">' + esc(code) + '</div>' +
         '<div class="mz-hint" style="margin:4px 0 8px;">' + data.referral.clicks + ' clicks · ' + data.referral.signups + ' sign-ups · ' + data.referral.activated + ' activated · KES ' + data.referral.earned_kes + ' earned</div>' +
-        '<div style="display:flex;gap:8px;flex-wrap:wrap;"><a class="mz-btn mz-btn--sm" target="_blank" rel="noopener" href="https://wa.me/?text=' + encodeURIComponent('Join Mzigo.online with my link: ' + link) + '">Share on WhatsApp</a>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;"><a class="mz-btn mz-btn--sm" target="_blank" rel="noopener" href="https://wa.me/?text=' + encodeURIComponent('Join MziGO.Online with my link: ' + link) + '">Share on WhatsApp</a>' +
         '<button type="button" class="mz-btn mz-btn--outline mz-btn--sm" data-referral-copy>Copy link</button><a class="mz-tab" href="/refer">Referral page</a></div>';
       var copy = body.querySelector('[data-referral-copy]');
       if (copy) copy.addEventListener('click', function () { if (navigator.clipboard) navigator.clipboard.writeText(link).then(function(){toast('Referral link copied.');}); else toast('Long-press to copy the link.', 'info'); });
@@ -5507,7 +5626,7 @@ return '<div class="mz-mobile-card">' +
     var preference = data.preference || 'all';
     var prefs = data.email_preferences || {};
     var prefCard = '<div class="mz-saas-card"><div class="mz-card__title">Email &amp; notification preferences</div>' +
-      '<p class="mz-hint">Add an email for receipts and parcel updates, then choose what Mzigo.online may email you about.</p>' +
+      '<p class="mz-hint">Add an email for receipts and parcel updates, then choose what MziGO.Online may email you about.</p>' +
       '<label class="mz-field"><span class="mz-label">Email address</span>' +
         '<input class="mz-input" type="email" data-customer-email value="' + esc(c.email || '') + '" placeholder="you@example.com"></label>' +
       '<div class="mz-hint" style="margin:-2px 0 10px;">' + (c.email ? (c.email_verified ? '<span class="mz-badge mz-badge--ok">Verified</span>' : '<span class="mz-badge mz-badge--warn">Not verified</span>') : 'No email on file yet.') + '</div>' +
@@ -5792,13 +5911,13 @@ return '<div class="mz-mobile-card">' +
       var h1 = head.querySelector('h1');
       var lead = head.querySelector('p');
       if (cap) cap.textContent = 'Free to use';
-      if (h1) h1.textContent = 'Mzigo.online is free to use right now';
+      if (h1) h1.textContent = 'MziGO.Online is free to use right now';
       if (lead) lead.textContent = 'No subscription is charged while we onboard courier partners. Delivery fees are quoted per parcel and paid at collection.';
     }
     grid.innerHTML =
       '<div class="mz-saas-card" style="grid-column:1/-1;">' +
         '<div class="mz-card__title">No subscription is charged right now</div>' +
-        '<p class="mz-hint">Mzigo.online is free to use while we onboard courier partners. Send, track and manage parcels without a monthly plan. Delivery fees are quoted per parcel and paid at collection.</p>' +
+        '<p class="mz-hint">MziGO.Online is free to use while we onboard courier partners. Send, track and manage parcels without a monthly plan. Delivery fees are quoted per parcel and paid at collection.</p>' +
         '<div class="mz-row" style="gap:10px;margin-top:12px;">' +
           '<a class="mz-btn" href="/send-mzigo">Send a parcel</a>' +
           '<a class="mz-btn mz-btn--outline" href="/signup">Create a workspace</a>' +
@@ -9900,7 +10019,7 @@ return '<div class="mz-mobile-card">' +
           '<label class="mz-field"><span class="mz-label">Mode</span><select class="mz-input" data-wa-field="mode"><option value="demo"' + (cfg.mode === 'demo' ? ' selected' : '') + '>Demo (no Meta calls)</option><option value="live"' + (cfg.mode === 'live' ? ' selected' : '') + '>Live Meta Cloud API</option></select></label>' +
           '<label class="mz-field"><span class="mz-label">Assistant</span><select class="mz-input" data-wa-field="enabled"><option value="1"' + (cfg.enabled ? ' selected' : '') + '>Enabled</option><option value="0"' + (!cfg.enabled ? ' selected' : '') + '>Paused</option></select></label>' +
           '<label class="mz-field"><span class="mz-label">WhatsApp provider</span><select class="mz-input" data-wa-field="provider"><option value="meta"' + (cfg.provider === 'meta' ? ' selected' : '') + '>Meta WhatsApp Cloud API</option><option value="infobip"' + (cfg.provider === 'infobip' ? ' selected' : '') + '>Infobip WhatsApp</option></select></label>' +
-          field('business_name', 'Business name', cfg.business_name, 'text', 'Mzigo.online') +
+          field('business_name', 'Business name', cfg.business_name, 'text', 'MziGO.Online') +
           field('infobip_base_url', 'Infobip WhatsApp base URL', cfg.infobip_base_url, 'text', 'd845wr.api.infobip.com') +
           field('infobip_sender', 'Infobip WhatsApp sender', cfg.infobip_sender, 'text', 'Your approved WhatsApp sender') +
           field('infobip_api_key', 'Infobip WhatsApp API key', '', 'password', cfg.infobip_api_key_set ? 'Saved — leave blank to keep' : 'Infobip API key') +
@@ -9974,7 +10093,7 @@ return '<div class="mz-mobile-card">' +
       return '<div class="mz-saas-card" style="margin-bottom:16px;"><div class="mz-card__title">Send a live WhatsApp test</div>' +
         '<p class="mz-hint">Sends through the selected provider (<strong>' + esc(cfg.provider || 'meta') + '</strong>). Use a WhatsApp-verified number.</p>' +
         '<div class="mz-wa-form"><label class="mz-field"><span class="mz-label">Phone number</span><input class="mz-input" data-wa-test-phone placeholder="+254 712 345 678"></label>' +
-        '<label class="mz-field"><span class="mz-label">Message</span><input class="mz-input" data-wa-test-body value="Mzigo.online WhatsApp delivery test"></label>' +
+        '<label class="mz-field"><span class="mz-label">Message</span><input class="mz-input" data-wa-test-body value="MziGO.Online WhatsApp delivery test"></label>' +
         '<div class="mz-field mz-field--full"><button type="button" class="mz-btn mz-btn--sm" data-wa-test-send>Send test WhatsApp</button><span class="mz-hint" data-wa-test-result style="margin-left:10px;"></span></div></div></div>';
     }
     function simulateCard() {
@@ -10688,7 +10807,7 @@ return '<div class="mz-mobile-card">' +
     host.innerHTML =
       '<div class="mz-admin-layout">' +
         '<aside class="mz-admin-nav" aria-label="Admin sections">' +
-          '<div class="mz-admin-nav__title">Mzigo.online</div>' +
+          '<div class="mz-admin-nav__title">MziGO.Online</div>' +
           nav.map(function (item) {
             return '<button type="button" class="mz-admin-nav__item' + (item[0] === adminInitialSection() ? ' is-active' : '') + '" data-admin-goto="' + item[0] + '">' +
               adminIcon(item[0]) + '<span class="mz-admin-nav__label">' + item[1] + '</span>' +
@@ -10826,7 +10945,7 @@ return '<div class="mz-mobile-card">' +
             '<div class="mz-saas-card" data-admin-claim-rails style="margin-bottom:16px;"></div>' +
             '<div class="mz-saas-card" data-admin-pricing style="margin-bottom:16px;"></div>' +
             '<div class="mz-saas-card" data-admin-twofa style="margin-bottom:16px;"></div>' +
-            '<div class="mz-saas-card"><div class="mz-card__title">Platform</div><div class="mz-kv"><dt>Software</dt><dd>Mzigo.online SaaS</dd></div>' +
+            '<div class="mz-saas-card"><div class="mz-card__title">Platform</div><div class="mz-kv"><dt>Software</dt><dd>MziGO.Online SaaS</dd></div>' +
             '<div class="mz-kv"><dt>Signed in as</dt><dd>' + esc((data.admin && data.admin.name) || 'Platform admin') + '</dd></div>' +
             '<div class="mz-kv"><dt>Database</dt><dd>' + esc(APP.database || '') + '</dd></div>' +
             '<div class="mz-kv"><dt>Notifications</dt><dd>' + esc(String((data.channels || []).filter(function (c) { return c.is_active; }).map(function (c) { return c.label; }).join(', ') || '—')) + '</dd></div></div>' +
@@ -11112,9 +11231,9 @@ return '<div class="mz-mobile-card">' +
         });
         var channel = emailChannel ? 'email' : (channels[0] ? channels[0].code : 'email');
         var leadLabel = cfg.lead_magnet_url ? (cfg.lead_magnet_label || cfg.cta) : cfg.cta;
-        var consentText = cfg.consent_label || 'I agree to receive the Mzigo.online newsletter and product alerts.';
+        var consentText = cfg.consent_label || 'I agree to receive the MziGO.Online newsletter and product alerts.';
         var body = '<div data-nl-fields>' +
-          (cfg.artwork_url ? '<img src="' + esc(cfg.artwork_url) + '" alt="Mzigo.online updates" style="display:block;width:100%;max-height:180px;object-fit:cover;border-radius:12px;margin:0 0 14px;">' : '') +
+          (cfg.artwork_url ? '<img src="' + esc(cfg.artwork_url) + '" alt="MziGO.Online updates" style="display:block;width:100%;max-height:180px;object-fit:cover;border-radius:12px;margin:0 0 14px;">' : '') +
           '<p class="mz-hint" style="margin:0 0 12px;">' + copyBlock(cfg.body) + '</p>' +
           '<label class="mz-field"><span class="mz-label" data-nl-channel-label>Email</span><input class="mz-input" name="nl_contact" type="email" autocomplete="email" placeholder="you@example.com"></label>' +
           (emailChannel && otherChannel ? '<button type="button" class="mz-link" data-nl-switch-channel style="font-size:12px;margin-top:-4px;">Prefer ' + esc(otherChannel.label) + ' instead?</button>' : '') +

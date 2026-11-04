@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — CLI migration runner.
+ * MziGO.Online — CLI migration runner.
  *
  *   php _server\db\migrate.php            # apply pending migrations
  *   php _server\db\migrate.php --status   # show applied/pending

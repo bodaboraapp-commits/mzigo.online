@@ -1,4 +1,4 @@
-# Mzigo.online — MVP status and pending work
+# MziGO.Online — MVP status and pending work
 
 **Updated:** 29 October 2026  
 **Scope:** current MVP/UAT build, production readiness and remaining launch work.  

@@ -1,6 +1,6 @@
 # Mzigo MCP microservice
 
-Privacy-enforcing MCP microservice for Mzigo.online.
+Privacy-enforcing MCP microservice for MziGO.Online.
 
 - `server.py` — dependency-free Python HTTP server that speaks MCP JSON-RPC.
 - `config.json` — runtime policy, written automatically by **Admin → Settings → MCP microservice privacy**. Do not edit by hand and never commit (it is gitignored).

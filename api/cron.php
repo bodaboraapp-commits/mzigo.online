@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — subscription lifecycle job (CLI only).
+ * MziGO.Online — subscription lifecycle job (CLI only).
  *
  *   php api\cron.php
  *
@@ -146,4 +146,4 @@ $webhookRetries = retry_webhook_deliveries(25);
 
 $pruned = $pdo->exec('DELETE FROM rate_limits WHERE expires_at < NOW() - INTERVAL 1 DAY');
 
-echo "Mzigo.online cron: {$n1} trial(s) expired, {$n2} workspace(s) suspended for overdue invoices, {$n3} scheduled billing change(s) applied, {$n4} claim SLA escalation(s), {$expiredBlacklist} blacklist entr(ies) expired, {$webhookRetries['attempted']} webhook retry attempt(s) ({$webhookRetries['sent']} sent), {$pruned} rate-limit bucket(s) pruned, {$campaignSent} referral campaign message(s) sent across " . count($campaignResults) . " campaign(s), {$marketingSent} marketing message(s) sent across " . count($marketingResults) . " campaign(s).\n";
+echo "MziGO.Online cron: {$n1} trial(s) expired, {$n2} workspace(s) suspended for overdue invoices, {$n3} scheduled billing change(s) applied, {$n4} claim SLA escalation(s), {$expiredBlacklist} blacklist entr(ies) expired, {$webhookRetries['attempted']} webhook retry attempt(s) ({$webhookRetries['sent']} sent), {$pruned} rate-limit bucket(s) pruned, {$campaignSent} referral campaign message(s) sent across " . count($campaignResults) . " campaign(s), {$marketingSent} marketing message(s) sent across " . count($marketingResults) . " campaign(s).\n";

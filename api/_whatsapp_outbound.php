@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — WhatsApp Phase 2 outbound parcel templates.
+ * MziGO.Online — WhatsApp Phase 2 outbound parcel templates.
  * Only sends to WhatsApp contacts with recorded consent; never messages cold numbers.
  */
 declare(strict_types=1);
@@ -11,7 +11,7 @@ function wa_out_config(): array
     $config = $raw !== '' ? (json_decode($raw, true) ?: []) : [];
     return array_replace([
         'enabled' => false, 'mode' => 'demo', 'provider' => 'meta', 'graph_version' => 'v23.0',
-        'phone_number_id' => '', 'access_token' => '', 'business_name' => 'Mzigo.online',
+        'phone_number_id' => '', 'access_token' => '', 'business_name' => 'MziGO.Online',
         'infobip_base_url' => '', 'infobip_api_key' => '', 'infobip_sender' => '',
     ], $config);
 }

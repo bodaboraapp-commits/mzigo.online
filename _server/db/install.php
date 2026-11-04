@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — database installer / upgrader (CLI).
+ * MziGO.Online — database installer / upgrader (CLI).
  *
  *   php _server\db\install.php
  *

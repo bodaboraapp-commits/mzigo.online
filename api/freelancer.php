@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — runner (freelancer) profile, availability, job feed and earnings.
+ * MziGO.Online — runner (freelancer) profile, availability, job feed and earnings.
  *
  * GET  /api/freelancer.php           profile + options + jobs + earnings + notifications
  * POST /api/freelancer.php           save-profile | set-availability | accept-job |

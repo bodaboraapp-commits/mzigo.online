@@ -1,17 +1,17 @@
-# Mzigo.online — Runner Terms (final draft)
+# MziGO.Online — Runner Terms (final draft)
 
 **Status:** final draft generated for legal sign-off · 26 October 2026
 
 ## 22. Runner (freelancer) terms
 
   
-These runner terms apply in addition to the rest of these Terms when you join Mzigo.online as a freelancer or runner. By creating a runner account, accepting a job or switching availability on, you agree to them.
+These runner terms apply in addition to the rest of these Terms when you join MziGO.Online as a freelancer or runner. By creating a runner account, accepting a job or switching availability on, you agree to them.
 
   
 ### 22.1 Independent contractor
 
   
-Runners are independent contractors, not employees, agents or representatives of Mzigo.online. You choose when to be available and which offered errands to accept. You are responsible for your own taxes, licences, insurance and equipment, and you may not hold yourself out as an employee of Mzigo.online.
+Runners are independent contractors, not employees, agents or representatives of MziGO.Online. You choose when to be available and which offered errands to accept. You are responsible for your own taxes, licences, insurance and equipment, and you may not hold yourself out as an employee of MziGO.Online.
 
   
 ### 22.2 Eligibility and account security
@@ -35,7 +35,7 @@ You must follow pickup, handling and delivery instructions, treat senders and re
 ### 22.5 Payments and payouts
 
   
-Completed jobs are recorded in your runner dashboard with the applicable fee. Pending earnings become available for payout subject to the minimum payout amount and any deductions disclosed in the app. Payouts are sent to the M-Pesa number saved in your runner profile. You are responsible for keeping that number accurate; payments sent to an incorrect number you supplied may not be recoverable. Mzigo.online records a payout reference for each payment.
+Completed jobs are recorded in your runner dashboard with the applicable fee. Pending earnings become available for payout subject to the minimum payout amount and any deductions disclosed in the app. Payouts are sent to the M-Pesa number saved in your runner profile. You are responsible for keeping that number accurate; payments sent to an incorrect number you supplied may not be recoverable. MziGO.Online records a payout reference for each payment.
 
   
 ### 22.6 Cancellation and no-show
@@ -47,7 +47,7 @@ If you cannot complete an accepted job, cancel as early as possible and follow t
 ### 22.7 Insurance and liability
 
   
-Parcel insurance offered through Mzigo.online covers parcels in accordance with the applicable terms; it does not provide personal accident, health, vehicle or income protection for runners. You are responsible for your own insurance. Nothing in these runner terms limits liability that cannot be limited under Kenyan law.
+Parcel insurance offered through MziGO.Online covers parcels in accordance with the applicable terms; it does not provide personal accident, health, vehicle or income protection for runners. You are responsible for your own insurance. Nothing in these runner terms limits liability that cannot be limited under Kenyan law.
 
   
 ### 22.8 Suspension and termination

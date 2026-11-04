@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — WhatsApp Phase 1: FAQ + tracking + human handoff.
+ * MziGO.Online — WhatsApp Phase 1: FAQ + tracking + human handoff.
  * Demo mode runs without Meta credentials; live mode uses WhatsApp Cloud API.
  */
 declare(strict_types=1);
@@ -21,13 +21,13 @@ function wa_config(): array
         'access_token' => '',
         'verify_token' => '',
         'app_secret' => '',
-        'business_name' => 'Mzigo.online',
+        'business_name' => 'MziGO.Online',
         'handoff_message' => "I'm connecting you to a Mzigo support agent. They will reply here during business hours.",
         'ai_provider' => 'demo',
         'ai_base_url' => '',
         'ai_model' => 'gpt-4o-mini',
         'ai_api_key' => '',
-        'ai_system_prompt' => "You are Mzigo.online's WhatsApp assistant for parcel delivery in Kenya. Be concise and helpful. Never invent parcel statuses, never reveal personal data, never promise refunds or payments. If the request is account-specific, a payment issue, a claim, a complaint or you are unsure, offer a human handoff.",
+        'ai_system_prompt' => "You are MziGO.Online's WhatsApp assistant for parcel delivery in Kenya. Be concise and helpful. Never invent parcel statuses, never reveal personal data, never promise refunds or payments. If the request is account-specific, a payment issue, a claim, a complaint or you are unsure, offer a human handoff.",
         'auto_reply' => true,
     ];
     $raw = platform_setting('whatsapp_config', '');

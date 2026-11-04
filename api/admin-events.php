@@ -1,5 +1,5 @@
 <?php
-/** Mzigo.online — admin view of CTA/funnel analytics events. */
+/** MziGO.Online — admin view of CTA/funnel analytics events. */
 declare(strict_types=1);
 require __DIR__ . '/_bootstrap.php';
 require_platform_admin();

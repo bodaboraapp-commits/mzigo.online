@@ -1,4 +1,4 @@
-# Mzigo.online — UI & Customer-Centric CTA Review
+# MziGO.Online — UI & Customer-Centric CTA Review
 
 **Status: the Top 8 fixes below are implemented (26 October 2026).** P1/P2 items remain proposals.
 Prepared 26 October 2026. Evidence: live CTA inventory across all public pages + merchant, freelancer and customer dashboards (`_raw/saas-proof/cta-audit/cta-inventory.json`).
@@ -190,7 +190,7 @@ A three-card row, each card = one audience + one primary CTA:
 | Freelancer | **Earn money running errands** | Pick up local errands, track your jobs and get paid — sign up with just your phone number. | **Join as a runner** (filled) · *How it works* (text) |
 | Customer | **Receiving a parcel?** | Follow every scan, pay the delivery fee by M-Pesa at collection and keep your collection code. | **Track a parcel** (filled) · *Pay on collection guide* (text) |
 
-Placement: directly after the send-form card, before the “Send parcels across Kenya with Mzigo.online” SEO intro. This fills the current freelancer gap without disrupting the hero.
+Placement: directly after the send-form card, before the “Send parcels across Kenya with MziGO.Online” SEO intro. This fills the current freelancer gap without disrupting the hero.
 
 ### 7B. Header (guest)
 

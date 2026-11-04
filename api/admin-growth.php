@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — admin growth console: coupons, incentive/referral config, referral activity.
+ * MziGO.Online — admin growth console: coupons, incentive/referral config, referral activity.
  */
 declare(strict_types=1);
 require __DIR__ . '/_bootstrap.php';

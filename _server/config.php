@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — SaaS configuration.
+ * MziGO.Online — SaaS configuration.
  *
  * Local defaults point at XAMPP's MariaDB on port 3307. Every value can be
  * overridden with environment variables, which is what the Docker/deployment
@@ -19,7 +19,7 @@ $demoMode = ($demoEnv === false || $demoEnv === '')
 
 return [
     'app' => [
-        'name'                => 'Mzigo.online',
+        'name'                => 'MziGO.Online',
         'env'                 => $appEnv,
         'base_url'            => getenv('APP_BASE_URL') ?: 'http://localhost:8090',
         'demo_mode'           => $demoMode,

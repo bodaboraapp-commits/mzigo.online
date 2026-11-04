@@ -21,12 +21,12 @@ function email_verification_issue(int $userId, string $email): array
     $user = $stmt->fetch() ?: ['id' => $userId, 'name' => 'there', 'email' => $email, 'phone' => '', 'comm_channel' => null];
     $body = implode("\n", [
         'Hi ' . ($user['name'] ?? 'there') . ',',
-        'Confirm the email address on your Mzigo.online account by opening this link:',
+        'Confirm the email address on your MziGO.Online account by opening this link:',
         $link,
         'The link expires in 24 hours.',
         'If you did not create this account, you can ignore this email.',
     ]);
-    notification_send('email', $user, 'Verify your Mzigo.online email', $body, 'email_verification',
+    notification_send('email', $user, 'Verify your MziGO.Online email', $body, 'email_verification',
         ['id' => 0, 'tracking' => ''], 'log', 'user', (string) $userId, ['link' => $link]);
     $attempt = db()->prepare("SELECT status, error FROM notifications WHERE template = 'email_verification' AND related_id = ? ORDER BY id DESC LIMIT 1");
     $attempt->execute([(string) $userId]);

@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — public API v1: parcels.
+ * MziGO.Online — public API v1: parcels.
  *
  * POST /api/v1/parcels.php  (X-API-Key)  create a parcel in the key's workspace
  * GET  /api/v1/parcels.php  (X-API-Key)  ?tracking=TRK-… | list recent parcels
@@ -125,8 +125,8 @@ $stmt->execute([
 
 $pdo->prepare(
     'INSERT INTO scans (subject_type, subject_id, status, label, location, note, scanned_at)
-     VALUES ("parcel", ?, "CREATED", "Parcel registered", "Mzigo.online", ?, NOW())'
-)->execute([$id, 'Created through the Mzigo.online API. Drop off at the courier office to start tracking.']);
+     VALUES ("parcel", ?, "CREATED", "Parcel registered", "MziGO.Online", ?, NOW())'
+)->execute([$id, 'Created through the MziGO.Online API. Drop off at the courier office to start tracking.']);
 
 $pdo->prepare('INSERT IGNORE INTO senders (tenant_id, phone, name) VALUES (?, ?, ?)')
     ->execute([$tenantId, $senderPhone, $senderName]);

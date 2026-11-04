@@ -1,4 +1,4 @@
-# Mzigo.online — SEO Rollout Log (Phase A + B)
+# MziGO.Online — SEO Rollout Log (Phase A + B)
 
 **Status:** implemented and verified on 25 October 2026. Source proposal: [seo-content-proposal.md](seo-content-proposal.md).
 **Phase 1 (on-page copy + technical SEO) and Phase 2 (About, Help Centre, location pages, partner programme) are live.**
@@ -24,7 +24,7 @@
 - Open Graph + Twitter (`summary_large_image`) with the new 1200×630 image.
 - JSON-LD: Organization (site-wide), WebSite + Service + FAQPage (home), BreadcrumbList (inner pages), ContactPage (contact).
 - `sitemap.xml` (22 indexable URLs, including `/faq`, `/help`, guides, locations and `/partners/become`) and `robots.txt` generated on every build.
-- New title/meta: home now "Send & Track Parcels Across Kenya | Mzigo.online".
+- New title/meta: home now "Send & Track Parcels Across Kenya | MziGO.Online".
 
 ### Copy
 - **Home:** new intro/trust band, "How Mzigo works" (3 steps), "Where we deliver", "Built for businesses and everyday senders", final CTA; "Why send with Mzigo" expanded to 4 proof cards.
@@ -35,7 +35,7 @@
 - **Pricing:** plan explanations, inclusions, pricing Q&A; paid plans rendered only in paid mode.
 - **Contact:** support intro, toll-free number and social handle.
 - **Signup:** trust-oriented heading and intro.
-- **Parcel insurance positioning:** Mzigo.online is the first Kenyan company to offer parcel insurance — the fact and the peace-of-mind benefit are now woven through the home page, Send, Errand, Track, Partners, Pricing, Contact, Signup, FAQ, About, Help Centre and its guides, all three location pages, the partner programme and the Terms.
+- **Parcel insurance positioning:** MziGO.Online is the first Kenyan company to offer parcel insurance — the fact and the peace-of-mind benefit are now woven through the home page, Send, Errand, Track, Partners, Pricing, Contact, Signup, FAQ, About, Help Centre and its guides, all three location pages, the partner programme and the Terms.
 - **FAQ:** replaced with the keyword bank (DB + static). The landing page now shows the first **5** FAQs with a **View all FAQs** button that opens the new standalone **[/faq](/faq)** page, which lists all 12 and carries the FAQPage schema.
 - **Footer:** toll free + @mzigo.online placeholder added.
 

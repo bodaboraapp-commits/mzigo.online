@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — printable invoice / receipt document.
+ * MziGO.Online — printable invoice / receipt document.
  * GET /api/invoice-doc.php?invoice=ID[&download=1]
  * Owner/admin/staff of the invoice's workspace only.
  */
@@ -64,7 +64,7 @@ $title = $refunded ? 'Credit note' : ($paid ? 'Receipt' : 'Invoice');
 $e = fn ($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
 $money = fn (int $v) => 'KES ' . number_format($v);
 $lines = '';
-$lines .= '<tr><th>Description</th><td>' . $e('Mzigo.online — ' . $inv['plan_name'] . ' plan (' . $inv['description'] . ')') . '</td></tr>';
+$lines .= '<tr><th>Description</th><td>' . $e('MziGO.Online — ' . $inv['plan_name'] . ' plan (' . $inv['description'] . ')') . '</td></tr>';
 $lines .= '<tr><th>Invoice number</th><td>' . $e($inv['number']) . '</td></tr>';
 $lines .= '<tr><th>Issued / due</th><td>' . $e($inv['issued_at']) . ' / ' . $e($inv['due_at'] ?: '—') . '</td></tr>';
 if ($paid) {
@@ -92,7 +92,7 @@ $html = '<!doctype html><html><head><meta charset="utf-8"><title>' . $e($brandNa
 '</style></head><body>' .
 '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap;">' .
 '<div>' . $brandLogoHtml .
-'<div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6b7a5c;">Powered By Mzigo.online</div>' .
+'<div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6b7a5c;">Powered By MziGO.Online</div>' .
 '<div class="muted" style="margin-top:4px;">' . $e($brandSupport) . ($brandPhone !== '' ? ' &middot; ' . $e($brandPhone) : '') . '</div></div>' .
 '<div style="text-align:right;"><h1 style="margin:0;font-size:22px;">' . $e($title) . '</h1><div class="muted">' . $e($inv['number']) . ' &middot; ' . ($refunded ? 'Refunded' : ($paid ? 'Paid' : 'Pending payment')) . '</div></div></div>' .
 '<h2 style="margin:18px 0 4px;">' . $e($brandName) . '</h2>' .
@@ -105,7 +105,7 @@ $html = '<!doctype html><html><head><meta charset="utf-8"><title>' . $e($brandNa
 '</div><table>' . $lines . '</table>' .
 '<div style="margin-top:18px;padding-top:10px;border-top:1px solid #e3ead9;color:#5b6b45;font-size:11px;line-height:1.6;">' .
 '<div>' . $e($brandFooter) . '</div>' .
-'<div>Payment terms: 7 days &middot; ' . $e($brandSupport) . ' &middot; Powered By Mzigo.online</div></div>' .
+'<div>Payment terms: 7 days &middot; ' . $e($brandSupport) . ' &middot; Powered By MziGO.Online</div></div>' .
 '<button onclick="window.print()">Print / Save as PDF</button></body></html>';
 
 if (!empty($_GET['download'])) {

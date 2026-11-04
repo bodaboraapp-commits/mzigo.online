@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — branded HTML email templates.
+ * MziGO.Online — branded HTML email templates.
  *
  * Every transactional email uses a responsive, inline-styled layout with the
  * Mzigo green brand. Templates receive the legacy plain-text body so existing
@@ -65,8 +65,8 @@ function email_shell(string $preheader, string $heading, string $content, ?strin
     $unsubscribeUrl = trim((string) ($opts['unsubscribe_url'] ?? ''));
     $isMarketing = !empty($opts['marketing']) || $unsubscribeUrl !== '';
     $footerNote = $isMarketing
-        ? 'You are receiving this because you subscribed to Mzigo.online updates.'
-        : 'This is a service message about your Mzigo.online account.';
+        ? 'You are receiving this because you subscribed to MziGO.Online updates.'
+        : 'This is a service message about your MziGO.Online account.';
     $preferenceUrl = $isMarketing && $unsubscribeUrl !== '' ? $unsubscribeUrl : $base . '/profile#notifications';
     $preferenceLabel = $isMarketing && $unsubscribeUrl !== '' ? 'Unsubscribe' : 'Manage notifications';
     return '<!doctype html><html lang="en"><head><meta charset="utf-8">' .
@@ -98,7 +98,7 @@ function email_shell(string $preheader, string $heading, string $content, ?strin
         '<div style="border-top:1px solid #35412a;margin:18px 0 14px;"></div>' .
         '<p style="margin:0 0 6px;font-size:11px;line-height:1.6;color:#aebba2;">Questions? <a href="mailto:' . email_e($support) . '" style="color:#c2f8cb;text-decoration:underline;">' . email_e($support) . '</a></p>' .
         '<p style="margin:0 0 10px;font-size:11px;line-height:1.6;color:#8f9d83;">' . email_e($footerNote) . '</p>' .
-        '<p style="margin:0;font-size:11px;line-height:1.6;color:#8f9d83;"><a href="' . email_e($preferenceUrl) . '" style="color:#c2f8cb;text-decoration:underline;">' . email_e($preferenceLabel) . '</a> &nbsp;&middot;&nbsp; Mzigo.online &middot; Nairobi, Kenya</p>' .
+        '<p style="margin:0;font-size:11px;line-height:1.6;color:#8f9d83;"><a href="' . email_e($preferenceUrl) . '" style="color:#c2f8cb;text-decoration:underline;">' . email_e($preferenceLabel) . '</a> &nbsp;&middot;&nbsp; MziGO.Online &middot; Nairobi, Kenya</p>' .
         '</td></tr></table></td></tr></table></body></html>';
 }
 
@@ -117,25 +117,25 @@ function email_render(string $template, array $user, string $subject, string $bo
     if ($template === 'email_verification' || $template === 'welcome') {
         $url = $link ?: (email_first_url($body) ?? '');
         $content = $greeting .
-            '<p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#46523a;">Welcome to Mzigo.online. Confirm your email address so we can send you parcel updates, receipts, password resets and account notices.</p>' .
+            '<p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#46523a;">Welcome to MziGO.Online. Confirm your email address so we can send you parcel updates, receipts, password resets and account notices.</p>' .
             email_info_card('Account', (string) ($user['email'] ?? '')) .
             email_paragraphs($url === '' ? $body : 'This link expires in 24 hours. If you did not create this account, you can ignore this email.');
-        return email_shell('Confirm your Mzigo.online account email', 'Confirm your email', $content, $url ?: null, 'Verify my email');
+        return email_shell('Confirm your MziGO.Online account email', 'Confirm your email', $content, $url ?: null, 'Verify my email');
     }
 
     if ($template === 'password_reset') {
         $url = $link ?: (email_first_url($body) ?? '');
         $content = $greeting .
-            '<p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#46523a;">We received a request to reset the password for your Mzigo.online account.</p>' .
+            '<p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#46523a;">We received a request to reset the password for your MziGO.Online account.</p>' .
             '<p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#46523a;">This single-use link expires in 60 minutes. If you did not request it, no action is needed.</p>';
-        return email_shell('Reset your Mzigo.online password', 'Reset your password', $content, $url ?: null, 'Choose a new password');
+        return email_shell('Reset your MziGO.Online password', 'Reset your password', $content, $url ?: null, 'Choose a new password');
     }
 
     if ($template === 'password_changed') {
         $content = $greeting .
             '<div style="padding:14px 16px;background:#f0fdf4;border:1px solid #bbf0c4;border-radius:12px;font-size:14px;color:#166534;margin-bottom:14px;"><strong>Your password was changed.</strong></div>' .
             '<p style="margin:0;font-size:14px;line-height:1.65;color:#46523a;">If this was not you, reset your password immediately and contact support.</p>';
-        return email_shell('Your Mzigo.online password changed', 'Password changed', $content, $base . '/forgot-password', 'Reset password');
+        return email_shell('Your MziGO.Online password changed', 'Password changed', $content, $base . '/forgot-password', 'Reset password');
     }
 
     if ($template === 'email_verified') {
@@ -154,7 +154,7 @@ function email_render(string $template, array $user, string $subject, string $bo
         $parcelSize = (string) ($parcel['size'] ?? '');
         $termsUrl = $base . '/terms#risk-and-cover';
         $content = $greeting .
-            '<p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#46523a;">Your parcel has been registered with Mzigo.online. Keep this tracking number and share it with the sender.</p>' .
+            '<p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#46523a;">Your parcel has been registered with MziGO.Online. Keep this tracking number and share it with the sender.</p>' .
             email_info_card('Tracking number', $tracking) .
             ($carrier !== '' ? email_info_card('Courier', $carrier) : '') .
             ($route !== '' ? email_info_card('Route', $route) : '') .
@@ -231,7 +231,7 @@ function email_render(string $template, array $user, string $subject, string $bo
         $url = (string) ($data['confirm_url'] ?? (email_first_url($body) ?? ''));
         $artwork = (string) ($data['artwork_url'] ?? '');
         $artworkHtml = $artwork !== ''
-            ? '<img src="' . email_e($artwork) . '" alt="Mzigo.online updates" style="display:block;width:100%;max-width:520px;height:auto;border-radius:12px;margin:0 0 16px;">'
+            ? '<img src="' . email_e($artwork) . '" alt="MziGO.Online updates" style="display:block;width:100%;max-width:520px;height:auto;border-radius:12px;margin:0 0 16px;">'
             : '';
         $leadUrl = (string) ($data['lead_magnet_url'] ?? '');
         $leadLabel = (string) ($data['lead_magnet_label'] ?? 'Download your guide');
@@ -239,11 +239,11 @@ function email_render(string $template, array $user, string $subject, string $bo
             ? '<p style="margin:0 0 14px;font-size:13px;line-height:1.6;color:#78866a;">Your guide: <a href="' . email_e($leadUrl) . '" style="color:#3c5223;text-decoration:underline;">' . email_e($leadLabel) . '</a></p>'
             : '';
         $content = $greeting . $artworkHtml .
-            '<p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#46523a;">Confirm that you want to receive Mzigo.online news and product alerts. We will only send the updates you asked for.</p>' .
+            '<p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#46523a;">Confirm that you want to receive MziGO.Online news and product alerts. We will only send the updates you asked for.</p>' .
             $leadHtml .
             email_info_card('Updates', 'Newsletter and product alerts') .
             '<p style="margin:0 0 12px;font-size:13px;line-height:1.6;color:#78866a;">This confirmation link expires in 48 hours. If you did not request this, you can ignore this email.</p>';
-        return email_shell('Confirm your Mzigo.online updates', 'Confirm your subscription', $content, $url ?: null, 'Confirm subscription');
+        return email_shell('Confirm your MziGO.Online updates', 'Confirm your subscription', $content, $url ?: null, 'Confirm subscription');
     }
 
     if (str_starts_with($template, 'claim_')) {
@@ -270,21 +270,21 @@ function email_render(string $template, array $user, string $subject, string $bo
             (($data['invoice'] ?? '') !== '' ? email_info_card('Invoice', (string) $data['invoice']) : '') .
             ($amount !== '' ? email_info_card('Amount paid', $amount) : '') .
             (($data['reference'] ?? '') !== '' ? email_info_card('Receipt', (string) $data['reference']) : '');
-        return email_shell('Payment received for your Mzigo.online subscription', 'Subscription payment received', $content, $base . '/billing', 'Open billing');
+        return email_shell('Payment received for your MziGO.Online subscription', 'Subscription payment received', $content, $base . '/billing', 'Open billing');
     }
 
     if ($template === 'team_invite') {
-        $content = $greeting . '<p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#46523a;">You have been invited to join the <strong>' . email_e((string) ($data['business'] ?? 'Mzigo.online')) . '</strong> workspace.</p>' .
+        $content = $greeting . '<p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#46523a;">You have been invited to join the <strong>' . email_e((string) ($data['business'] ?? 'MziGO.Online')) . '</strong> workspace.</p>' .
             email_info_card('Email', (string) ($data['email'] ?? ($user['email'] ?? ''))) .
             (($data['password'] ?? '') !== '' ? email_info_card('Temporary password', (string) $data['password']) : '') .
             '<p style="margin:0;font-size:13px;color:#78866a;">Sign in and change your password from Settings.</p>';
-        return email_shell('You are invited to Mzigo.online', 'Welcome to the team', $content, $base . '/login', 'Sign in');
+        return email_shell('You are invited to MziGO.Online', 'Welcome to the team', $content, $base . '/login', 'Sign in');
     }
 
     if ($template === 'smtp_test') {
-        $content = $greeting . '<p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#46523a;">This is a test email from your Mzigo.online SMTP configuration. Delivery is working.</p>' .
+        $content = $greeting . '<p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#46523a;">This is a test email from your MziGO.Online SMTP configuration. Delivery is working.</p>' .
             email_info_card('Sent at', date('d M Y, H:i')) . email_info_card('Recipient', (string) ($user['email'] ?? ''));
-        return email_shell('Mzigo.online SMTP test', 'SMTP test successful', $content, $base . '/admin#communications', 'Open communications');
+        return email_shell('MziGO.Online SMTP test', 'SMTP test successful', $content, $base . '/admin#communications', 'Open communications');
     }
 
     if ($template === 'marketing_campaign') {
@@ -294,7 +294,7 @@ function email_render(string $template, array $user, string $subject, string $bo
         $unsub = (string) ($data['unsubscribe_url'] ?? '');
         $text = preg_replace('/\n\nUnsubscribe:.*$/s', '', $body) ?? $body;
         $content = $greeting .
-            ($artwork !== '' ? '<img src="' . email_e($artwork) . '" alt="Mzigo.online" style="display:block;width:100%;max-width:520px;height:auto;border-radius:12px;margin:0 0 16px;">' : '') .
+            ($artwork !== '' ? '<img src="' . email_e($artwork) . '" alt="MziGO.Online" style="display:block;width:100%;max-width:520px;height:auto;border-radius:12px;margin:0 0 16px;">' : '') .
             email_paragraphs($text);
         return email_shell($subject, $subject, $content, $ctaUrl ?: null, $ctaLabel ?: null, ['marketing' => true, 'unsubscribe_url' => $unsub]);
     }

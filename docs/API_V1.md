@@ -1,6 +1,6 @@
-# Mzigo.online Public API v1
+# MziGO.Online Public API v1
 
-Server-to-server API for creating, listing and tracking parcels inside a Mzigo.online workspace.
+Server-to-server API for creating, listing and tracking parcels inside a MziGO.Online workspace.
 
 - **Base URL (production):** `https://mzigo.online`
 - **Local/demo base URL:** `http://localhost:8090`

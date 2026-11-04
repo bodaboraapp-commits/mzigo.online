@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — register a parcel.
+ * MziGO.Online — register a parcel.
  *
  * Cookie/session endpoint (CSRF-protected). When the request belongs to a signed-in
  * workspace the parcel is scoped to that tenant and the monthly plan quota is
@@ -144,7 +144,7 @@ $scan = $pdo->prepare(
      VALUES (\'parcel\', ?, ?, ?, ?, ?, NOW())'
 );
 $scan->execute([
-    $id, 'CREATED', 'Parcel registered', 'Mzigo.online',
+    $id, 'CREATED', 'Parcel registered', 'MziGO.Online',
     'QR label and Locker ID issued to sender. Drop off at the courier office to start tracking.',
 ]);
 

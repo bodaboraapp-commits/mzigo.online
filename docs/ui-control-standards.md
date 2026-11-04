@@ -1,4 +1,4 @@
-# Mzigo.online — Form & CTA Padding Standards (UI/UX + QC)
+# MziGO.Online — Form & CTA Padding Standards (UI/UX + QC)
 
 Audit date: 26 October 2026 · Scope: public pages, auth, send/track/contact forms, merchant dashboard, admin console, runner and customer dashboards.
 

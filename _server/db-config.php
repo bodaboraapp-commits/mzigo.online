@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — local database credentials.
+ * MziGO.Online — local database credentials.
  *
  * Kept inside _server/ (denied over HTTP) and included by api/_bootstrap.php.
  * On this machine XAMPP's MariaDB listens on 3307; container deployments set

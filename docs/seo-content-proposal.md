@@ -1,4 +1,4 @@
-﻿# Mzigo.online â€” SEO Content & Copy Proposal
+﻿# MziGO.Online â€” SEO Content & Copy Proposal
 
 **Status: DRAFT FOR REVIEW â€” nothing on the live site has been replaced.**
 Prepared 25 October 2026. Approve section by section (reply with the section numbers), or send edits.
@@ -38,7 +38,7 @@ Every string in Â§5/Â§6 is written to be pasted as-is. Items needing your in
 
 ## 2. Positioning, voice and value propositions
 
-**Positioning statement:** *Mzigo.online is the simplest way for Kenyan businesses and individuals to send a parcel or errand through trusted courier partners â€” with live tracking and payment on collection by M-Pesa.*
+**Positioning statement:** *MziGO.Online is the simplest way for Kenyan businesses and individuals to send a parcel or errand through trusted courier partners â€” with live tracking and payment on collection by M-Pesa.*
 
 **Voice:** confident, plain Kenyan English; benefit-first; concrete; never hypey. No â€œcheapestâ€, â€œfastestâ€, â€œguaranteed same-dayâ€ claims â€” we cannot verify them.
 
@@ -73,7 +73,7 @@ Every string in Â§5/Â§6 is written to be pasted as-is. Items needing your in
 ## 4. Global SEO foundation
 
 ### 4.1 Titles and meta descriptions
-- **Title formula:** `{Primary keyword phrase} | Mzigo.online` â€” keep â‰¤60 characters, keyword first, brand last.
+- **Title formula:** `{Primary keyword phrase} | MziGO.Online` â€” keep â‰¤60 characters, keyword first, brand last.
 - **Meta description:** 140â€“158 characters, one benefit + one proof + implicit CTA.
 - **H1 rule:** one per page, contains the primary keyword phrase naturally. Current home H1 is a slogan â€” proposed change in Â§5.1.
 - H2s carry supporting keywords (â€œHow Mzigo worksâ€, â€œWhere we deliverâ€, â€œParcel sizes explainedâ€).
@@ -94,7 +94,7 @@ Every string in Â§5/Â§6 is written to be pasted as-is. Items needing your in
 
 ### 4.3 Canonical, Open Graph, Twitter
 - Self-referencing canonical on every indexable page: `<link rel="canonical" href="https://mzigo.online{path}">`.
-- OG defaults: `og:site_name=Mzigo.online`, `og:type=website` (home) / `article` (help), `og:title` = SEO title, `og:description` = meta description, `og:url`, `og:image=1200Ã—630`.
+- OG defaults: `og:site_name=MziGO.Online`, `og:type=website` (home) / `article` (help), `og:title` = SEO title, `og:description` = meta description, `og:url`, `og:image=1200Ã—630`.
 - Twitter: `summary_large_image`, same title/description/image.
 - âš ï¸ DECISION: final production domain (`mzigo.online` assumed) and an OG image (I can design one from the hero later).
 
@@ -132,7 +132,7 @@ Legend: **Title** = `<title>`, **Meta** = meta description, **H1** = page headin
 
 ### 5.1 Home `/` â€” index
 
-**Title (47):** `Send & Track Parcels Across Kenya | Mzigo.online`
+**Title (47):** `Send & Track Parcels Across Kenya | MziGO.Online`
 **Meta (149):** `Send parcels with trusted courier partners across Kenya. Compare couriers, drop off, track every scan and pay on collection with M-Pesa. Start free.`
 
 **H1 options:**
@@ -150,7 +150,7 @@ Legend: **Title** = `<title>`, **Meta** = meta description, **H1** = page headin
 `6 courier partners Â· 70+ destinations Â· Live tracking Â· Pay on collection`
 
 **Intro paragraph (new, under hero/step section, 205 chars):**
-`Mzigo.online connects you to trusted courier partners across Kenya. Register a parcel online, drop it off at a partner office and track it all the way to collection â€” while the receiver pays the delivery fee by M-Pesa.`
+`MziGO.Online connects you to trusted courier partners across Kenya. Register a parcel online, drop it off at a partner office and track it all the way to collection â€” while the receiver pays the delivery fee by M-Pesa.`
 
 **â€œHow Mzigo worksâ€ (3 cards):**
 1. **Choose your courier and route** â€” `Compare partner offices, routes and delivery options for your parcel, then pick the one that fits your budget.`
@@ -170,7 +170,7 @@ H2: `Where we deliver`
 **Audience blocks (new):**
 - **For individuals** â€” `Send a gift, documents or a parcel home without queuing at multiple offices. Register online, drop off once, track to collection.`
 - **For e-commerce sellers** â€” `Register parcels from your workspace, share a tracking link with each customer and let receivers pay at collection.`
-- **For teams** â€” `Invite staff, assign roles, save frequent senders and connect your store with the Mzigo.online API.`
+- **For teams** â€” `Invite staff, assign roles, save frequent senders and connect your store with the MziGO.Online API.`
 
 **Final CTA (new):**
 H2: `Send your first parcel today`
@@ -187,7 +187,7 @@ Buttons: `Start free` â†’ `/signup` Â· `Track a parcel` â†’ `/track-
 
 ### 5.2 Send a parcel `/send-mzigo` â€” index
 
-**Title (55):** `Send a Parcel in Kenya â€” Compare Couriers | Mzigo.online`
+**Title (55):** `Send a Parcel in Kenya â€” Compare Couriers | MziGO.Online`
 **Meta (145):** `Compare courier partners, get a delivery quote and register your parcel in minutes. QR label, live tracking and M-Pesa pay on collection across Kenya.`
 
 **H1:** `Send a parcel across Kenya`
@@ -217,7 +217,7 @@ H2: `Where your parcel can go`
 
 ### 5.3 Run an errand `/send-errand` â€” index
 
-**Title (51):** `Book a Runner for Errands in Kenya | Mzigo.online`
+**Title (51):** `Book a Runner for Errands in Kenya | MziGO.Online`
 **Meta (137):** `Book a runner to pick up or deliver around town. Set the route, add the item details and confirm the fee before pickup. Pay by M-Pesa or cash.`
 
 **H1:** `Book a runner for errands`
@@ -242,7 +242,7 @@ H2: `Paying for an errand`
 
 ### 5.4 Track `/track-mzigo` â€” index
 
-**Title (45):** `Track Your Parcel or Errand | Mzigo.online`
+**Title (45):** `Track Your Parcel or Errand | MziGO.Online`
 **Meta (148):** `Enter your tracking number or Locker ID to see every scan from drop-off to collection. Track Mzigo parcels and errands instantly â€” no login required.`
 
 **H1:** `Track your parcel`
@@ -272,8 +272,8 @@ H2: `Paying for an errand`
 
 ### 5.5 Partners `/partners` â€” index
 
-**Title (52):** `Courier Partners & Routes Across Kenya | Mzigo.online`
-**Meta (132):** `Browse courier partners and their routes across Kenya. Compare destinations, choose a partner and send your parcel with Mzigo.online.`
+**Title (52):** `Courier Partners & Routes Across Kenya | MziGO.Online`
+**Meta (132):** `Browse courier partners and their routes across Kenya. Compare destinations, choose a partner and send your parcel with MziGO.Online.`
 
 **H1:** `Courier partners and routes`
 
@@ -291,7 +291,7 @@ H2: `Paying for an errand`
 
 **Optional partner recruitment block (âš ï¸ DECISION â€” only if the programme exists):**
 H2: `Run a courier or transport business?`
-`Partner with Mzigo.online to receive senders digitally, manage drop-offs and grow your route network. Email hello@mzigo.online with your company details.`
+`Partner with MziGO.Online to receive senders digitally, manage drop-offs and grow your route network. Email hello@mzigo.online with your company details.`
 
 **Schema:** BreadcrumbList, ItemList (partners).
 **Internal links:** send-mzigo, pricing, contact.
@@ -300,7 +300,7 @@ H2: `Run a courier or transport business?`
 
 ### 5.6 Pricing `/pricing` â€” index
 
-**Title (52):** `Pricing & Plans for Growing Businesses | Mzigo.online`
+**Title (52):** `Pricing & Plans for Growing Businesses | MziGO.Online`
 **Meta (147):** `Simple monthly plans for businesses: Starter, Growth and Scale. Tracking, QR labels, saved senders and M-Pesa pay on collection included on every plan.`
 
 **H1:** `Simple pricing that grows with your business`
@@ -319,7 +319,7 @@ H2: `Run a courier or transport business?`
 **Pricing FAQ (4):** see Â§6 Q10â€“Q12.
 
 **âš ï¸ DECISION â€” pricing mode banner.** The platform currently runs in free mode (`pricing_mode=free`). Either:
-- **A (recommended while free):** add a banner `Mzigo.online is free to use while we onboard partners â€” no subscription is charged today.` and keep plans visible as â€œwhat's comingâ€.
+- **A (recommended while free):** add a banner `MziGO.Online is free to use while we onboard partners â€” no subscription is charged today.` and keep plans visible as â€œwhat's comingâ€.
 - **B:** hide plan prices and say `Plans are being finalised â€” contact us for current pricing.`
 
 **Schema:** Product + Offer (only if prices remain public).
@@ -329,10 +329,10 @@ H2: `Run a courier or transport business?`
 
 ### 5.7 Contact `/contact` â€” index
 
-**Title (46):** `Contact Mzigo.online | Support & Partnerships`
-**Meta (141):** `Contact the Mzigo.online team about sending, tracking, billing, workspaces, claims or partnerships. We reply within one business day, Monâ€“Sat.`
+**Title (46):** `Contact MziGO.Online | Support & Partnerships`
+**Meta (141):** `Contact the MziGO.Online team about sending, tracking, billing, workspaces, claims or partnerships. We reply within one business day, Monâ€“Sat.`
 
-**H1:** `Contact Mzigo.online`
+**H1:** `Contact MziGO.Online`
 
 **Intro (154):**
 `Questions about a parcel, a workspace or a partnership? Send us a message and our team will reply by email within one business day.`
@@ -353,10 +353,10 @@ H2: `Run a courier or transport business?`
 
 ### 5.8 Signup `/signup` â€” index
 
-**Title (41):** `Create a Free Workspace | Mzigo.online`
-**Meta (136):** `Start a Mzigo.online workspace: 14-day Starter trial, 50 parcels a month, tracking links, QR labels and team roles. No card required.`
+**Title (41):** `Create a Free Workspace | MziGO.Online`
+**Meta (136):** `Start a MziGO.Online workspace: 14-day Starter trial, 50 parcels a month, tracking links, QR labels and team roles. No card required.`
 
-**H1:** `Start your free Mzigo.online workspace`
+**H1:** `Start your free MziGO.Online workspace`
 
 **Intro (152):**
 `Create a workspace for your business and send your first parcel today. 14 days of Starter are on us â€” no card required.`
@@ -375,10 +375,10 @@ H2: `Run a courier or transport business?`
 
 ### 5.9 Login and auth screens â€” `noindex, follow`
 
-- **Title:** `Sign in to Mzigo.online`
-- **Meta:** `Sign in to your Mzigo.online workspace to send, track and manage parcels.`
+- **Title:** `Sign in to MziGO.Online`
+- **Meta:** `Sign in to your MziGO.Online workspace to send, track and manage parcels.`
 - Keep demo-account block **only in development**; hide when `show_demo_accounts=0` before production.
-- `forgot-password`, `reset-password`, `verify-email`: refine titles (`Reset your password | Mzigo.online`), add `noindex`.
+- `forgot-password`, `reset-password`, `verify-email`: refine titles (`Reset your password | MziGO.Online`), add `noindex`.
 
 ---
 
@@ -386,13 +386,13 @@ H2: `Run a courier or transport business?`
 
 | Page | Proposed title | Proposed meta |
 |---|---|---|
-| `/legal` | `Legal & Policies | Mzigo.online` | `Mzigo.online policies: terms of service, privacy policy and support policy in one place — what applies when you send, track or collect parcels.` |
-| `/terms` | `Terms & Conditions | Mzigo.online` | `The terms that apply when you send, track or receive parcels through Mzigo.online, including bookings, fees, claims and liability.` |
-| `/privacy` | `Privacy Policy | Mzigo.online` | `How Mzigo.online collects, uses, shares and protects personal data under the Kenya Data Protection Act â€” and the rights you have.` |
+| `/legal` | `Legal & Policies | MziGO.Online` | `MziGO.Online policies: terms of service, privacy policy and support policy in one place — what applies when you send, track or collect parcels.` |
+| `/terms` | `Terms & Conditions | MziGO.Online` | `The terms that apply when you send, track or receive parcels through MziGO.Online, including bookings, fees, claims and liability.` |
+| `/privacy` | `Privacy Policy | MziGO.Online` | `How MziGO.Online collects, uses, shares and protects personal data under the Kenya Data Protection Act â€” and the rights you have.` |
 
 Add short SEO intros above the legal documents (they are already detailed; intros help snippets):
-- Terms: `These terms explain how sending, tracking and collecting parcels works on Mzigo.online, including fees, claims and liability.`
-- Privacy: `This policy explains what personal data Mzigo.online collects, why we collect it, who we share it with and the rights you have under the Kenya Data Protection Act, 2019.`
+- Terms: `These terms explain how sending, tracking and collecting parcels works on MziGO.Online, including fees, claims and liability.`
+- Privacy: `This policy explains what personal data MziGO.Online collects, why we collect it, who we share it with and the rights you have under the Kenya Data Protection Act, 2019.`
 
 **Schema:** BreadcrumbList.
 **Internal links:** each other, contact.
@@ -406,7 +406,7 @@ This is an authenticated app screen. Keep it out of the index. The public-facing
 ### 5.12 App screens â€” `noindex, nofollow`
 
 `/orders`, `/billing`, `/settings`, `/profile`, `/admin`, `/freelancer`, `/customer`, `/verify-email`, `/forgot-password`, `/reset-password`.
-Titles stay task-focused (e.g. `Orders | Mzigo.online`). No marketing copy needed.
+Titles stay task-focused (e.g. `Orders | MziGO.Online`). No marketing copy needed.
 
 ### 5.13 Error pages â€” `noindex`
 
@@ -418,7 +418,7 @@ Keep the production 404/403/500 copy already implemented. Optional addition on 4
 
 Current 6 FAQs are good; proposal: keep the topics, rewrite for keywords, and expand to 12. Home displays all; tool pages can show a subset.
 
-**Q1. How do I send a parcel with Mzigo.online?**
+**Q1. How do I send a parcel with MziGO.Online?**
 `Open Send Mzigo, choose a courier partner and route, add the sender and receiver details, declare the parcel value and drop it off at the partner office. A tracking number and QR label are generated for every parcel.`
 
 **Q2. How do I track my parcel?**
@@ -463,17 +463,17 @@ Current 6 FAQs are good; proposal: keep the topics, rewrite for keywords, and ex
 | Priority | URL | Title | H1 | Primary keyword | Purpose |
 |---|---|---|---|---|---|
 | 1 | `/parcel-delivery-kenya` | `Parcel Delivery in Kenya â€” Send with Trusted Couriers` | `Parcel delivery across Kenya` | parcel delivery Kenya | Service pillar page linking to all tools |
-| 1 | `/help` | `Help Centre | Mzigo.online` | `How can we help?` | Mzigo help | Hub for FAQs and guides |
-| 2 | `/send-parcel-nairobi` | `Send a Parcel in Nairobi | Mzigo.online` | `Send a parcel in Nairobi` | send parcel Nairobi | Corridor landing page |
-| 2 | `/send-parcel-mombasa` | `Send a Parcel to Mombasa | Mzigo.online` | `Send a parcel to Mombasa` | parcel to Mombasa | Corridor landing page |
-| 2 | `/send-parcel-nakuru` | `Send a Parcel to Nakuru | Mzigo.online` | `Send a parcel to Nakuru` | parcel to Nakuru | Corridor landing page |
+| 1 | `/help` | `Help Centre | MziGO.Online` | `How can we help?` | Mzigo help | Hub for FAQs and guides |
+| 2 | `/send-parcel-nairobi` | `Send a Parcel in Nairobi | MziGO.Online` | `Send a parcel in Nairobi` | send parcel Nairobi | Corridor landing page |
+| 2 | `/send-parcel-mombasa` | `Send a Parcel to Mombasa | MziGO.Online` | `Send a parcel to Mombasa` | parcel to Mombasa | Corridor landing page |
+| 2 | `/send-parcel-nakuru` | `Send a Parcel to Nakuru | MziGO.Online` | `Send a parcel to Nakuru` | parcel to Nakuru | Corridor landing page |
 | 3 | `/help/how-to-send-a-parcel-in-kenya` | `How to Send a Parcel in Kenya (Step by Step)` | `How to send a parcel in Kenya` | how to send a parcel | Guide + HowTo schema |
 | 3 | `/help/mpesa-pay-on-collection` | `M-Pesa Pay on Collection Explained` | `Paying for a parcel with M-Pesa` | pay on delivery M-Pesa | Guide |
 | 3 | `/help/how-to-track-your-parcel` | `How to Track Your Parcel` | `How to track your parcel` | track parcel Kenya | Guide |
 | 3 | `/help/parcel-sizes-and-pricing` | `Parcel Sizes and Delivery Pricing` | `Parcel sizes explained` | parcel sizes Kenya | Guide |
-| 4 | `/about` | `About Mzigo.online | Our Courier Network` | `About Mzigo.online` | Mzigo company | E-E-A-T / brand |
-| 4 | `/partners/become` | `Become a Courier Partner | Mzigo.online` | `Partner with Mzigo.online` | become courier partner | Partner acquisition |
-| 4 | `/blog` | `Mzigo.online Blog` | `Practical delivery advice for Kenyan businesses` | parcel delivery tips | Content hub |
+| 4 | `/about` | `About MziGO.Online | Our Courier Network` | `About MziGO.Online` | Mzigo company | E-E-A-T / brand |
+| 4 | `/partners/become` | `Become a Courier Partner | MziGO.Online` | `Partner with MziGO.Online` | become courier partner | Partner acquisition |
+| 4 | `/blog` | `MziGO.Online Blog` | `Practical delivery advice for Kenyan businesses` | parcel delivery tips | Content hub |
 
 **Flagship article outline â€” â€œHow to Send a Parcel in Kenyaâ€ (~1,200 words):**
 1. What you need before you start (sender/receiver, parcel size, value).
@@ -495,7 +495,7 @@ Site-wide Organization (place once, e.g. home + inner pages via template):
 {
   "@context": "https://schema.org",
   "@type": "Organization",
-  "name": "Mzigo.online",
+  "name": "MziGO.Online",
   "url": "https://mzigo.online",
   "logo": "https://mzigo.online/assets/img/mzigo-logo.png",
   "description": "Send and track parcels across Kenya with trusted courier partners.",
@@ -515,7 +515,7 @@ Home WebSite + Service:
 {
   "@context": "https://schema.org",
   "@type": "WebSite",
-  "name": "Mzigo.online",
+  "name": "MziGO.Online",
   "url": "https://mzigo.online"
 }
 ```
@@ -525,7 +525,7 @@ Home WebSite + Service:
   "@context": "https://schema.org",
   "@type": "Service",
   "serviceType": "Parcel delivery",
-  "provider": { "@type": "Organization", "name": "Mzigo.online", "url": "https://mzigo.online" },
+  "provider": { "@type": "Organization", "name": "MziGO.Online", "url": "https://mzigo.online" },
   "areaServed": { "@type": "Country", "name": "Kenya" },
   "description": "Parcel delivery and tracking through trusted courier partners, with M-Pesa pay on collection."
 }
@@ -564,7 +564,7 @@ ContactPage:
 {
   "@context": "https://schema.org",
   "@type": "ContactPage",
-  "name": "Contact Mzigo.online",
+  "name": "Contact MziGO.Online",
   "url": "https://mzigo.online/contact"
 }
 ```
@@ -575,8 +575,8 @@ Pricing offers (only if prices stay public):
 {
   "@context": "https://schema.org",
   "@type": "Product",
-  "name": "Mzigo.online workspace plans",
-  "brand": { "@type": "Brand", "name": "Mzigo.online" },
+  "name": "MziGO.Online workspace plans",
+  "brand": { "@type": "Brand", "name": "MziGO.Online" },
   "offers": [
     { "@type": "Offer", "name": "Starter", "price": "1500", "priceCurrency": "KES" },
     { "@type": "Offer", "name": "Growth", "price": "3500", "priceCurrency": "KES" },
@@ -592,7 +592,7 @@ Pricing offers (only if prices stay public):
 | Image | Current alt | Proposed alt |
 |---|---|---|
 | Hero photo | `Parcel delivery` | `Courier handing over a parcel at a Mzigo partner drop-off in Kenya` |
-| Header/footer logo | `mzigo` | Keep short: `Mzigo.online logo` (decorative duplicate can be `alt=""`) |
+| Header/footer logo | `mzigo` | Keep short: `MziGO.Online logo` (decorative duplicate can be `alt=""`) |
 | Partner card avatar | `{letter}` only | `{Partner name} courier partner in Kenya` |
 | Why-Mzigo icons | decorative | `alt=""` + text label (already text) |
 | OG image (new) | â€” | 1200Ã—630 with logo, headline â€œSend & track parcels across Kenyaâ€ |

@@ -50,7 +50,7 @@ Suggested utility template bodies:
 - `mzigo_parcel_registered`: “Hi {{1}}, parcel {{2}} with {{3}} is registered. Route: {{4}}. Track it at mzigo.online/track-mzigo.”
 - `mzigo_parcel_ready`: “Hi {{1}}, parcel {{2}} is ready for collection. Delivery fee: KES {{3}}. Pay in the Mzigo customer portal to receive your collection code.”
 - `mzigo_payment_received`: “Hi {{1}}, payment for {{2}} was received. Amount: KES {{3}}. Collection code: {{4}}. Show it at the office.”
-- `mzigo_parcel_collected`: “Hi {{1}}, parcel {{2}} has been collected. Thank you for using Mzigo.online.”
+- `mzigo_parcel_collected`: “Hi {{1}}, parcel {{2}} has been collected. Thank you for using MziGO.Online.”
 - `mzigo_parcel_status`: “Hi {{1}}, parcel {{2}} update: {{3}} {{4}}”
 
 ## Consent rules

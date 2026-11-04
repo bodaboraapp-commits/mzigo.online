@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — SaaS authentication.
+ * MziGO.Online — SaaS authentication.
  *
  * GET  ?action=me                        -> session context
  * POST action=signup                      -> create workspace + owner + 14-day trial
@@ -176,7 +176,7 @@ switch ($action) {
         $stmt->execute([$identifier, $identifier]);
         $user = $stmt->fetch();
         if ($user && ($user['status'] ?? 'active') !== 'active') {
-            fail_error('account_suspended', 'This account is suspended. Contact Mzigo.online support.', 403);
+            fail_error('account_suspended', 'This account is suspended. Contact MziGO.Online support.', 403);
         }
         if (!$user || empty($user['password_hash']) || !password_verify($password, (string) $user['password_hash'])) {
             audit('auth.login_failed', 'user', null, ['identifier' => $identifier]);
@@ -247,7 +247,7 @@ switch ($action) {
         rate_limit('customer-start:' . client_ip() . ':' . $phone, 10, 300);
         $existing = find_best_phone_user($phone, 'customer');
         if ($existing !== null && ($existing['status'] ?? 'active') !== 'active') {
-            fail_error('account_suspended', 'This account is suspended. Contact Mzigo.online support.', 403);
+            fail_error('account_suspended', 'This account is suspended. Contact MziGO.Online support.', 403);
         }
         if ($existing !== null && ($existing['role'] ?? '') === 'platform_admin') {
             fail_error('account_type_mismatch', 'Use the admin console for this account.', 409);
@@ -286,9 +286,9 @@ switch ($action) {
                 if ($email === '') {
                     fail_error('email_missing', 'No email address is on this customer account. Use SMS or add an email in the customer portal first.', 422);
                 }
-                $subject = 'Your Mzigo.online sign-in code';
-                $textBody = 'Your Mzigo.online sign-in code is ' . $code . '. It expires in 10 minutes. Never share it.';
-                $html = email_shell('Your Mzigo sign-in code', 'Sign in to Mzigo.online',
+                $subject = 'Your MziGO.Online sign-in code';
+                $textBody = 'Your MziGO.Online sign-in code is ' . $code . '. It expires in 10 minutes. Never share it.';
+                $html = email_shell('Your Mzigo sign-in code', 'Sign in to MziGO.Online',
                     '<p style="font-size:15px;color:#26331a;">Your sign-in code is:</p>' .
                     '<p style="font-size:32px;font-weight:800;letter-spacing:6px;color:#3c5223;margin:16px 0;">' . htmlspecialchars($code, ENT_QUOTES) . '</p>' .
                     '<p style="font-size:13px;color:#63705a;">It expires in 10 minutes. If you did not request this, you can ignore this email.</p>');
@@ -335,7 +335,7 @@ switch ($action) {
             fail_error('invalid_credentials', 'No customer account matches that phone number. Choose Freelancer or Business if that is your account type.', 401);
         }
         if (($customer['status'] ?? 'active') !== 'active') {
-            fail_error('account_suspended', 'This account is suspended. Contact Mzigo.online support.', 403);
+            fail_error('account_suspended', 'This account is suspended. Contact MziGO.Online support.', 403);
         }
         $stmt = db()->prepare('SELECT otp_hash, otp_expires_at FROM users WHERE id = ? LIMIT 1');
         $stmt->execute([$customer['id']]);
@@ -390,8 +390,8 @@ switch ($action) {
                 if ($email === '') {
                     fail_error('email_missing', 'No email address is on this runner account. Use SMS or ask an admin to add an email.', 422);
                 }
-                $subject = 'Your Mzigo.online runner code';
-                $textBody = 'Your Mzigo.online runner sign-in code is ' . $pin . '. It expires when you request a new code. Never share it.';
+                $subject = 'Your MziGO.Online runner code';
+                $textBody = 'Your MziGO.Online runner sign-in code is ' . $pin . '. It expires when you request a new code. Never share it.';
                 $html = email_shell('Your Mzigo runner sign-in code', 'Runner sign-in code',
                     '<p style="font-size:15px;color:#26331a;">Your runner sign-in code is:</p>' .
                     '<p style="font-size:32px;font-weight:800;letter-spacing:6px;color:#3c5223;margin:16px 0;">' . htmlspecialchars($pin, ENT_QUOTES) . '</p>' .
@@ -438,7 +438,7 @@ switch ($action) {
             fail_error('invalid_credentials', 'No freelancer account matches that phone number. Choose Customer or Business if that is your account type.', 401);
         }
         if (($freelancer['status'] ?? 'active') !== 'active') {
-            fail_error('account_suspended', 'This account is suspended. Contact Mzigo.online support.', 403);
+            fail_error('account_suspended', 'This account is suspended. Contact MziGO.Online support.', 403);
         }
         $stmt = db()->prepare('SELECT pin_hash FROM users WHERE id = ? LIMIT 1');
         $stmt->execute([$freelancer['id']]);

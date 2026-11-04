@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — merchant orders API.
+ * MziGO.Online — merchant orders API.
  *
  * GET /api/orders.php?tab=parcels|errands&q=&status=&from=&to=&page=&per_page=&format=json|csv
  * Tenant-scoped (owner/admin/staff) parcels/errand list with filters, paging and
@@ -47,7 +47,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     if ($action === 'cancel_parcel' && in_array($parcel['status'], $cancelable, true)) {
         db()->prepare('UPDATE parcels SET status = "CANCELLED" WHERE id = ?')->execute([$parcel['id']]);
         db()->prepare('INSERT INTO scans (subject_type, subject_id, status, label, location, note, scanned_at)
-            VALUES ("parcel", ?, "CANCELLED", "Parcel cancelled", "Mzigo.online", ?, NOW())')
+            VALUES ("parcel", ?, "CANCELLED", "Parcel cancelled", "MziGO.Online", ?, NOW())')
             ->execute([$parcel['id'], 'Cancelled by workspace; paid fees are refundable via support.']);
         audit('parcel.cancelled', 'parcel', (string) $parcel['id'], ['tracking' => $tracking], $tenantId);
         dispatch_webhooks($tenantId, 'parcel.cancelled', ['tracking' => $tracking]);
@@ -56,7 +56,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     if ($action === 'request_return' && in_array($parcel['status'], $returnable, true)) {
         db()->prepare('UPDATE parcels SET status = "RETURN_IN_TRANSIT" WHERE id = ?')->execute([$parcel['id']]);
         db()->prepare('INSERT INTO scans (subject_type, subject_id, status, label, location, note, scanned_at)
-            VALUES ("parcel", ?, "RETURN_IN_TRANSIT", "Return requested", "Mzigo.online", ?, NOW())')
+            VALUES ("parcel", ?, "RETURN_IN_TRANSIT", "Return requested", "MziGO.Online", ?, NOW())')
             ->execute([$parcel['id'], 'Return requested by workspace; the parcel will be sent back to the origin office.']);
         audit('parcel.return_requested', 'parcel', (string) $parcel['id'], ['tracking' => $tracking], $tenantId);
         dispatch_webhooks($tenantId, 'parcel.returned', ['tracking' => $tracking]);
@@ -74,7 +74,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             [$nextStatus, $label, $note] = $transitions[$parcel['status']];
             db()->prepare('UPDATE parcels SET status = ? WHERE id = ?')->execute([$nextStatus, $parcel['id']]);
             db()->prepare('INSERT INTO scans (subject_type, subject_id, status, label, location, note, scanned_at)
-                VALUES ("parcel", ?, ?, ?, "Mzigo.online", ?, NOW())')
+                VALUES ("parcel", ?, ?, ?, "MziGO.Online", ?, NOW())')
                 ->execute([$parcel['id'], $nextStatus, $label, $note]);
             audit('parcel.status_advanced', 'parcel', (string) $parcel['id'], ['from' => $parcel['status'], 'to' => $nextStatus], $tenantId);
             $template = $nextStatus === 'READY_FOR_COLLECTION' ? 'parcel_ready' : 'parcel_status';

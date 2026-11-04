@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — SaaS API bootstrap.
+ * MziGO.Online — SaaS API bootstrap.
  *
  * Multi-tenant core: config, PDO, hardened sessions, CSRF, rate limiting,
  * users/tenants/roles, subscription plans + quota enforcement, audit log and
@@ -51,10 +51,10 @@ function db(): PDO
         try {
             $pdo->exec("SET time_zone = '+03:00'");
         } catch (Throwable $tzError) {
-            error_log('Mzigo.online DB timezone alignment skipped: ' . $tzError->getMessage());
+            error_log('MziGO.Online DB timezone alignment skipped: ' . $tzError->getMessage());
         }
     } catch (PDOException $e) {
-        error_log('Mzigo.online DB connection failed: ' . $e->getMessage());
+        error_log('MziGO.Online DB connection failed: ' . $e->getMessage());
         json_out(['ok' => false, 'error' => ['code' => 'db_unavailable', 'message' => 'Database unavailable.']], 500);
     }
     return $pdo;

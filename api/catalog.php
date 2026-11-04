@@ -1,5 +1,5 @@
 <?php
-/** Mzigo.online — courier catalog straight from MySQL. */
+/** MziGO.Online — courier catalog straight from MySQL. */
 declare(strict_types=1);
 require __DIR__ . '/_bootstrap.php';
 

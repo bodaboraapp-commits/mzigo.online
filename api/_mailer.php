@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — email delivery adapters (SMTP, SendGrid, Mailgun, demo log).
+ * MziGO.Online — email delivery adapters (SMTP, SendGrid, Mailgun, demo log).
  *
  * Uses the admin-configured email channel (Communication channels → Email).
  * Supported providers: smtp, sendgrid, mailgun, log. Falls back to
@@ -74,7 +74,7 @@ function mzigo_sendgrid_send(string $to, string $subject, string $body, ?string 
     if ($html !== null && trim($html) !== '') { $content[] = ['type' => 'text/html', 'value' => $html]; }
     $payload = [
         'personalizations' => [['to' => [['email' => $to]]]],
-        'from' => ['email' => $s['from'], 'name' => 'Mzigo.online'],
+        'from' => ['email' => $s['from'], 'name' => 'MziGO.Online'],
         'subject' => $subject,
         'content' => $content,
     ];
@@ -100,7 +100,7 @@ function mzigo_mailgun_send(string $to, string $subject, string $body, ?string $
     $region = strtolower(trim((string) ($cfg['region'] ?? 'us')));
     $base = $region === 'eu' ? 'https://api.eu.mailgun.net' : 'https://api.mailgun.net';
     $url = $base . '/v3/' . rawurlencode($domain) . '/messages';
-    $fields = ['from' => 'Mzigo.online <' . $s['from'] . '>', 'to' => $to, 'subject' => $subject, 'text' => $body];
+    $fields = ['from' => 'MziGO.Online <' . $s['from'] . '>', 'to' => $to, 'subject' => $subject, 'text' => $body];
     if ($html !== null && trim($html) !== '') { $fields['html'] = $html; }
     $ch = curl_init($url);
     curl_setopt_array($ch, [
@@ -173,7 +173,7 @@ function mzigo_mail_send(string $to, string $subject, string $body, ?string $htm
         }
         $encodedSubject = '=?UTF-8?B?' . base64_encode($subject) . '?=';
         $headers = [
-            'From: Mzigo.online <' . $from . '>',
+            'From: MziGO.Online <' . $from . '>',
             'Reply-To: ' . $from,
             'MIME-Version: 1.0',
         ];
@@ -233,12 +233,12 @@ function mzigo_mail_send(string $to, string $subject, string $body, ?string $htm
         mzigo_smtp_cmd($fp, 'DATA', ['3']);
         $encodedSubject = '=?UTF-8?B?' . base64_encode($subject) . '?=';
         $headers = [
-            'From: Mzigo.online <' . $s['from'] . '>',
+            'From: MziGO.Online <' . $s['from'] . '>',
             'To: <' . $to . '>',
             'Subject: ' . $encodedSubject,
             'Date: ' . date('r'),
             'MIME-Version: 1.0',
-            'X-Mailer: Mzigo.online',
+            'X-Mailer: MziGO.Online',
         ];
         $normalized = str_replace(["\r\n", "\r"], "\n", $body);
         if ($html !== null && trim($html) !== '') {

@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — contact inbox threads.
+ * MziGO.Online — contact inbox threads.
  * Internal notes + direct replies through the configured notification channels.
  */
 declare(strict_types=1);
@@ -66,7 +66,7 @@ function contact_send_reply(array $message, string $channel, string $body): arra
         return ['status' => 'skipped', 'error' => 'No recipient on file for this channel.'];
     }
     $subject = 'Re: ' . (string) $message['subject'];
-    $fullBody = $body . "\n\n— Mzigo.online support\nReply reference: CONTACT-" . (int) $message['id'];
+    $fullBody = $body . "\n\n— MziGO.Online support\nReply reference: CONTACT-" . (int) $message['id'];
     $user = ['id' => 0, 'name' => (string) $message['name'], 'email' => (string) $message['email'], 'phone' => (string) ($message['phone'] ?? ''), 'comm_channel' => null];
     $parcel = ['id' => 0, 'tracking' => 'CONTACT-' . (int) $message['id']];
     try {

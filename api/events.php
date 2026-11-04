@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — public CTA/funnel analytics intake.
+ * MziGO.Online — public CTA/funnel analytics intake.
  *
  * POST /api/events.php  { event, path, label, location, audience, meta }
  *

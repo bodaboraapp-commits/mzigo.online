@@ -112,7 +112,7 @@ if ($updateKey) {
     $keyFile = __DIR__ . '/../config-key.php';
     $backup = $keyFile . '.bak.' . date('YmdHis');
     if (is_file($keyFile)) { @copy($keyFile, $backup); @chmod($backup, 0600); }
-    $contents = "<?php\n/**\n * Mzigo.online application key (local secret).\n * Used to encrypt provider credentials at rest in MySQL.\n * Keep this file outside version control in production and deny web access to _server.\n */\nreturn " . var_export($newKey, true) . ";\n";
+    $contents = "<?php\n/**\n * MziGO.Online application key (local secret).\n * Used to encrypt provider credentials at rest in MySQL.\n * Keep this file outside version control in production and deny web access to _server.\n */\nreturn " . var_export($newKey, true) . ";\n";
     $tmp = $keyFile . '.tmp';
     if (@file_put_contents($tmp, $contents) === false || !@rename($tmp, $keyFile)) {
         @unlink($tmp);

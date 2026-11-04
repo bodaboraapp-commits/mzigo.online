@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — KYC review queue for platform admins.
+ * MziGO.Online — KYC review queue for platform admins.
  *
  * GET  /api/admin-kyc.php   pending + recent documents
  * POST /api/admin-kyc.php   { action: review, doc_id, decision: approved|rejected, note }

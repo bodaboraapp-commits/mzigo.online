@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — secure KYC document download for the owner or a platform admin.
+ * MziGO.Online — secure KYC document download for the owner or a platform admin.
  * GET /api/kyc-document.php?id=123
  */
 declare(strict_types=1);

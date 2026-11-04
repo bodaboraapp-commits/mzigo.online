@@ -1,4 +1,4 @@
-# Mzigo.online — Runner Incentives & Referral Growth Proposal
+# MziGO.Online — Runner Incentives & Referral Growth Proposal
 
 **Status: proposal only — no implementation until approved.**
 Goal: reward high-quality runners, turn runners/senders/receivers into a referral engine, and lower acquisition cost for freelancers and customers.

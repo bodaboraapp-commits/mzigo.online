@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — claim payout and recovery rails.
+ * MziGO.Online — claim payout and recovery rails.
  *
  * Payout providers: demo (immediate), mpesa (Daraja B2C sandbox/live).
  * Recovery providers: demo, webhook (signed HTTP integration for insurers/carriers).

@@ -1,4 +1,4 @@
-/* Mzigo.online — Firebase Cloud Messaging service worker.
+/* MziGO.Online — Firebase Cloud Messaging service worker.
    Firebase web config is public. If the Firebase project changes, update this
    file (or deploy a generated replacement) together with Admin → Communications. */
 importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js');
@@ -19,7 +19,7 @@ messaging.onBackgroundMessage(function (payload) {
   const n = payload.notification || {};
   const d = payload.data || {};
   const link = d.link || '/';
-  self.registration.showNotification(n.title || 'Mzigo.online', {
+  self.registration.showNotification(n.title || 'MziGO.Online', {
     body: n.body || '',
     icon: d.icon || '/assets/img/scan-icon-192.png',
     badge: '/assets/img/favicon-64.png',

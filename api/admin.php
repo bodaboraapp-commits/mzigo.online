@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — platform admin console API (platform_admin role only).
+ * MziGO.Online — platform admin console API (platform_admin role only).
  *
  * GET  -> metrics, tenants, invoices, plans, recent audit
  * POST verify_csrf:
@@ -1200,11 +1200,11 @@ switch ($action) {
 
     case 'send_test_sms':
         $to = require_phone($data);
-        $body = 'Mzigo.online: this is a test SMS from your Infobip configuration. Delivery is working.';
+        $body = 'MziGO.Online: this is a test SMS from your Infobip configuration. Delivery is working.';
         notification_send('sms', [
             'id' => (int) $admin['id'], 'name' => $admin['name'], 'email' => '',
             'phone' => $to, 'comm_channel' => null,
-        ], 'Mzigo.online SMS test', $body, 'sms_test', ['id' => 0, 'tracking' => ''], 'log', 'user', (string) $admin['id'], []);
+        ], 'MziGO.Online SMS test', $body, 'sms_test', ['id' => 0, 'tracking' => ''], 'log', 'user', (string) $admin['id'], []);
         $stmt = $pdo->prepare("SELECT status, provider, error FROM notifications WHERE recipient = ? AND template = 'sms_test' ORDER BY id DESC LIMIT 1");
         $stmt->execute([$to]);
         $result = $stmt->fetch() ?: ['status' => 'unknown', 'provider' => null, 'error' => null];
@@ -1216,11 +1216,11 @@ switch ($action) {
     case 'send_test_email':
         $to = param($data, 'email', 5, 160, 'Email');
         if (!email_valid($to)) { fail_error('invalid_email', 'Enter a valid email address.', 422); }
-        $body = "This is a test email from your Mzigo.online SMTP configuration. Delivery is working.";
+        $body = "This is a test email from your MziGO.Online SMTP configuration. Delivery is working.";
         notification_send('email', [
             'id' => (int) $admin['id'], 'name' => $admin['name'], 'email' => $to,
             'phone' => '', 'comm_channel' => null,
-        ], 'Mzigo.online SMTP test', $body, 'smtp_test', ['id' => 0, 'tracking' => ''], 'log', 'user', (string) $admin['id'], []);
+        ], 'MziGO.Online SMTP test', $body, 'smtp_test', ['id' => 0, 'tracking' => ''], 'log', 'user', (string) $admin['id'], []);
         $stmt = $pdo->prepare("SELECT status, provider, error FROM notifications WHERE recipient = ? AND template = 'smtp_test' ORDER BY id DESC LIMIT 1");
         $stmt->execute([$to]);
         $result = $stmt->fetch() ?: ['status' => 'unknown', 'provider' => null, 'error' => null];

@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — merchant settlement statements (monthly fee & collection summary).
+ * MziGO.Online — merchant settlement statements (monthly fee & collection summary).
  * GET /api/settlements.php[?format=csv]
  */
 declare(strict_types=1);

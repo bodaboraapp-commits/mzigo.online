@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — parcel claims (lost, damaged, delayed) with Phase 1 controls.
+ * MziGO.Online — parcel claims (lost, damaged, delayed) with Phase 1 controls.
  *
  * Controls enforced here:
  *  - eligibility windows by claim type and parcel status

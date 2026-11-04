@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — password reset for admin/merchant accounts.
+ * MziGO.Online — password reset for admin/merchant accounts.
  *
  * GET  ?token=…   validate a reset token
  * POST request    { email }        generic response + email link (demo link in demo mode)
@@ -56,12 +56,12 @@ if ($action === 'request') {
         $link = $base . '/reset-password?token=' . rawurlencode($token);
         $body = implode("\n", [
             'Hi ' . ($user['name'] ?? 'there') . ',',
-            'Use the link below to reset your Mzigo.online password. It expires in 60 minutes and can be used once.',
+            'Use the link below to reset your MziGO.Online password. It expires in 60 minutes and can be used once.',
             $link,
             'If you did not request this, you can ignore this email.',
         ]);
         notification_send(
-            'email', $user, 'Reset your Mzigo.online password', $body, 'password_reset',
+            'email', $user, 'Reset your MziGO.Online password', $body, 'password_reset',
             ['id' => 0, 'tracking' => ''], 'log', 'user', (string) $user['id'], ['link' => $link]
         );
         audit('auth.password_reset_requested', 'user', (string) $user['id'], ['email' => $user['email']]);
@@ -103,8 +103,8 @@ if ($action === 'reset') {
     notification_send('email', [
         'id' => (int) $row['user_id'], 'name' => $row['name'] ?? 'there', 'email' => $row['email'],
         'phone' => '', 'comm_channel' => null,
-    ], 'Your Mzigo.online password was changed',
-        "Hi " . ($row['name'] ?? 'there') . ",\nYour Mzigo.online password was changed. If this was not you, reset it immediately.",
+    ], 'Your MziGO.Online password was changed',
+        "Hi " . ($row['name'] ?? 'there') . ",\nYour MziGO.Online password was changed. If this was not you, reset it immediately.",
         'password_changed', ['id' => 0, 'tracking' => ''], 'log', 'user', (string) $row['user_id'], []);
     json_out(['ok' => true, 'source' => 'mysql', 'message' => 'Password updated. Sign in with your new password.']);
 }

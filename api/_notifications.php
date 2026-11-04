@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — outbound notification service.
+ * MziGO.Online — outbound notification service.
  *
  * When a business registers an order, the receiver's phone is looked up:
  *  • existing user   → send tracking via their preferred (active) channel(s)
@@ -656,7 +656,7 @@ function notify_customer_status(array $parcel, string $template, string $label, 
         'Hi ' . ($parcel['receiver_name'] ?? 'there') . ',',
         'Parcel ' . $tracking . ' is now: ' . $label . '.',
         $note,
-        'Track your parcel any time from your Mzigo.online account.',
+        'Track your parcel any time from your MziGO.Online account.',
     ]));
     $result = notify_customer_email($parcel, $template, 'Parcel ' . $tracking . ' · ' . $label, $body, [
         'tracking' => $tracking, 'status_label' => $label, 'note' => $note,
@@ -681,7 +681,7 @@ function notify_invoice_paid(array $invoice, array $user): array
     if (empty($user['email'])) { return []; }
     $body = implode("\n", [
         'Hi ' . ($user['name'] ?? 'there') . ',',
-        'We received your Mzigo.online subscription payment.',
+        'We received your MziGO.Online subscription payment.',
         'Invoice: ' . ($invoice['number'] ?? ''),
         'Amount: KES ' . (int) ($invoice['amount_kes'] ?? 0),
         'Your workspace remains active.',
@@ -700,12 +700,12 @@ function notify_team_invite(string $name, string $email, string $business, strin
     $user = ['id' => 0, 'name' => $name, 'email' => $email, 'phone' => '', 'comm_channel' => null];
     $body = implode("\n", [
         'Hi ' . $name . ',',
-        'You have been invited to the ' . $business . ' workspace on Mzigo.online.',
+        'You have been invited to the ' . $business . ' workspace on MziGO.Online.',
         'Email: ' . $email,
         'Temporary password: ' . $password,
         'Sign in and change your password from Settings.',
     ]);
-    notification_send('email', $user, 'You are invited to ' . $business . ' on Mzigo.online', $body, 'team_invite',
+    notification_send('email', $user, 'You are invited to ' . $business . ' on MziGO.Online', $body, 'team_invite',
         ['id' => 0, 'tracking' => ''], 'log', 'user', '', ['business' => $business, 'email' => $email, 'password' => $password]);
     return ['sent' => 1];
 }
@@ -732,7 +732,7 @@ function notify_parcel_created(array $parcel): array
         : parcel_insurance_ref($tracking);
     $lines = [
         'Hi ' . ($user['name'] ?? 'there') . ',',
-        'A parcel has been registered with Mzigo.online for delivery to ' . ($parcel['to_city'] ?? 'you') . '.',
+        'A parcel has been registered with MziGO.Online for delivery to ' . ($parcel['to_city'] ?? 'you') . '.',
         'Status: registered. The sender still needs to drop it off at the courier office; tracking updates begin after drop-off.',
         'Courier: ' . ($parcel['carrier'] ?? 'Mzigo partner') . '.',
         'Sender: ' . ($parcel['sender_name'] ?? 'the sender') . '.',

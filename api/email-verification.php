@@ -43,7 +43,7 @@ if ($action === 'verify') {
     notification_send('email', [
         'id' => (int) $row['user_id'], 'name' => $verifiedUser['name'], 'email' => $verifiedUser['email'],
         'phone' => '', 'comm_channel' => null,
-    ], 'Your Mzigo.online email is verified',
+    ], 'Your MziGO.Online email is verified',
         "Hi " . $verifiedUser['name'] . ",\nYour email address is now verified.",
         'email_verified', ['id' => 0, 'tracking' => ''], 'log', 'user', (string) $row['user_id'], []);
     json_out(['ok' => true, 'source' => 'mysql', 'message' => 'Email verified. Your account is confirmed.']);

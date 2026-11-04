@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — runner job helpers.
+ * MziGO.Online — runner job helpers.
  * Jobs originate from errand bookings; runners accept from the job feed.
  */
 declare(strict_types=1);
@@ -101,7 +101,7 @@ function runner_job_broadcast(array $job): void
 
 /**
  * Create an available runner job from a booked errand.
- * Runner keeps the base fee; the platform fee stays with Mzigo.online.
+ * Runner keeps the base fee; the platform fee stays with MziGO.Online.
  */
 /** Issue a one-time receiver code for a picked-up job (RN-06b). */
 function runner_job_issue_delivery_otp(int $jobId): array
@@ -247,7 +247,7 @@ function runner_notify_job_parties(array $job, string $event): void
         $pretty . '.',
         'Errand: ' . ($job['pickup'] ?? '') . ' → ' . ($job['dropoff'] ?? ''),
         'Reference: ' . $ref,
-        $event === 'delivered' ? 'Thank you for using Mzigo.online.' : 'You can follow updates from your Mzigo.online account.',
+        $event === 'delivered' ? 'Thank you for using MziGO.Online.' : 'You can follow updates from your MziGO.Online account.',
         $event === 'delivered' ? 'Know someone sending? Invite them and earn: ' . rtrim((string) (config()['app']['url'] ?? 'https://mzigo.online'), '/') . '/refer' : '',
     ]);
     if ($event === 'delivered') {

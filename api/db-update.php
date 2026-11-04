@@ -99,7 +99,7 @@ if (isset($_GET['download'])) {
     header('Content-Type: application/sql; charset=utf-8');
     header('Content-Disposition: attachment; filename="mzigo-db-update-' . date('Ymd-His') . '.sql"');
     header('Cache-Control: no-store');
-    echo "-- Mzigo.online pending schema migrations\n";
+    echo "-- MziGO.Online pending schema migrations\n";
     echo "-- Generated " . date('c') . "\n";
     echo "-- Review before importing. This file does not drop existing tables.\n\n";
     foreach ($pending as $item) {

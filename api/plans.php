@@ -1,5 +1,5 @@
 <?php
-/** Mzigo.online — public pricing catalog. */
+/** MziGO.Online — public pricing catalog. */
 declare(strict_types=1);
 require __DIR__ . '/_bootstrap.php';
 

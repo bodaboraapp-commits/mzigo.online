@@ -1,5 +1,5 @@
 <?php
-/** Mzigo.online — SaaS health/status probe (reads straight from MariaDB). */
+/** MziGO.Online — SaaS health/status probe (reads straight from MariaDB). */
 declare(strict_types=1);
 require __DIR__ . '/_bootstrap.php';
 

@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — platform analytics for the admin console (platform_admin only).
+ * MziGO.Online — platform analytics for the admin console (platform_admin only).
  *
  * BI model
  *  • SaaS health:     MRR, ARPA, trial → paid conversion, active/trial/suspended

@@ -43,7 +43,7 @@ try {
 
 $user = firebase_find_user_by_phone($phone, $scope);
 if ($user && ($user['status'] ?? 'active') !== 'active') {
-    fail_error('account_suspended', 'This account is suspended. Contact Mzigo.online support.', 403);
+    fail_error('account_suspended', 'This account is suspended. Contact MziGO.Online support.', 403);
 }
 
 try {

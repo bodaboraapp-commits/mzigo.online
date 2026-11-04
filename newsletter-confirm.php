@@ -16,5 +16,5 @@ if ($row) {
     echo newsletter_html_page('Subscription confirmed', 'You are confirmed. We will send only the updates you asked for. You can unsubscribe at any time from any newsletter.', true,
         $leadUrl, (string) ($cfg['lead_magnet_label'] ?? 'Download your guide'));
 } else {
-    echo newsletter_html_page('Confirmation link invalid or expired', 'This confirmation link is invalid or has expired. You can request a new one from the Mzigo.online website.', false);
+    echo newsletter_html_page('Confirmation link invalid or expired', 'This confirmation link is invalid or has expired. You can request a new one from the MziGO.Online website.', false);
 }

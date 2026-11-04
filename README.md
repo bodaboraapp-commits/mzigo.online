@@ -1,8 +1,8 @@
-﻿# Mzigo.online â€” SaaS parcel platform (local build)
+﻿# MziGO.Online â€” SaaS parcel platform (local build)
 
 A multi-tenant SaaS version of the Mzigo parcel platform: business workspaces,
 team roles, subscription plans with trials and quotas, invoices, a platform admin
-console, API keys and a public REST API â€” on top of the rebuilt Mzigo.online
+console, API keys and a public REST API â€” on top of the rebuilt MziGO.Online
 front-end (parcel registration, QR labels, tracking).
 
 **Preview:** <http://localhost:8090/>
@@ -251,7 +251,7 @@ docker compose -f deploy/docker-compose.yml up --build -d
 - **Charts:** the admin BI dashboard uses a locally vendored Chart.js 4.4.7
   (`assets/js/vendor/chart.umd.min.js`, MIT). It is lazy-loaded only on `/admin`;
   if it fails the KPI cards remain and each chart shows a fallback message.
-- **Branding:** every shipped reference is Mzigo.online; the build reapplies it.
+- **Branding:** every shipped reference is MziGO.Online; the build reapplies it.
 - **Security scope:** this is a demo-to-production starting point. The API uses
   prepared statements, tenant-scoped queries, CSRF, rate limits and server-side
   quota/pricing, but still needs TLS, rotated secrets, real payment/email

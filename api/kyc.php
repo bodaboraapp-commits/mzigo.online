@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — KYC document upload/status for runners and merchant workspaces.
+ * MziGO.Online — KYC document upload/status for runners and merchant workspaces.
  *
  * GET  /api/kyc.php    current status + uploaded documents
  * POST /api/kyc.php    multipart: doc_type, file

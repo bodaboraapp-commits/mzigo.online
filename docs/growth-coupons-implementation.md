@@ -1,4 +1,4 @@
-# Mzigo.online — Growth & Coupons Implementation
+# MziGO.Online — Growth & Coupons Implementation
 
 Implemented 26 October 2026 after approval of Phases 1–3, plus coupon checkout.
 

@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — profile/workspace data (packages, errands, senders, plan usage).
+ * MziGO.Online — profile/workspace data (packages, errands, senders, plan usage).
  * Scoped to the signed-in workspace plus anything this browser created anonymously.
  */
 declare(strict_types=1);

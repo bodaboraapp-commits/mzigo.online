@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — admin/ops runner job dispatch console.
+ * MziGO.Online — admin/ops runner job dispatch console.
  *
  * GET  /api/admin-runner-jobs.php   jobs + active runners
  * POST /api/admin-runner-jobs.php   create-job | assign-job | cancel-job

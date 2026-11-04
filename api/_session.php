@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — DB session handler.
+ * MziGO.Online — DB session handler.
  *
  * Stores every PHP session (including the serialized payload) in the `sessions`
  * table, with user/tenant context, IP, user-agent, idle/absolute expiry and a

@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — SMS delivery.
+ * MziGO.Online — SMS delivery.
  *
  * Uses the active `sms` communication channel. Infobip is the first-class
  * provider; the existing log provider is a safe demo fallback. Credentials
@@ -270,7 +270,7 @@ function sms_send_code(string $phone, string $code, string $purpose = 'customer'
 {
     $purpose = $purpose === 'runner' ? 'runner' : 'customer';
     $body = $purpose === 'runner'
-        ? 'Mzigo.online: your runner PIN is ' . $code . '. Never share it with anyone.'
-        : 'Mzigo.online: your sign-in code is ' . $code . '. It expires in 10 minutes. Never share it.';
+        ? 'MziGO.Online: your runner PIN is ' . $code . '. Never share it with anyone.'
+        : 'MziGO.Online: your sign-in code is ' . $code . '. It expires in 10 minutes. Never share it.';
     return sms_send($phone, $body);
 }

@@ -98,7 +98,7 @@ if ($action === 'send_test_whatsapp') {
     $phone = wa_normalize_phone((string) ($data['phone'] ?? ''));
     $body = trim((string) ($data['body'] ?? ''));
     if ($phone === '') fail('Enter a test phone number.', 422);
-    if ($body === '') $body = 'Mzigo.online: this is a WhatsApp delivery test from your admin console.';
+    if ($body === '') $body = 'MziGO.Online: this is a WhatsApp delivery test from your admin console.';
     $result = wa_send_text($phone, $body, false);
     audit('admin.whatsapp_test', 'platform', 'whatsapp', ['phone' => $phone, 'ok' => !empty($result['ok']), 'provider' => $result['provider'] ?? '']);
     json_out(['ok' => true, 'result' => $result]);

@@ -1,6 +1,6 @@
 <?php
 /**
- * Mzigo.online — insurer integration.
+ * MziGO.Online — insurer integration.
  *
  * Parcel insurance is issued through a configurable provider. Demo mode issues
  * clearly-labelled demo policies; live mode calls the provider API configured in
