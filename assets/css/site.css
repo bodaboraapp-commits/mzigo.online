@@ -2156,3 +2156,51 @@ img[data-mz-hero-placeholder] { opacity: 0; }
 @media (max-width: 767px) {
   .mz-bell-panel { position: fixed; left: 12px; right: 12px; top: 66px; width: auto; max-height: 70vh; }
 }
+
+/* Runner active-job task card */
+.mz-job-task {
+  border: 1px solid var(--mz-border); border-radius: 16px; padding: 14px 16px;
+  background: #fff; margin-bottom: 10px;
+}
+.mz-job-task__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.mz-job-task__ref { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 13px; font-weight: 800; color: var(--mz-hunter); }
+.mz-job-route { display: flex; align-items: center; gap: 10px; margin: 12px 0 12px; min-width: 0; }
+.mz-job-route__point { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.mz-job-route__point > span:last-child { min-width: 0; display: flex; flex-direction: column; }
+.mz-job-route__point strong { font-size: 13px; color: var(--mz-hunter); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mz-job-route__dot { width: 9px; height: 9px; flex: none; border-radius: 50%; background: var(--mz-hunter); box-shadow: 0 0 0 3px rgba(60,82,35,.12); }
+.mz-job-route__dot.is-end { background: var(--mz-tea); border: 2px solid var(--mz-hunter); width: 11px; height: 11px; }
+.mz-job-route__line { display: flex; flex: 1 1 auto; align-items: center; justify-content: center; gap: 0; min-width: 34px; color: var(--mz-hunter); position: relative; }
+.mz-job-route__line::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; border-top: 1px dashed #b9d6ad; }
+.mz-job-route__line span { position: relative; z-index: 1; background: #fff; padding: 0 4px; font-size: 14px; line-height: 1; }
+.mz-job-task__body { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 14px; align-items: start; }
+.mz-job-task__contacts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; }
+.mz-job-task__contacts strong { display: block; color: var(--mz-fg); font-size: 12px; }
+.mz-job-task__contacts small { display: block; color: var(--mz-muted-fg); font-size: 11px; margin-top: 1px; }
+.mz-job-task__facts { display: flex; gap: 14px; text-align: right; }
+.mz-job-task__facts strong { display: block; color: var(--mz-hunter); font-size: 14px; white-space: nowrap; }
+.mz-job-timeline { display: flex; align-items: flex-start; margin: 14px 0 2px; }
+.mz-job-timeline__step { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 54px; }
+.mz-job-timeline__dot {
+  display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%;
+  border: 1px solid #cfe3c6; background: #fff; color: #8a9c7d; font-size: 9px; font-weight: 800;
+}
+.mz-job-timeline__step.is-done .mz-job-timeline__dot { background: var(--mz-hunter); border-color: var(--mz-hunter); color: #fff; }
+.mz-job-timeline__step.is-current .mz-job-timeline__dot { background: var(--mz-tea); border: 2px solid var(--mz-hunter); color: var(--mz-hunter); box-shadow: 0 0 0 3px rgba(60,82,35,.09); }
+.mz-job-timeline__label { color: var(--mz-muted-fg); font-size: 9px; font-weight: 700; white-space: nowrap; }
+.mz-job-timeline__step.is-done .mz-job-timeline__label,
+.mz-job-timeline__step.is-current .mz-job-timeline__label { color: var(--mz-hunter); }
+.mz-job-timeline__line { flex: 1 1 auto; height: 2px; margin-top: 10px; background: #e1ecd9; min-width: 18px; }
+.mz-job-timeline__line.is-done { background: var(--mz-hunter); }
+.mz-job-task__note { margin: 10px 0 0; color: var(--mz-muted-fg); font-size: 12px; }
+.mz-job-task__actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.mz-job-task__actions .mz-input { flex: 1 1 180px; max-width: 320px; }
+.mz-job-task__file { flex: 1 1 200px; max-width: 280px; font-size: 11px; }
+.mz-job-task__actions--delivery { padding-top: 10px; border-top: 1px solid var(--mz-border); }
+@media (max-width: 640px) {
+  .mz-job-task__body { grid-template-columns: 1fr; gap: 10px; }
+  .mz-job-task__facts { text-align: left; }
+  .mz-job-task__contacts { gap: 8px 12px; }
+  .mz-job-route__line { min-width: 20px; }
+  .mz-job-task__actions .mz-input { max-width: none; }
+}

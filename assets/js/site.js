@@ -4448,35 +4448,61 @@ return '<div class="mz-mobile-card">' +
 
     var activeBody = activeJobs.length
       ? activeJobs.map(function (job) {
-          var contact = job.contact_name
-            ? '<div class="mz-hint">Pickup: ' + esc(job.contact_name) + ' · ' + esc(job.contact_phone) +
-              '<br>Receiver: ' + esc(job.receiver_name) + ' · ' + esc(job.receiver_phone) + '</div>'
-            : '';
+          var stageKeys = ['accepted', 'picked_up', 'delivered'];
+          var stageLabels = ['Accepted', 'Picked up', 'Delivered'];
+          var stageIndex = Math.max(0, stageKeys.indexOf(job.status));
+          var timeline = stageLabels.map(function (label, i) {
+            var cls = i < stageIndex ? 'is-done' : (i === stageIndex ? 'is-current' : 'is-pending');
+            return '<div class="mz-job-timeline__step ' + cls + '" role="listitem"' + (i === stageIndex ? ' aria-current="step"' : '') + '>' +
+              '<span class="mz-job-timeline__dot" aria-hidden="true">' + (i < stageIndex ? '&#10003;' : String(i + 1)) + '</span>' +
+              '<span class="mz-job-timeline__label">' + label + '</span></div>' +
+              (i < stageLabels.length - 1 ? '<span class="mz-job-timeline__line' + (i < stageIndex ? ' is-done' : '') + '"></span>' : '');
+          }).join('');
+          var contact = '';
+          if (job.contact_name || job.contact_phone || job.receiver_name || job.receiver_phone) {
+            contact =
+              '<div class="mz-job-task__contacts">' +
+                '<div><span class="mz-cap">Pickup</span><strong>' + esc(job.contact_name || 'Sender') + '</strong>' +
+                  (job.contact_phone ? '<small>' + esc(job.contact_phone) + '</small>' : '') + '</div>' +
+                '<div><span class="mz-cap">Receiver</span><strong>' + esc(job.receiver_name || 'Receiver') + '</strong>' +
+                  (job.receiver_phone ? '<small>' + esc(job.receiver_phone) + '</small>' : '') + '</div>' +
+              '</div>';
+          }
           var actions = '';
           if (job.status === 'accepted') {
-            actions = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">' +
+            actions = '<div class="mz-job-task__actions">' +
               '<button type="button" class="mz-btn" data-pickup-job="' + job.id + '">Confirm pickup</button>' +
               '<button type="button" class="mz-tab" data-cancel-job="' + job.id + '">Cancel job</button>' +
             '</div>';
           } else if (job.status === 'picked_up') {
-            actions = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">' +
-              '<input class="mz-input" style="max-width:320px;" data-proof-note="' + job.id + '" placeholder="Delivery note (e.g. handed to receiver)">' +
+            actions = '<div class="mz-job-task__actions mz-job-task__actions--delivery">' +
+              '<input class="mz-input" data-proof-note="' + job.id + '" placeholder="Delivery note">' +
               (job.otp_required
-                ? '<input class="mz-input" style="max-width:200px;" inputmode="numeric" maxlength="6" data-delivery-otp="' + job.id + '" placeholder="Receiver 6-digit code">' +
-                  '<button type="button" class="mz-tab" data-resend-otp="' + job.id + '">Resend receiver code</button>'
+                ? '<input class="mz-input" inputmode="numeric" maxlength="6" data-delivery-otp="' + job.id + '" placeholder="Receiver 6-digit code">' +
+                  '<button type="button" class="mz-tab" data-resend-otp="' + job.id + '">Resend code</button>'
                 : '') +
-              '<input class="mz-input" type="file" accept="image/jpeg,image/png" data-proof-photo="' + job.id + '" aria-label="Delivery photo (optional)">' +
+              '<input class="mz-input mz-job-task__file" type="file" accept="image/jpeg,image/png" data-proof-photo="' + job.id + '" aria-label="Delivery photo (optional)">' +
               '<button type="button" class="mz-btn" data-deliver-job="' + job.id + '">Mark delivered</button>' +
               '<button type="button" class="mz-tab" data-cancel-job="' + job.id + '">Cancel job</button>' +
             '</div>';
           }
-          return '<div class="mz-list-card" style="margin-bottom:10px;">' +
-            '<div class="mz-row"><div style="min-width:0;">' +
-              '<div class="mz-mono" style="font-weight:700;">' + esc(job.ref) + '</div>' +
-              '<div style="font-size:14px;">' + esc(job.pickup) + ' → ' + esc(job.dropoff) + '</div>' +
+          return '<div class="mz-job-task" data-job-task="' + job.id + '">' +
+            '<div class="mz-job-task__head">' +
+              '<span class="mz-job-task__ref">' + esc(job.ref) + '</span>' +
+              '<span class="mz-pill ' + (stageIndex >= 1 ? 'mz-pill--ok' : '') + '">' + esc(statusLabel[job.status] || job.status) + '</span>' +
+            '</div>' +
+            '<div class="mz-job-route" aria-label="Route from ' + esc(job.pickup) + ' to ' + esc(job.dropoff) + '">' +
+              '<div class="mz-job-route__point"><span class="mz-job-route__dot" aria-hidden="true"></span><span><span class="mz-cap">Pickup</span><strong>' + esc(job.pickup) + '</strong></span></div>' +
+              '<span class="mz-job-route__line" aria-hidden="true"><span>&#8594;</span></span>' +
+              '<div class="mz-job-route__point"><span class="mz-job-route__dot is-end" aria-hidden="true"></span><span><span class="mz-cap">Drop-off</span><strong>' + esc(job.dropoff) + '</strong></span></div>' +
+            '</div>' +
+            '<div class="mz-job-task__body">' +
               contact +
-            '</div><span class="mz-pill">' + esc(statusLabel[job.status] || job.status) + '</span></div>' +
-            '<p class="mz-hint" style="margin:8px 0 0;">Fee ' + money(job.fee_kes) + ' · ' + (job.description ? esc(job.description) : 'Errand') + '</p>' +
+              '<div class="mz-job-task__facts"><div><span class="mz-cap">Fee</span><strong>' + money(job.fee_kes) + '</strong></div>' +
+                (job.size ? '<div><span class="mz-cap">Size</span><strong>' + esc(job.size) + '</strong></div>' : '') + '</div>' +
+            '</div>' +
+            '<div class="mz-job-timeline" role="list" aria-label="Job status timeline">' + timeline + '</div>' +
+            (job.description ? '<p class="mz-job-task__note">' + esc(job.description) + '</p>' : '') +
             actions +
           '</div>';
         }).join('')
@@ -7798,6 +7824,63 @@ return '<div class="mz-mobile-card">' +
           '</div>');
   }
 
+  function renderAdminFirebasePush(card) {
+    if (!card) return;
+    function render(push) {
+      push = push || {};
+      var statusBadge = push.configured
+        ? '<span class="mz-badge mz-badge--ok">Ready</span>'
+        : '<span class="mz-badge mz-badge--warn">Not configured</span>';
+      card.innerHTML =
+        '<div class="mz-row"><div><div class="mz-card__title" style="margin:0;">Firebase push notifications</div>' +
+        '<div class="mz-hint">Credentials for order-status pushes and marketing notifications. Project: <strong>' +
+          esc(push.project_id || '—') + '</strong></div></div>' + statusBadge + '</div>' +
+        '<form class="mz-stack" data-firebase-push-form style="margin-top:12px;">' +
+          '<label class="mz-field"><span class="mz-label">Web Push VAPID key</span>' +
+            '<input class="mz-input mz-mono" name="vapid_key" value="' + esc(push.vapid_key || '') + '" placeholder="B... (Firebase → Cloud Messaging → Web Push certificates)"></label>' +
+          (push.has_vapid
+            ? '<label class="mz-check"><input type="checkbox" name="clear_vapid"> Remove the saved VAPID key</label>'
+            : '') +
+          '<label class="mz-field"><span class="mz-label">Service account JSON</span>' +
+            '<textarea class="mz-input mz-mono" name="service_account_json" rows="4" placeholder="' +
+              (push.has_service_account ? 'Saved — leave blank to keep the current key' : 'Paste the full service-account JSON') +
+            '"></textarea></label>' +
+          (push.has_service_account
+            ? '<label class="mz-check"><input type="checkbox" name="clear_service_account"> Remove the saved service account</label>'
+            : '') +
+          '<label class="mz-field"><span class="mz-label">Legacy server key (optional fallback)</span>' +
+            '<input class="mz-input mz-mono" name="server_key" type="password" placeholder="' +
+              (push.has_server_key ? 'Saved — leave blank to keep' : 'Only if service-account JSON is unavailable') + '"></label>' +
+          (push.has_server_key
+            ? '<label class="mz-check"><input type="checkbox" name="clear_server_key"> Remove the saved legacy server key</label>'
+            : '') +
+          '<label class="mz-check"><input type="checkbox" name="active"' + (push.active ? ' checked' : '') + '> Keep Firebase channel active</label>' +
+          (push.service_account_email ? '<div class="mz-hint">Service account: ' + esc(push.service_account_email) + '</div>' : '') +
+          '<button class="mz-btn" type="submit">Save Firebase push credentials</button>' +
+        '</form>';
+      var form = card.querySelector('[data-firebase-push-form]');
+      form.addEventListener('submit', function (ev) {
+        ev.preventDefault();
+        var btn = form.querySelector('[type="submit"]');
+        btn.disabled = true;
+        api('admin-firebase-push.php', { method: 'POST', body: {
+          vapid_key: formValue(form, 'vapid_key'),
+          service_account_json: formValue(form, 'service_account_json'),
+          server_key: formValue(form, 'server_key'),
+          clear_vapid: form.querySelector('[name="clear_vapid"]') ? form.querySelector('[name="clear_vapid"]').checked : false,
+          clear_service_account: form.querySelector('[name="clear_service_account"]') ? form.querySelector('[name="clear_service_account"]').checked : false,
+          clear_server_key: form.querySelector('[name="clear_server_key"]') ? form.querySelector('[name="clear_server_key"]').checked : false,
+          active: form.querySelector('[name="active"]').checked
+        } }).then(function (res) {
+          toast(res.message || 'Firebase push credentials saved.');
+          render(res.push);
+        }).catch(function (err) { toast(err.message, 'error'); btn.disabled = false; });
+      });
+    }
+    api('admin-firebase-push.php').then(function (res) { render(res.push); })
+      .catch(function (err) { card.innerHTML = '<div class="mz-hint">Could not load Firebase push settings: ' + esc(err.message) + '</div>'; });
+  }
+
   function renderAdminDeliverability(card, data) {
     if (!card) return;
     var suppressions = data.suppressions || [];
@@ -10627,6 +10710,7 @@ return '<div class="mz-mobile-card">' +
             adminSectionHead('Communications', 'Channel controls, SMTP delivery testing and the outbound customer message log.') +
             '<div class="mz-saas-card" data-admin-email-test style="margin-bottom:16px;"></div>' +
             '<div class="mz-saas-card" data-admin-sms-test style="margin-bottom:16px;"></div>' +
+            '<div class="mz-saas-card" data-admin-firebase-push style="margin-bottom:16px;"></div>' +
             '<div class="mz-saas-card" data-admin-deliverability style="margin-bottom:16px;"></div>' +
             '<div class="mz-saas-grid mz-saas-grid--2 mz-comms-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));">' +
               '<div class="mz-saas-card" data-admin-channels></div>' +
@@ -10783,6 +10867,7 @@ return '<div class="mz-mobile-card">' +
     renderAdminChannels(host.querySelector('[data-admin-channels]'), data.channels || []);
     renderAdminEmailTest(host.querySelector('[data-admin-email-test]'), data.admin || {});
     renderAdminSmsTest(host.querySelector('[data-admin-sms-test]'));
+    renderAdminFirebasePush(host.querySelector('[data-admin-firebase-push]'));
     renderAdminNotifications(host.querySelector('[data-admin-notifications]'), data.notifications || []);
     renderAdminCommsTemplates(host.querySelector('[data-admin-comms-templates]'), data.comms_templates || []);
     renderAdminDeliverability(host.querySelector('[data-admin-deliverability]'), data.email_deliverability || {});
