@@ -1,4 +1,4 @@
-﻿(function () {
+(function () {
   'use strict';
   var API = '/api/scan.php';
   var TOKEN_KEY = 'mzigo_point_token';
@@ -394,7 +394,9 @@
         renderPointDash();
       }
       clearScanFields();
-      resetJourney();
+      // Keep the parcel journey visible after a successful scan; refresh it
+      // so the completed stage and next action are immediately shown.
+      lookupParcel(res.tracking, false);
     }).catch(function (err) {
       if (isNetworkError(err)) {
         enqueueScan(payload);

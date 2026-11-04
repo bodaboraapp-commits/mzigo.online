@@ -144,12 +144,12 @@ WHERE tracking = 'TRK-XXXXXXXX';
 ### TC-02 — Verify label and public tracking
 
 1. Download/view the label.
-2. Open `/track-mzigo?num=TRK-XXXXXXXX`.
+2. Open `/track-mzigo`, enter `TRK-XXXXXXXX`, then enter the receiver phone `0744333444`.
 
 **Expected**
 
 - Label shows tracking number, QR, sender/receiver and courier.
-- Public tracking shows the parcel without login.
+- Public tracking shows the parcel without login when the tracking number and phone match.
 - Only registration scan is visible.
 
 ---
@@ -297,7 +297,7 @@ ORDER BY scanned_at;
 
 ### TC-09 — Final tracking page
 
-Open the public tracking URL.
+Open `/track-mzigo`, enter the tracking number and the receiver phone.
 
 **Expected timeline**
 
@@ -385,7 +385,9 @@ Optional but recommended.
 
 - [ ] Sender receives drop-off notification
 - [ ] Customer receives ready-for-collection notification
-- [ ] Customer receives payment receipt
+- [ ] Customer receives payment receipt by SMS and email (collection code included)
+- [ ] Customer portal shows one in-app notification per event (no duplicate rows)
+- [ ] Payment SMS and email both contain the collection code
 - [ ] `notifications` table has correct channel/status
 - [ ] Workspace webhook `parcel.status_updated` fires
 - [ ] Workspace webhook `customer.parcel_paid` fires
@@ -409,7 +411,7 @@ ORDER BY id DESC;
 - [ ] Scanner screenshots for each action
 - [ ] Customer portal payment screenshot
 - [ ] M-Pesa receipt / demo receipt
-- [ ] Public tracking timeline screenshot
+- [ ] Public tracking timeline screenshot (after entering tracking + phone)
 - [ ] `parcels` row
 - [ ] `scans` rows
 - [ ] `mpesa_payments` row (if live)
@@ -429,7 +431,7 @@ ORDER BY id DESC;
 | Arrival | ☐ Pass ☐ Fail | | |
 | Customer payment | ☐ Pass ☐ Fail | | |
 | Collection | ☐ Pass ☐ Fail | | |
-| Public tracking | ☐ Pass ☐ Fail | | |
+| Public tracking (order + phone) | ☐ Pass ☐ Fail | | |
 | Negative cases | ☐ Pass ☐ Fail | | |
 | Notifications/webhooks | ☐ Pass ☐ Fail | | |
 

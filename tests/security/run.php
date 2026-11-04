@@ -269,9 +269,16 @@ try {
     });
 
     sec_run('Tracking data is redacted publicly', function () use ($pdo, $guest): void {
-        $tracking = $pdo->query('SELECT tracking FROM parcels WHERE receiver_phone IS NOT NULL AND receiver_phone <> "" ORDER BY registered_at DESC LIMIT 1')->fetchColumn();
-        sec_expect($tracking !== false, 'No parcel fixture found for tracking redaction test.');
-        $response = sec_http('GET', '/api/track.php?q=' . rawurlencode((string) $tracking), null, $guest['jar']);
+        $fixture = $pdo->query('SELECT tracking, receiver_phone FROM parcels WHERE receiver_phone IS NOT NULL AND receiver_phone <> "" ORDER BY registered_at DESC LIMIT 1')->fetch();
+        sec_expect(!empty($fixture['tracking']), 'No parcel fixture found for tracking redaction test.');
+        $tracking = (string) $fixture['tracking'];
+        $trackPhone = (string) $fixture['receiver_phone'];
+        $withoutPhone = sec_http('GET', '/api/track.php?q=' . rawurlencode($tracking), null, $guest['jar']);
+        sec_status($withoutPhone, [422], 'public tracking without phone');
+        $wrongPhone = sec_http('GET', '/api/track.php?q=' . rawurlencode($tracking) . '&phone=0700000000', null, $guest['jar']);
+        sec_status($wrongPhone, [200], 'public tracking with wrong phone');
+        sec_expect(($wrongPhone['json']['found'] ?? true) === false, 'Public tracking matched a wrong phone.');
+        $response = sec_http('GET', '/api/track.php?q=' . rawurlencode($tracking) . '&phone=' . rawurlencode($trackPhone), null, $guest['jar']);
         sec_status($response, [200], 'public tracking');
         $record = $response['json']['record'] ?? null;
         sec_expect(is_array($record), 'Tracking response missing record.');

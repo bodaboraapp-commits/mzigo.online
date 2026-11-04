@@ -9,11 +9,11 @@ $method = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
 if ($method === 'GET') {
     $stmt = db()->prepare(
         'SELECT id, channel, subject, body, template, related_type, related_id, status, created_at, read_at
-         FROM notifications WHERE recipient_user_id = ? ORDER BY id DESC LIMIT 50'
+         FROM notifications WHERE recipient_user_id = ? AND channel = "in_app" ORDER BY id DESC LIMIT 50'
     );
     $stmt->execute([(int) $user['id']]);
     $rows = $stmt->fetchAll();
-    $unreadStmt = db()->prepare('SELECT COUNT(*) FROM notifications WHERE recipient_user_id = ? AND read_at IS NULL');
+    $unreadStmt = db()->prepare('SELECT COUNT(*) FROM notifications WHERE recipient_user_id = ? AND channel = "in_app" AND read_at IS NULL');
     $unreadStmt->execute([(int) $user['id']]);
     json_out(['ok' => true, 'source' => 'mysql', 'notifications' => $rows,
         'unread' => (int) $unreadStmt->fetchColumn()]);
@@ -33,6 +33,6 @@ if ($action === 'mark_read') {
 } else {
     fail_error('unknown_action', 'Unknown notification action.', 400);
 }
-$unreadStmt = db()->prepare('SELECT COUNT(*) FROM notifications WHERE recipient_user_id = ? AND read_at IS NULL');
+$unreadStmt = db()->prepare('SELECT COUNT(*) FROM notifications WHERE recipient_user_id = ? AND channel = "in_app" AND read_at IS NULL');
 $unreadStmt->execute([(int) $user['id']]);
 json_out(['ok' => true, 'source' => 'mysql', 'unread' => (int) $unreadStmt->fetchColumn()]);

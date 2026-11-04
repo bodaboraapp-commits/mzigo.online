@@ -75,7 +75,7 @@ if ($method === 'GET') {
     $waContact = $waStmt->fetch() ?: [];
     $whatsappOptin = !empty($waContact['consent_at']) && (int) ($waContact['opted_out'] ?? 0) === 0;
     $notes = db()->prepare('SELECT id, channel, subject, body, template, status, recipient, created_at, read_at
-        FROM notifications WHERE recipient_user_id = ? ORDER BY id DESC LIMIT 10');
+        FROM notifications WHERE recipient_user_id = ? AND channel = "in_app" ORDER BY id DESC LIMIT 10');
     $notes->execute([(int) $user['id']]);
     json_out([
         'ok'       => true,
