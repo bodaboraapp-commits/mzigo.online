@@ -5614,10 +5614,11 @@ return '<div class="mz-mobile-card">' +
       : '';
     var action = '';
     if (!paid && p.can_pay) {
-      action = '<button type="button" class="mz-btn" data-customer-pay="' + esc(p.tracking) +
-        '" data-customer-fee="' + fee + '" style="margin-top:12px;">Pay ' + money(fee) + ' with M-Pesa' +
+      action = '<div class="mz-order-pay">' +
+        '<button type="button" class="mz-btn" data-customer-pay="' + esc(p.tracking) +
+        '" data-customer-fee="' + fee + '">Pay ' + money(fee) + ' with M-Pesa' +
         ((APP.mpesaPayment && APP.mpesaPayment.mode === 'live') ? '' : ' (demo)') + '</button>' +
-        '<div style="font-size:11px;color:var(--mz-muted-fg);margin-top:6px;">Your collection code appears after payment.</div>';
+        '<div class="mz-order-pay__note">Your collection code appears after payment.</div></div>';
     } else if (!paid) {
       action = '<div class="mz-hint" style="margin-top:12px;">Payment opens when the parcel is ready for collection.</div>';
     }
