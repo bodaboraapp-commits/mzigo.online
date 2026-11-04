@@ -59,6 +59,9 @@ return [
         'auth_domain' => getenv('FIREBASE_AUTH_DOMAIN') ?: '',
         'project_id'  => getenv('FIREBASE_PROJECT_ID') ?: '',
         'app_id'      => getenv('FIREBASE_APP_ID') ?: '',
+        'vapid_key'   => getenv('FIREBASE_VAPID_KEY') ?: '',
+        'service_account_json' => getenv('FIREBASE_SERVICE_ACCOUNT_JSON') ?: '',
+        'server_key'  => getenv('FIREBASE_SERVER_KEY') ?: '',
     ],
     'security' => [
         'session_name'         => 'mzigo_saas',

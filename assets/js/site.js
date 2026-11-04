@@ -4168,6 +4168,80 @@ return '<div class="mz-mobile-card">' +
     }).catch(function () {});
   }
 
+  function initPushCard(host) {
+    if (!host || host.querySelector('[data-push-card]') || !APP.user) return;
+    if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+    var card = doc.createElement('div');
+    card.className = 'mz-saas-card';
+    card.style.marginTop = '16px';
+    card.setAttribute('data-push-card', '');
+    card.innerHTML =
+      '<div class="mz-card__title">Push notifications</div>' +
+      '<p class="mz-hint">Get order status updates on this device, and opt in to occasional Mzigo.online offers.</p>' +
+      '<label style="display:flex;align-items:center;gap:8px;margin:10px 0 12px;font-size:13px;">' +
+        '<input type="checkbox" data-push-marketing> Send me marketing messages (optional)' +
+      '</label>' +
+      '<button type="button" class="mz-btn mz-btn--outline" data-push-enable>Enable push notifications</button>' +
+      '<div class="mz-hint" data-push-status style="margin-top:8px;" hidden></div>';
+    host.appendChild(card);
+    var btn = card.querySelector('[data-push-enable]');
+    var status = card.querySelector('[data-push-status]');
+    var marketing = card.querySelector('[data-push-marketing]');
+    function setStatus(msg, error) {
+      if (!status) return;
+      status.hidden = !msg;
+      status.textContent = msg || '';
+      status.style.color = error ? '#9f1d1d' : '';
+    }
+    function loadScript(src) {
+      return new Promise(function (resolve, reject) {
+        var s = doc.createElement('script');
+        s.src = src; s.async = true;
+        s.onload = resolve;
+        s.onerror = function () { reject(new Error('Could not load Firebase Messaging.')); };
+        doc.head.appendChild(s);
+      });
+    }
+    api('push-config.php').then(function (res) {
+      if (!res || !res.enabled || !res.config || !res.vapidKey || !res.config.apiKey) {
+        card.remove();
+        return;
+      }
+      btn.addEventListener('click', function () {
+        btn.disabled = true;
+        setStatus('Requesting permission…');
+        Notification.requestPermission().then(function (permission) {
+          if (permission !== 'granted') throw new Error('Notification permission was not granted.');
+          return Promise.all([
+            loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js'),
+            loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js')
+          ]);
+        }).then(function () {
+          if (!window.firebase) throw new Error('Firebase SDK did not load.');
+          if (!window.firebase.apps.length) window.firebase.initializeApp(res.config);
+          return navigator.serviceWorker.register('/firebase-messaging-sw.js');
+        }).then(function (registration) {
+          return window.firebase.messaging().getToken({
+            vapidKey: res.vapidKey,
+            serviceWorkerRegistration: registration
+          });
+        }).then(function (token) {
+          return api('push-token.php', { method: 'POST', body: {
+            action: 'save', token: token, platform: 'web',
+            marketing_opt_in: !!(marketing && marketing.checked)
+          } });
+        }).then(function () {
+          setStatus('Push notifications are enabled on this device.');
+          btn.textContent = 'Notifications enabled';
+          btn.disabled = true;
+        }).catch(function (err) {
+          setStatus(err && err.message ? err.message : 'Could not enable push notifications.', true);
+          btn.disabled = false;
+        });
+      });
+    }).catch(function () { card.remove(); });
+  }
+
   function initForgotPasswordPage() {
     var form = $('[data-forgot-password-form]');
     if (!form) return;
@@ -5567,6 +5641,7 @@ return '<div class="mz-mobile-card">' +
     if (out) out.addEventListener('click', function () {
       signOut().then(function () { window.location.href = '/login'; });
     });
+    initPushCard(host);
   }
 
   function customerClaimsSection(data) {
@@ -6457,6 +6532,7 @@ return '<div class="mz-mobile-card">' +
       teamCredential = null;
       loadSettings();
     });
+    initPushCard(host);
   }
 
   /* -------------------------------------------------------------------- admin */

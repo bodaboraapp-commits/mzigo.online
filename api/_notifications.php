@@ -22,6 +22,7 @@ require_once __DIR__ . '/_whatsapp_outbound.php';
 require_once __DIR__ . '/_sms.php';
 require_once __DIR__ . '/_template_store.php';
 require_once __DIR__ . '/_notification_prefs.php';
+require_once dirname(__DIR__) . '/_server/firebase.php';
 
 /**
  * Notification channels, ordered for display.
@@ -136,6 +137,9 @@ function channel_provider_catalog(): array
                 ['key' => 'storage_bucket', 'label' => 'Storage bucket (optional)', 'placeholder' => 'mzigo-xxxx.firebasestorage.app'],
                 ['key' => 'messaging_sender_id', 'label' => 'Messaging sender ID (optional)', 'placeholder' => '123456789012'],
                 ['key' => 'measurement_id', 'label' => 'Measurement ID (optional)', 'placeholder' => 'G-XXXXXXXXXX'],
+                ['key' => 'vapid_key', 'label' => 'Web Push VAPID key', 'placeholder' => 'B...', 'type' => 'password', 'hint' => 'Firebase Console → Project settings → Cloud Messaging → Web Push certificates.'],
+                ['key' => 'service_account_json', 'label' => 'Service account JSON (for sending)', 'placeholder' => '{"type":"service_account",...}', 'type' => 'password', 'hint' => 'Project settings → Service accounts → Generate new private key. Paste the JSON.'],
+                ['key' => 'server_key', 'label' => 'Legacy server key (optional fallback)', 'placeholder' => 'AAAA...', 'type' => 'password', 'hint' => 'Only if service account JSON is not available. Legacy FCM keys are deprecated.'],
             ],
         ],
 
@@ -272,6 +276,22 @@ function receiver_notification_targets(array $user): array
 function notification_send(string $channel, array $user, string $subject, string $body, string $template, array $parcel, string $provider = 'log',
     ?string $relatedType = null, ?string $relatedId = null, array $data = [], bool $force = false): array
 {
+    // One push per user/template/related record even when multiple channels
+    // (SMS + email) are active for the same order event.
+    if (!empty($user['id']) && firebase_messaging_ready()) {
+        static $pushSent = [];
+        $pushKey = (int) $user['id'] . '|' . $template . '|' . (string) ($relatedId ?? ($parcel['tracking'] ?? ''));
+        if (!isset($pushSent[$pushKey])) {
+            $pushSent[$pushKey] = true;
+            $tracking = (string) ($parcel['tracking'] ?? '');
+            $link = rtrim((string) (config()['app']['base_url'] ?? ''), '/') .
+                ($tracking !== '' ? '/track-mzigo?num=' . rawurlencode($tracking) : '/profile');
+            firebase_push_user((int) $user['id'], $subject, $body, $link, [
+                'template' => (string) $template,
+                'link' => $link,
+            ]);
+        }
+    }
     $recipient = $channel === 'email' ? (string) ($user['email'] ?? '') : (string) ($user['phone'] ?? '');
     $status = 'sent';
     $error = null;

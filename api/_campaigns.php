@@ -364,6 +364,18 @@ function marketing_campaign_send(int $id): array
                     $status = 'failed';
                     $error = mb_substr($e->getMessage(), 0, 255);
                 }
+                if (!empty($subscriber['user_id']) && firebase_messaging_ready()) {
+                    try {
+                        $pushLink = $ctaAbsolute !== '' ? $ctaAbsolute : ($base . '/newsletter-unsubscribe.php?id=' . $sid . '&token=' . newsletter_unsub_token($sid));
+                        firebase_push_user((int) $subscriber['user_id'], (string) $campaign['subject'], (string) $campaign['body'], $pushLink, [
+                            'campaign_id' => (string) $id,
+                            'campaign_name' => (string) $campaign['name'],
+                            'link' => $pushLink,
+                        ], true);
+                    } catch (Throwable $e) {
+                        error_log('campaign push failed: ' . $e->getMessage());
+                    }
+                }
             }
             db()->prepare('INSERT INTO marketing_campaign_recipients (campaign_id, subscriber_id, channel, recipient, status, error, created_at)
                 VALUES (?, ?, ?, ?, ?, ?, NOW())')->execute([$id, $sid, $channel, $recipient ?: 'n/a', $status, $error]);
