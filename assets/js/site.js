@@ -4599,6 +4599,15 @@ return '<div class="mz-mobile-card">' +
 
     var profileForm =
       '<div class="mz-saas-card" id="runner-profile" style="margin-top:16px;">' +
+        '<div class="mz-row" style="margin-bottom:14px;">' +
+          '<div style="display:flex;align-items:center;gap:12px;min-width:0;">' + avatar(u.name, 'lg') +
+            '<div style="min-width:0;"><div class="mz-cap">Runner account</div>' +
+            '<div style="font-size:18px;font-weight:700;">' + esc(p.name || u.name) + '</div>' +
+            '<div style="font-size:13px;color:var(--mz-muted-fg);">' + esc(u.phone || '') + '</div></div>' +
+          '</div>' + statusBadge +
+        '</div>' +
+        '<div class="mz-hint" style="margin:-6px 0 14px;">Joined ' +
+          esc(fmtDate(u.created_at || nowISO())) + ' · phone + PIN sign-in</div>' +
         '<div class="mz-card__title">Runner profile &amp; availability</div>' +
         '<p class="mz-hint">We use these details to match you with errands. Your payout number is where M-Pesa earnings are sent.</p>' +
         '<form data-runner-profile style="margin-top:10px;">' +
@@ -4646,19 +4655,6 @@ return '<div class="mz-mobile-card">' +
       '</div>';
 
     host.innerHTML =
-      '<div class="mz-saas-grid mz-saas-grid--2" style="margin-bottom:16px;">' +
-        '<div class="mz-saas-card" style="grid-column:1/-1;">' +
-          '<div class="mz-row">' +
-            '<div style="display:flex;align-items:center;gap:12px;min-width:0;">' + avatar(u.name, 'lg') +
-              '<div style="min-width:0;"><div class="mz-cap">Runner account</div>' +
-              '<div style="font-size:18px;font-weight:700;">' + esc(p.name || u.name) + '</div>' +
-              '<div style="font-size:13px;color:var(--mz-muted-fg);">' + esc(u.phone || '') + '</div></div>' +
-            '</div>' + statusBadge +
-          '</div>' +
-          '<div style="margin-top:14px;font-size:12px;color:var(--mz-muted-fg);">Joined ' +
-            esc(fmtDate(u.created_at || nowISO())) + ' · phone + PIN sign-in</div>' +
-        '</div>' +
-      '</div>' +
       onboarding +
       '<div data-runner-kyc style="margin-bottom:16px;"></div>' +
       '<div class="mz-row" style="gap:10px;margin-bottom:16px;justify-content:flex-start;flex-wrap:wrap;" data-freelancer-actions>' +
@@ -4746,10 +4742,9 @@ return '<div class="mz-mobile-card">' +
     var statsCard = host.querySelector('#performance');
     var jobsCard = host.querySelector('#freelancer-jobs');
     var onboardingCard = host.querySelector('[data-runner-onboarding]');
-    var accountCard = host.querySelector('.mz-saas-grid');
     var availabilityCard = host.querySelector('[data-runner-availability-card]');
     var profilePanel = host.querySelector('[data-runner-profile-panel]');
-    var topAnchor = onboardingCard || accountCard;
+    var topAnchor = onboardingCard;
     if (statsCard && jobsCard && topAnchor) {
       topAnchor.insertAdjacentElement('afterend', statsCard);
       statsCard.insertAdjacentElement('afterend', jobsCard);
@@ -4758,6 +4753,9 @@ return '<div class="mz-mobile-card">' +
       if (complete && profilePanel) profilePanel.insertBefore(availabilityCard, profilePanel.firstChild);
       else if (!complete) availabilityCard.remove();
     }
+
+    var kycMount = host.querySelector('[data-runner-kyc]');
+    if (kycMount && profilePanel) profilePanel.insertBefore(kycMount, profilePanel.firstChild);
 
     var earningsView = host.querySelector('[data-runner-earnings]');
     var earningsCard = host.querySelector('[data-runner-earnings-card]');
