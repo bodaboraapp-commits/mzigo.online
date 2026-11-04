@@ -23,6 +23,9 @@
   var queueFlushing = false;
   var torchOn = false;
   var scanPushConfig = null;
+  var scanAlerts = [];
+  var scanAlertChannels = [];
+  var scanAlertPush = false;
   var scanPushLoading = false;
   var scanSwPromise = null;
 
@@ -97,6 +100,7 @@
     $('#setup').hidden = true;
     $('#app').hidden = false;
     refreshScanPushSection();
+    loadScanAlerts();
   }
   function clearAutoRecord() {
     if (autoRecordInterval) { clearInterval(autoRecordInterval); autoRecordInterval = 0; }
@@ -382,6 +386,7 @@
         esc(res.tracking) + ' Â· ' + esc(res.status) +
         (res.idempotent ? ' Â· already recorded' : '') + '</div></div>';
       saveRecent({ tracking: res.tracking, action: selectedAction, label: res.label, at: new Date().toLocaleTimeString() });
+      loadScanAlerts();
       if (!res.idempotent) {
         pointStats.today = Number(pointStats.today || 0) + 1;
         pointStats.total = Number(pointStats.total || 0) + 1;
@@ -622,6 +627,76 @@
       .finally(function () { button.disabled = false; button.textContent = original; });
   }
 
+  function scanAlertsRequest(method, body) {
+    return fetch('/api/scan-notifications.php', {
+      method: method || 'GET',
+      headers: body
+        ? { 'Content-Type': 'application/json', 'X-Point-Token': token }
+        : { 'X-Point-Token': token },
+      body: body ? JSON.stringify(body) : undefined,
+      cache: 'no-store'
+    }).then(function (res) {
+      return res.json().catch(function () { return { ok: false, error: { message: 'Unexpected response from the server.' } }; })
+        .then(function (data) {
+          if (!res.ok || data.ok === false) throw new Error((data.error && data.error.message) || 'Could not load scan alerts.');
+          return data;
+        });
+    });
+  }
+
+  function renderScanAlerts() {
+    var count = $('#scanBellCount');
+    var list = $('#scanBellList');
+    var read = $('#scanBellRead');
+    var unread = scanAlerts.filter(function (n) { return !n.read_at; }).length;
+    if (count) {
+      count.textContent = String(unread);
+      count.hidden = unread <= 0;
+    }
+    if (read) read.hidden = unread <= 0;
+    if (!list) return;
+    list.innerHTML = scanAlerts.length ? scanAlerts.map(function (n) {
+      return '<div class="scan-bell-item' + (n.read_at ? '' : ' is-unread') + '">' +
+        '<strong>' + esc(n.subject || 'Scan update') + '</strong>' +
+        '<p>' + esc(n.body || '') + '</p>' +
+        '<small>' + esc(n.created_at || '') + '</small></div>';
+    }).join('') : '<p class="scan-hint">No alerts yet.</p>';
+  }
+
+  function applyScanAlertChannels() {
+    var channels = $('#scanPushChannels');
+    if (!channels) return;
+    var labels = scanAlertChannels.map(function (c) { return c.label; }).filter(Boolean);
+    channels.hidden = !labels.length;
+    channels.textContent = labels.length ? 'Platform channels: ' + labels.join(', ') + (scanAlertPush ? ' · Push active' : ' · Push inactive') : '';
+  }
+
+  function loadScanAlerts() {
+    if (!point || !token) return;
+    scanAlertsRequest('GET').then(function (data) {
+      scanAlerts = data.notifications || [];
+      scanAlertChannels = data.channels || [];
+      scanAlertPush = !!data.push;
+      renderScanAlerts();
+      applyScanAlertChannels();
+    }).catch(function () {});
+  }
+
+  function markScanAlertsRead() {
+    if (!point || !token) return;
+    scanAlertsRequest('POST', { action: 'mark_all_read' }).then(function (data) {
+      scanAlerts = data.notifications || [];
+      renderScanAlerts();
+    }).catch(function (err) { window.alert(err.message); });
+  }
+
+  function closeScanBell() {
+    var panel = $('#scanBellPanel');
+    var btn = $('#scanBellBtn');
+    if (panel) panel.hidden = true;
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+  }
+
   function refreshScanPushSection() {
     var section = $('#scanPushSection');
     if (!section) return;
@@ -742,6 +817,21 @@
       if (ev.key === 'Enter') { ev.preventDefault(); lookupParcel($('#tracking').value); }
     });
     $('#settingsBtn').addEventListener('click', function () { $('#settingsOverlay').hidden = false; });
+    $('#scanBellBtn').addEventListener('click', function (ev) {
+      ev.stopPropagation();
+      var panel = $('#scanBellPanel');
+      if (!panel) return;
+      panel.hidden = !panel.hidden;
+      $('#scanBellBtn').setAttribute('aria-expanded', String(!panel.hidden));
+      if (!panel.hidden) loadScanAlerts();
+    });
+    $('#scanBellClose').addEventListener('click', closeScanBell);
+    $('#scanBellRead').addEventListener('click', markScanAlertsRead);
+    document.addEventListener('click', function (ev) {
+      var panel = $('#scanBellPanel');
+      if (!panel || panel.hidden) return;
+      if (!panel.contains(ev.target) && !ev.target.closest('#scanBellBtn')) closeScanBell();
+    });
     $('#scanPushEnable').addEventListener('click', enableScanPush);
     $('#settingsClose').addEventListener('click', function () { $('#settingsOverlay').hidden = true; });
     $('#settingsOverlay').addEventListener('click', function (ev) {
@@ -775,6 +865,7 @@
         .catch(function () { return null; });
     }
     loadScanPushConfig();
+    setInterval(loadScanAlerts, 60000);
     var installPrompt = null;
     window.addEventListener('beforeinstallprompt', function (ev) {
       ev.preventDefault(); installPrompt = ev; $('#installBtn').hidden = false;

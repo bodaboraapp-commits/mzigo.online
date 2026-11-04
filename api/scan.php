@@ -11,6 +11,7 @@ require __DIR__ . '/_bootstrap.php';
 require __DIR__ . '/_notifications.php';
 require __DIR__ . '/_webhooks.php';
 require __DIR__ . '/_scan_actions.php';
+require __DIR__ . '/_push.php';
 
 const SCAN_POINT_ACTIONS = ['dropoff', 'handover', 'arrival', 'collection'];
 
@@ -316,5 +317,16 @@ if ($parcel['tenant_id'] !== null) {
     } catch (Throwable $e) {
         error_log('point scan webhook dispatch failed: ' . $e->getMessage());
     }
+}
+try {
+    point_notify(
+        (int) $point['id'],
+        'scan_activity',
+        $notifyLabel . ' · ' . $tracking,
+        $tracking . ' was marked ' . strtolower($notifyLabel) . ' at ' . (string) $point['name'] . '.',
+        ['tracking' => $tracking, 'status' => $newStatus, 'action' => $action]
+    );
+} catch (Throwable $e) {
+    error_log('point notification failed: ' . $e->getMessage());
 }
 scan_point_respond($response);

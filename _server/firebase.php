@@ -24,8 +24,17 @@ function firebase_config(): array
         'service_account_json' => (string) ($cfg['service_account_json'] ?? ''),
         'server_key' => (string) ($cfg['server_key'] ?? ''),
     ];
-    // Admin -> Communications -> Firebase channel is the preferred source.
+    // Respect the admin Communications toggle for the Firebase channel.
     if (function_exists('notification_channel_raw')) {
+        try {
+            $activeRow = db()->query("SELECT is_active FROM communication_channels
+                WHERE code = 'firebase' OR provider = 'firebase' ORDER BY is_active DESC LIMIT 1")->fetch();
+            if ($activeRow !== false && (int) $activeRow['is_active'] !== 1) {
+                $out['enabled'] = false;
+            }
+        } catch (Throwable $e) {
+            // Fall back to environment config when channel storage is unavailable.
+        }
         $channel = notification_channel_raw('firebase');
         $chanCfg = $channel['config'] ?? [];
         if ($chanCfg) {

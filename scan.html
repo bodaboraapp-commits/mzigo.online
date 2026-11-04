@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -12,7 +12,7 @@
   <link rel="icon" href="/assets/img/favicon-64.png" type="image/png">
   <link rel="apple-touch-icon" href="/assets/img/scan-icon-192.png">
   <link rel="manifest" href="/assets/scan-manifest.webmanifest">
-  <link rel="stylesheet" href="/assets/css/scan.css?v=20261104a">
+  <link rel="stylesheet" href="/assets/css/scan.css?v=20261104b">
 </head>
 <body>
   <header class="scan-head">
@@ -23,9 +23,24 @@
     <div class="scan-head__right">
       <span id="netState" class="scan-pill scan-pill--ok">Online</span>
       <button type="button" id="installBtn" class="scan-icon-btn" hidden title="Install scanner">&#8595;</button>
+      <button type="button" id="scanBellBtn" class="scan-icon-btn scan-bell-btn" aria-label="Alerts" aria-haspopup="true" aria-expanded="false" title="Alerts">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
+        <span id="scanBellCount" class="scan-bell-count" hidden></span>
+      </button>
       <button type="button" id="settingsBtn" class="scan-icon-btn" title="Scanner settings">&#9881;</button>
     </div>
   </header>
+
+  <div id="scanBellPanel" class="scan-bell-panel" hidden>
+    <div class="scan-bell-panel__head">
+      <strong>Alerts</strong>
+      <div>
+        <button type="button" id="scanBellRead" class="scan-link" hidden>Mark all read</button>
+        <button type="button" id="scanBellClose" class="scan-link" aria-label="Close alerts">&#10005;</button>
+      </div>
+    </div>
+    <div id="scanBellList" class="scan-bell-list"><p class="scan-hint">No alerts yet.</p></div>
+  </div>
 
   <main class="scan-main">
     <section id="scanView" class="scan-view">
@@ -168,6 +183,7 @@
       <div id="scanPushSection" class="scan-settings-section" hidden>
         <div class="scan-card-title">Push notifications</div>
         <p class="scan-hint">Get scan confirmations and point alerts on this phone, even when the scanner is closed.</p>
+        <p id="scanPushChannels" class="scan-hint" hidden></p>
         <button type="button" id="scanPushEnable" class="scan-btn scan-btn--outline" style="width:100%;margin-top:10px;">Enable scan notifications</button>
         <p id="scanPushStatus" class="scan-hint" hidden></p>
       </div>
@@ -195,7 +211,7 @@
   </nav>
 
   <script src="/assets/js/jsQR.min.js?v=20261028f" defer></script>
-  <script src="/assets/js/scan.js?v=20261104a" defer></script>
+  <script src="/assets/js/scan.js?v=20261104b" defer></script>
 </body>
 </html>
 
