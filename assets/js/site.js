@@ -1609,17 +1609,6 @@
     var form = $('[data-mz-track-page-form]');
     if (!form) return;
     var input = form.querySelector('input');
-    var phone = form.querySelector('[data-mz-track-phone]');
-    if (!phone) {
-      var phoneWrap = doc.createElement('div');
-      phoneWrap.className = 'mz-field';
-      phoneWrap.style.maxWidth = '420px';
-      phoneWrap.style.marginTop = '10px';
-      phoneWrap.innerHTML = '<span class="mz-label">Phone used for this parcel</span>' +
-        '<input class="mz-input" type="tel" inputmode="tel" autocomplete="tel" placeholder="0712 345 678" data-mz-track-phone>';
-      form.parentNode.insertBefore(phoneWrap, form.nextSibling);
-      phone = phoneWrap.querySelector('input');
-    }
     var panel = doc.createElement('div');
     panel.className = 'mz-suggest';
     panel.hidden = true;
@@ -1645,7 +1634,7 @@
         btn.addEventListener('click', function () {
           input.value = btn.getAttribute('data-track');
           panel.hidden = true;
-          run();
+          requestLookup();
         });
       });
     }
@@ -1656,33 +1645,56 @@
     input.addEventListener('input', function () { renderPanel(input.value); panel.hidden = false; });
     doc.addEventListener('click', function (ev) { if (!host.contains(ev.target)) panel.hidden = true; });
 
-    function run() {
-      var value = input.value.trim();
-      var phoneValue = (phone && phone.value || '').trim();
-      if (!value) { toast('Enter a tracking number first.', 'error'); input.focus(); return; }
-      if (!phoneValue) { toast('Enter the phone number used for this parcel.', 'error'); phone.focus(); return; }
-      if (history.replaceState) history.replaceState(null, '', '/track-mzigo?num=' + encodeURIComponent(value));
-      renderTrackResult(value, phoneValue);
+    function submitLookup(term, phoneValue) {
+      if (history.replaceState) history.replaceState(null, '', '/track-mzigo?num=' + encodeURIComponent(term));
+      renderTrackResult(term, phoneValue);
       var res = $('[data-mz-track-result]');
-      if (res) res.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (res) setTimeout(function () { res.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 60);
     }
+
+    function openTrackPhone(term) {
+      var savedPhone = '';
+      try { savedPhone = sessionStorage.getItem('mzigo_track_phone') || ''; } catch (e) {}
+      openDialog({
+        title: 'Phone used for this parcel',
+        sub: 'Confirm the phone number used when ' + term + ' was registered. This keeps tracking private.',
+        submitLabel: 'Track parcel',
+        body: '<label class="mz-field"><span class="mz-label">Phone number</span>' +
+          '<input class="mz-input" type="tel" inputmode="tel" autocomplete="tel" name="track_phone" placeholder="0712 345 678" value="' + esc(savedPhone) + '"></label>' +
+          '<p class="mz-hint" style="margin:-4px 0 0;">Use the sender or receiver phone number on the parcel.</p>',
+        onSubmit: function (dialogForm) {
+          var phoneValue = (dialogForm.querySelector('[name="track_phone"]').value || '').trim();
+          if (!phoneValue) throw new Error('Enter the phone number used for this parcel.');
+          try { sessionStorage.setItem('mzigo_track_phone', phoneValue); } catch (e) {}
+          submitLookup(term, phoneValue);
+          return Promise.resolve();
+        }
+      });
+    }
+
+    function requestLookup() {
+      var value = input.value.trim();
+      if (!value) { toast('Enter a tracking number first.', 'error'); input.focus(); return; }
+      panel.hidden = true;
+      openTrackPhone(value);
+    }
+
     var submitBtn = form.querySelector('button[type="submit"]');
     function syncSubmit() {
       if (!submitBtn) return;
-      var has = !!(input.value || '').trim() && !!((phone && phone.value) || '').trim();
+      var has = !!(input.value || '').trim();
       submitBtn.disabled = !has;
       submitBtn.setAttribute('aria-disabled', String(!has));
     }
     input.addEventListener('input', syncSubmit);
-    if (phone) phone.addEventListener('input', syncSubmit);
     syncSubmit();
-    form.addEventListener('submit', function (ev) { ev.preventDefault(); panel.hidden = true; run(); syncSubmit(); });
+    form.addEventListener('submit', function (ev) { ev.preventDefault(); requestLookup(); syncSubmit(); });
 
     var num = qs('num') || qs('tracking');
     if (num) {
       input.value = num;
-      if (phone && phone.value.trim()) renderTrackResult(num, phone.value.trim());
-      else if (phone) phone.focus();
+      syncSubmit();
+      openTrackPhone(num);
     }
   }
 
