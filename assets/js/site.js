@@ -639,8 +639,8 @@
   }
 
   /** Ask the platform for a parcel/errand by tracking number, Locker ID or errand ref. */
-  function trackLookup(term) {
-    return api('track.php?q=' + encodeURIComponent(term));
+  function trackLookup(term, phone) {
+    return api('track.php?q=' + encodeURIComponent(term) + '&phone=' + encodeURIComponent(phone || ''));
   }
 
   /* ------------------------------------------------------------------ header */
@@ -1427,8 +1427,10 @@
     if (!demo) return;
     demo.addEventListener('click', function () {
       var input = $('input[aria-label="Tracking number input"]');
+      var phone = $('[data-mz-track-phone]');
       if (input) input.value = 'TRK-4WEWFH1L';
-      renderTrackResult('TRK-4WEWFH1L');
+      if (phone) phone.value = '0723456789';
+      renderTrackResult('TRK-4WEWFH1L', '0723456789');
     });
   }
 
@@ -1561,19 +1563,19 @@
     bindTrackSubscribe(mount, ref);
   }
 
-  function renderTrackResult(term) {
+  function renderTrackResult(term, phone) {
     var mount = $('[data-mz-track-result]');
     if (!mount) return Promise.resolve();
     mount.innerHTML = '<div class="mz-list-card" style="text-align:center;padding:26px;">' +
       '<div class="mz-cap">Checking tracking history</div>' +
       '<p style="margin:6px 0 0;font-size:14px;">Looking up “' + esc(term) + '”…</p></div>';
-    return trackLookup(term).then(function (res) {
+    return trackLookup(term, phone).then(function (res) {
       if (!res.found) {
         mount.innerHTML =
           '<div class="mz-list-card" style="text-align:center;padding:32px 20px;">' +
             '<div class="mz-empty-icon">' + ICON.search + '</div>' +
             '<p style="font-size:17px;font-weight:700;margin:0 0 6px;">No parcel found for “' + esc(term) + '”</p>' +
-            '<p style="font-size:13px;color:var(--mz-muted-fg);margin:0 0 16px;">Nothing in the database matches that tracking number or Locker ID. Check it and try again.</p>' +
+            '<p style="font-size:13px;color:var(--mz-muted-fg);margin:0 0 16px;">No parcel matches that tracking number and phone number. Check both and try again.</p>' +
             '<button type="button" class="mz-tab is-active" data-mz-try-demo style="display:inline-flex;">Try demo parcel TRK-4WEWFH1L</button>' +
           '</div>';
         bindTrackDemo(mount);
@@ -1587,7 +1589,7 @@
           '<div class="mz-list-card" style="text-align:center;padding:32px 20px;">' +
             '<div class="mz-empty-icon">' + ICON.search + '</div>' +
             '<p style="font-size:17px;font-weight:700;margin:0 0 6px;">Nothing to look up yet</p>' +
-            '<p style="font-size:13px;color:var(--mz-muted-fg);margin:0 0 16px;">Enter a tracking number, Locker ID or errand reference.</p>' +
+            '<p style="font-size:13px;color:var(--mz-muted-fg);margin:0 0 16px;">Enter a tracking number and the phone used for the parcel.</p>' +
             '<button type="button" class="mz-tab is-active" data-mz-try-demo style="display:inline-flex;">Try demo parcel TRK-4WEWFH1L</button>' +
           '</div>';
         bindTrackDemo(mount);
@@ -5587,20 +5589,11 @@ return '<div class="mz-mobile-card">' +
             (p.collect_code ? ' <button type="button" class="mz-tab" data-copy-code="' + esc(p.collect_code) + '">Copy</button>' : '') +
           '</dd></div>' +
         '</div>' +
-        '<div class="mz-row" style="gap:12px;margin-top:8px;justify-content:flex-start;flex-wrap:wrap;">' +
-          '<a class="mz-link" href="/contact?topic=payment">Contact support</a>' +
-          '<a class="mz-link" href="/claims">Open a claim</a>' +
-        '</div>' +
         (p.payment_ref ? '<div style="font-size:11px;color:var(--mz-muted-fg);margin-top:6px;">Receipt ' + esc(p.payment_ref) + (p.paid_at ? ' · ' + esc(fmtDate(p.paid_at)) : '') + '</div>' : '');
     } else if (p.can_pay) {
       action = '<button type="button" class="mz-btn" data-customer-pay="' + esc(p.tracking) + '" data-customer-fee="' + fee + '" style="margin-top:12px;">Pay ' + money(fee) + ' with M-Pesa' + ((APP.mpesaPayment && APP.mpesaPayment.mode === 'live') ? '' : ' (demo)') + '</button>' +
         '<div style="font-size:11px;color:var(--mz-muted-fg);margin-top:6px;">Your collection code appears after payment.</div>' +
-        '<div class="mz-row" style="gap:12px;margin-top:8px;justify-content:flex-start;flex-wrap:wrap;">' +
-          '<span class="mz-hint" style="margin:0;">Parcel not as expected?</span>' +
-          '<a class="mz-link" href="/contact?ref=' + encodeURIComponent(p.tracking) + '&topic=payment">Contact support</a>' +
-          '<a class="mz-link" href="/claims">Open a claim</a>' +
-        '</div>';
-    } else {
+        '';    } else {
       action = '<div class="mz-hint" style="margin-top:12px;">Payment opens when the parcel is ready for collection.</div>';
     }
     return '<div class="mz-list-card" style="margin-bottom:12px;">' +
