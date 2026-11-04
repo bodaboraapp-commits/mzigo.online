@@ -4468,9 +4468,27 @@ return '<div class="mz-mobile-card">' +
                   (job.receiver_phone ? '<small>' + esc(job.receiver_phone) + '</small>' : '') + '</div>' +
               '</div>';
           }
-          var actions = '<div class="mz-job-task__actions">' +
-            '<button type="button" class="mz-tab" data-cancel-job="' + job.id + '">Cancel job</button>' +
-          '</div>';
+          var actions = '';
+          if (job.status === 'picked_up') {
+            actions = '<div class="mz-delivery-note">' +
+              '<div class="mz-delivery-note__head"><span class="mz-cap">Delivery note</span><strong>' + esc(job.delivery_note_no || '') + '</strong></div>' +
+              '<p class="mz-delivery-note__text">' + esc(job.delivery_note || '') + '</p>' +
+              '<input type="hidden" data-proof-note="' + job.id + '" value="' + esc(job.delivery_note || '') + '">' +
+              (job.otp_required
+                ? '<label class="mz-label" for="delivery-otp-' + job.id + '">Receiver signature code</label>' +
+                  '<input id="delivery-otp-' + job.id + '" class="mz-input" inputmode="numeric" maxlength="6" data-delivery-otp="' + job.id + '" placeholder="6-digit code">'
+                : '<p class="mz-hint" style="margin:0;">No receiver code was issued; the delivery note will be signed on completion.</p>') +
+              '<div class="mz-job-task__actions">' +
+                '<button type="button" class="mz-btn" data-deliver-job="' + job.id + '">Sign &amp; complete delivery</button>' +
+                (job.otp_required ? '<button type="button" class="mz-tab" data-resend-otp="' + job.id + '">Resend code</button>' : '') +
+                '<button type="button" class="mz-tab" data-cancel-job="' + job.id + '">Cancel job</button>' +
+              '</div>' +
+            '</div>';
+          } else {
+            actions = '<div class="mz-job-task__actions">' +
+              '<button type="button" class="mz-tab" data-cancel-job="' + job.id + '">Cancel job</button>' +
+            '</div>';
+          }
           return '<div class="mz-job-task" data-job-task="' + job.id + '">' +
             '<div class="mz-job-task__head">' +
               '<span class="mz-job-task__ref">' + esc(job.ref) + '</span>' +
@@ -4501,6 +4519,7 @@ return '<div class="mz-mobile-card">' +
               '<div class="mz-mono" style="font-weight:700;">' + esc(job.ref) + '</div>' +
               '<div class="mz-hint">' + esc(job.pickup) + ' → ' + esc(job.dropoff) + ' · ' + esc(fmtDate(job.delivered_at || job.created_at)) + '</div>' +
             '</div><strong>' + money(job.fee_kes) + '</strong></div>' +
+            (job.delivery_note_no ? '<div class="mz-hint">Delivery note <strong>' + esc(job.delivery_note_no) + '</strong></div>' : '') +
             (job.proof_note ? '<div class="mz-hint">Proof: ' + esc(job.proof_note) + '</div>' : '') +
           '</div>';
         }).join('')
@@ -4616,12 +4635,17 @@ return '<div class="mz-mobile-card">' +
           '</label>' +
           '<button class="mz-btn" type="submit" style="margin-top:12px;">Save runner profile</button>' +
         '</form>' +
+        '<div style="border-top:1px solid rgba(60,82,35,.12);margin-top:16px;padding-top:14px;">' +
+          '<div class="mz-card__title" style="margin:0 0 4px;">Your PIN</div>' +
+          '<p class="mz-hint" data-freelancer-pin-note>Your 4-digit PIN is system generated. In this demo the PIN is <strong>1234</strong>.</p>' +
+          '<button type="button" class="mz-btn mz-btn--outline" data-freelancer-reset>Reset PIN</button>' +
+        '</div>' +
         '<p class="mz-hint" style="margin-top:10px;">How payouts work: <a class="mz-link" href="/earn#pay">see runner payouts</a> · <a class="mz-link" href="/contact">Get help</a></p>' +
       '</div>';
 
     host.innerHTML =
       '<div class="mz-saas-grid mz-saas-grid--2" style="margin-bottom:16px;">' +
-        '<div class="mz-saas-card">' +
+        '<div class="mz-saas-card" style="grid-column:1/-1;">' +
           '<div class="mz-row">' +
             '<div style="display:flex;align-items:center;gap:12px;min-width:0;">' + avatar(u.name, 'lg') +
               '<div style="min-width:0;"><div class="mz-cap">Runner account</div>' +
@@ -4631,11 +4655,6 @@ return '<div class="mz-mobile-card">' +
           '</div>' +
           '<div style="margin-top:14px;font-size:12px;color:var(--mz-muted-fg);">Joined ' +
             esc(fmtDate(u.created_at || nowISO())) + ' · phone + PIN sign-in</div>' +
-        '</div>' +
-        '<div class="mz-saas-card">' +
-          '<div class="mz-card__title">Your PIN</div>' +
-          '<p class="mz-hint" data-freelancer-pin-note>Your 4-digit PIN is system generated. In this demo the PIN is <strong>1234</strong>.</p>' +
-          '<button type="button" class="mz-btn mz-btn--outline" data-freelancer-reset>Reset PIN</button>' +
         '</div>' +
       '</div>' +
       onboarding +
@@ -4709,7 +4728,7 @@ return '<div class="mz-mobile-card">' +
         '<div class="mz-card__title" style="font-size:14px;margin-top:18px;">Completed</div>' +
         completedBody +
       '</div>' +
-      (complete ? '<div data-runner-profile-panel hidden>' + profileForm + '</div>' : '') +
+      '<div data-runner-profile-panel hidden>' + profileForm + '</div>' +
       '<div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">' +
         '<a class="mz-tab" href="/track-mzigo">Track a parcel</a>' +
         '<button type="button" class="mz-tab mz-signout-inline" data-freelancer-signout>Sign out</button>' +

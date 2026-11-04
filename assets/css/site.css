@@ -2208,3 +2208,11 @@ img[data-mz-hero-placeholder] { opacity: 0; }
 .mz-job-timeline--scan { text-decoration: none; color: inherit; cursor: pointer; }
 .mz-job-timeline--scan:hover .mz-job-timeline__label { color: var(--mz-hunter); }
 .mz-job-task__scan-hint { margin: 0 0 2px; color: var(--mz-muted-fg); font-size: 10px; }
+
+.mz-delivery-note { margin-top: 12px; padding: 12px; border: 1px solid #d7e9cd; border-radius: 12px; background: #f7fbf3; }
+.mz-delivery-note__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.mz-delivery-note__head strong { color: var(--mz-hunter); font-family: ui-monospace, Consolas, monospace; font-size: 12px; }
+.mz-delivery-note__text { margin: 6px 0 10px; color: var(--mz-muted-fg); font-size: 11px; line-height: 1.5; }
+.mz-delivery-note .mz-label { display: block; margin-top: 8px; }
+.mz-delivery-note .mz-input { margin-top: 4px; }
+.mz-delivery-note .mz-job-task__actions { margin-top: 10px; }

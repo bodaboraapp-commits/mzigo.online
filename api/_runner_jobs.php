@@ -209,6 +209,19 @@ function runner_job_create_from_errand(array $errand): ?int
 }
 
 
+/** Auto-generated delivery note; the 6-digit receiver code is its signature. */
+function runner_delivery_note(array $job): array
+{
+    $ref = strtoupper(trim((string) ($job['ref'] ?? 'JOB')));
+    $suffix = preg_replace('/[^A-Z0-9]/', '', preg_replace('/^RJ-/', '', $ref)) ?? '';
+    $number = 'DN-' . substr($suffix !== '' ? $suffix : 'JOB', 0, 8);
+    $fee = (int) ($job['fee_kes'] ?? 0);
+    $text = 'Delivery of errand ' . $ref . ': ' . (string) ($job['pickup'] ?? '') . ' to ' .
+        (string) ($job['dropoff'] ?? '') . '. Receiver: ' . (string) ($job['receiver_name'] ?? 'Receiver') .
+        '. Runner fee: KES ' . number_format($fee) . '.';
+    return ['no' => $number, 'text' => $text];
+}
+
 /**
  * RN-07: notify the receiver (and sender when identifiable) when a runner
  * accepts, picks up or delivers an errand.

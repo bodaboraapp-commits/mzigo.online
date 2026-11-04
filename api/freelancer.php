@@ -61,6 +61,7 @@ function freelancer_profile_view(array $user): array
 
 function runner_job_view(array $job, bool $withContact): array
 {
+    $deliveryNote = runner_delivery_note($job);
     $view = [
         'id'            => (int) $job['id'],
         'ref'           => (string) $job['ref'],
@@ -79,6 +80,8 @@ function runner_job_view(array $job, bool $withContact): array
         'picked_up_at'  => $job['picked_up_at'] ?? null,
         'delivered_at'  => $job['delivered_at'] ?? null,
         'proof_note'    => (string) ($job['proof_note'] ?? ''),
+        'delivery_note_no' => $deliveryNote['no'],
+        'delivery_note' => $deliveryNote['text'],
         'proof_photo_path' => (string) ($job['proof_photo_path'] ?? ''),
         'rating'        => $job['rating'] !== null ? (int) $job['rating'] : null,
         'rating_note'   => (string) ($job['rating_note'] ?? ''),
@@ -589,13 +592,18 @@ function freelancer_dispatch(array $user): void
 
         case 'deliver-job': {
             $jobId = (int) ($data['job_id'] ?? 0);
-            $proof = param($data, 'proof_note', 3, 255, 'Delivery note');
+            $proof = isset($data['proof_note']) && is_scalar($data['proof_note']) ? trim((string) $data['proof_note']) : '';
             $jobStmt = $pdo->prepare("SELECT * FROM runner_jobs WHERE id = ? AND runner_id = ? LIMIT 1");
             $jobStmt->execute([$jobId, $uid]);
             $jobRow = $jobStmt->fetch();
             if (!$jobRow || $jobRow['status'] !== 'picked_up') {
                 fail('This job cannot be marked as delivered.', 409);
             }
+            if ($proof === '') {
+                $generatedNote = runner_delivery_note($jobRow);
+                $proof = $generatedNote['text'] . ' Signed with the receiver code.';
+            }
+            $proof = mb_substr($proof, 0, 255);
             if (!empty($jobRow['delivery_otp_required'])) {
                 $otp = preg_replace('/\D+/', '', (string) ($data['otp'] ?? '')) ?? '';
                 if (strlen($otp) !== 6) { fail('Enter the 6-digit receiver code.', 422, ['otp' => 'Enter the 6-digit code from the receiver.']); }
