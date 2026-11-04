@@ -5587,8 +5587,6 @@ return '<div class="mz-mobile-card">' +
             (p.collect_code ? ' <button type="button" class="mz-tab" data-copy-code="' + esc(p.collect_code) + '">Copy</button>' : '') +
           '</dd></div>' +
         '</div>' +
-        '<p style="font-size:12px;color:var(--mz-muted-fg);margin:6px 0 0;">Keep this code — it stays in My parcels until collection. ' +
-          '<button type="button" class="mz-link" data-customer-receipt="' + esc(p.tracking) + '">Email receipt</button></p>' +
         '<div class="mz-row" style="gap:12px;margin-top:8px;justify-content:flex-start;flex-wrap:wrap;">' +
           '<a class="mz-link" href="/contact?topic=payment">Contact support</a>' +
           '<a class="mz-link" href="/claims">Open a claim</a>' +
