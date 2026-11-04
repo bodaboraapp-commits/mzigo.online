@@ -54,7 +54,7 @@ try {
         $memberships = user_tenants((int) $user['id']);
         $tenantId = $memberships ? (int) $memberships[0]['id'] : null;
         set_session_user((int) $user['id'], $tenantId);
-        $context = auth_context();
+        $context = firebase_login_context();
         $context['redirect'] = (($context['user']['role'] ?? '') === 'platform_admin') ? '/admin' : '/profile';
         audit('auth.firebase_otp_login', 'user', (string) $user['id'], ['phone' => $phone, 'scope' => $scope]);
         json_out(['ok' => true, 'source' => 'mysql', 'provider' => 'firebase'] + $context);
@@ -72,7 +72,7 @@ try {
             $userId = (int) $user['id'];
         }
         set_session_user($userId, null, 'customer');
-        $context = auth_context();
+        $context = firebase_login_context();
         $context['redirect'] = '/customer';
         audit('auth.firebase_otp_login', 'user', (string) $userId, ['phone' => $phone, 'scope' => $scope]);
         json_out(['ok' => true, 'source' => 'mysql', 'provider' => 'firebase'] + $context);
@@ -93,7 +93,7 @@ try {
         $userId = (int) $user['id'];
     }
     set_session_user($userId, null, 'freelancer');
-    $context = auth_context();
+    $context = firebase_login_context();
     $context['redirect'] = '/freelancer';
     audit('auth.firebase_otp_login', 'user', (string) $userId, ['phone' => $phone, 'scope' => $scope]);
     json_out(['ok' => true, 'source' => 'mysql', 'provider' => 'firebase'] + $context);

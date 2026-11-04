@@ -61,6 +61,25 @@ function firebase_web_config(): array
     ], static fn ($v) => $v !== '');
 }
 
+/**
+ * Session context for the Firebase login endpoint. Equivalent to auth_context()
+ * in auth.php, which cannot be required here because that file dispatches the
+ * auth API on include.
+ */
+function firebase_login_context(): array
+{
+    $user = current_user();
+    $tenant = current_tenant();
+    return [
+        'user' => $user,
+        'tenant' => $tenant,
+        'tenants' => $user ? user_tenants((int) $user['id']) : [],
+        'role' => $tenant['role'] ?? ($user['role'] ?? null),
+        'usage' => $tenant ? tenant_usage((int) $tenant['id']) : null,
+        'csrf' => csrf_token(),
+    ];
+}
+
 function firebase_b64url_decode(string $value): string
 {
     $value = strtr($value, '-_', '+/');
