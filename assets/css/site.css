@@ -2204,3 +2204,7 @@ img[data-mz-hero-placeholder] { opacity: 0; }
   .mz-job-route__line { min-width: 20px; }
   .mz-job-task__actions .mz-input { max-width: none; }
 }
+
+.mz-job-timeline--scan { text-decoration: none; color: inherit; cursor: pointer; }
+.mz-job-timeline--scan:hover .mz-job-timeline__label { color: var(--mz-hunter); }
+.mz-job-task__scan-hint { margin: 0 0 2px; color: var(--mz-muted-fg); font-size: 10px; }

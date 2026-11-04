@@ -4468,24 +4468,9 @@ return '<div class="mz-mobile-card">' +
                   (job.receiver_phone ? '<small>' + esc(job.receiver_phone) + '</small>' : '') + '</div>' +
               '</div>';
           }
-          var actions = '';
-          if (job.status === 'accepted') {
-            actions = '<div class="mz-job-task__actions">' +
-              '<button type="button" class="mz-btn" data-pickup-job="' + job.id + '">Confirm pickup</button>' +
-              '<button type="button" class="mz-tab" data-cancel-job="' + job.id + '">Cancel job</button>' +
-            '</div>';
-          } else if (job.status === 'picked_up') {
-            actions = '<div class="mz-job-task__actions mz-job-task__actions--delivery">' +
-              '<input class="mz-input" data-proof-note="' + job.id + '" placeholder="Delivery note">' +
-              (job.otp_required
-                ? '<input class="mz-input" inputmode="numeric" maxlength="6" data-delivery-otp="' + job.id + '" placeholder="Receiver 6-digit code">' +
-                  '<button type="button" class="mz-tab" data-resend-otp="' + job.id + '">Resend code</button>'
-                : '') +
-              '<input class="mz-input mz-job-task__file" type="file" accept="image/jpeg,image/png" data-proof-photo="' + job.id + '" aria-label="Delivery photo (optional)">' +
-              '<button type="button" class="mz-btn" data-deliver-job="' + job.id + '">Mark delivered</button>' +
-              '<button type="button" class="mz-tab" data-cancel-job="' + job.id + '">Cancel job</button>' +
-            '</div>';
-          }
+          var actions = '<div class="mz-job-task__actions">' +
+            '<button type="button" class="mz-tab" data-cancel-job="' + job.id + '">Cancel job</button>' +
+          '</div>';
           return '<div class="mz-job-task" data-job-task="' + job.id + '">' +
             '<div class="mz-job-task__head">' +
               '<span class="mz-job-task__ref">' + esc(job.ref) + '</span>' +
@@ -4501,7 +4486,8 @@ return '<div class="mz-mobile-card">' +
               '<div class="mz-job-task__facts"><div><span class="mz-cap">Fee</span><strong>' + money(job.fee_kes) + '</strong></div>' +
                 (job.size ? '<div><span class="mz-cap">Size</span><strong>' + esc(job.size) + '</strong></div>' : '') + '</div>' +
             '</div>' +
-            '<div class="mz-job-timeline" role="list" aria-label="Job status timeline">' + timeline + '</div>' +
+            '<a class="mz-job-timeline mz-job-timeline--scan" href="/scan" aria-label="Scan to update this job">' + timeline + '</a>' +
+            '<p class="mz-job-task__scan-hint">Scan at pickup or delivery to update this job.</p>' +
             (job.description ? '<p class="mz-job-task__note">' + esc(job.description) + '</p>' : '') +
             actions +
           '</div>';
