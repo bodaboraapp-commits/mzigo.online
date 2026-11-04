@@ -5631,7 +5631,7 @@ return '<div class="mz-mobile-card">' +
         code +
         '<span class="mz-pill mz-pill--' + esc(meta.pill) + '">' + esc(meta.label) + '</span>' +
       '</div>' +
-      '<div class="mz-order-fee">' +
+      '<div class="mz-order-fee' + (!paid && p.can_pay ? ' mz-order-fee--pay' : '') + '">' +
         '<div><div class="mz-cap">Delivery fee</div><div style="font-size:18px;font-weight:800;">' + money(fee) + '</div></div>' +
         receipt +
         '<span class="mz-badge ' + (paid ? 'mz-badge--ok' : 'mz-badge--warn') + '">' + (paid ? 'Paid' : 'Payment due') + '</span>' +
