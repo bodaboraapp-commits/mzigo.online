@@ -5526,9 +5526,11 @@ return '<div class="mz-mobile-card">' +
               ? 'An M-Pesa prompt will be sent to your registered phone. Enter your PIN. Sandbox testing charges KES 1.'
               : 'An M-Pesa prompt will be sent to your registered phone. Enter your PIN. The full order amount after discounts will be charged to your M-Pesa account.')
           : 'Pay the delivery fee to receive your collection code. In demo mode no real money moves.') + '</div>' +
-        '<div class="mz-form-grid"><label class="mz-field"><span class="mz-label">Coupon code (optional)</span>' +
-          '<input class="mz-input" name="coupon_code" placeholder="e.g. MZIGO100"></label>' +
-          '<div style="display:flex;align-items:flex-end;"><button type="button" class="mz-btn mz-btn--outline mz-btn--sm" data-coupon-apply>Apply coupon</button></div></div>' +
+        '<div class="mz-coupon-row">' +
+          '<label class="mz-field"><span class="mz-label">Coupon code (optional)</span>' +
+            '<input class="mz-input" name="coupon_code" placeholder="e.g. MZIGO100"></label>' +
+          '<button type="button" class="mz-btn mz-btn--outline" data-coupon-apply>Apply coupon</button>' +
+        '</div>' +
         '<div class="mz-kv"><dt>Delivery fee</dt><dd>' + money(fee) + '</dd></div>' +
         '<div class="mz-kv"><dt>Coupon discount</dt><dd data-coupon-discount>' + money(0) + '</dd></div>' +
         '<div class="mz-kv"><dt>Referral credit</dt><dd data-credit-discount>' + money(0) + '</dd></div>' +
@@ -6031,8 +6033,11 @@ return '<div class="mz-mobile-card">' +
       submitLabel: 'Pay ' + money(Math.max(0, amount - credit)),
       body:
         '<div class="mz-alert" style="margin-bottom:12px;">Demo payment mode — no real money moves. Coupons and referral bill credit are applied here.</div>' +
-        '<label class="mz-field"><span class="mz-label">Coupon code (optional)</span><input class="mz-input" name="coupon_code" placeholder="e.g. MZIGO100"></label>' +
-        '<button type="button" class="mz-btn mz-btn--outline mz-btn--sm" data-invoice-coupon-apply>Apply coupon</button>' +
+        '<div class="mz-coupon-row">' +
+          '<label class="mz-field"><span class="mz-label">Coupon code (optional)</span>' +
+            '<input class="mz-input" name="coupon_code" placeholder="e.g. MZIGO100"></label>' +
+          '<button type="button" class="mz-btn mz-btn--outline" data-invoice-coupon-apply>Apply coupon</button>' +
+        '</div>' +
         '<div class="mz-kv" style="margin-top:12px;"><dt>Invoice amount</dt><dd>' + money(amount) + '</dd></div>' +
         '<div class="mz-kv"><dt>Coupon discount</dt><dd data-invoice-discount>' + money(0) + '</dd></div>' +
         '<div class="mz-kv"><dt>Referral bill credit</dt><dd data-invoice-credit>' + money(credit) + '</dd></div>' +
