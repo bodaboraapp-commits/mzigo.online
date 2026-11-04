@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -12,7 +12,7 @@
   <link rel="icon" href="/assets/img/favicon-64.png" type="image/png">
   <link rel="apple-touch-icon" href="/assets/img/scan-icon-192.png">
   <link rel="manifest" href="/assets/scan-manifest.webmanifest">
-  <link rel="stylesheet" href="/assets/css/scan.css?v=20261029r">
+  <link rel="stylesheet" href="/assets/css/scan.css?v=20261104a">
 </head>
 <body>
   <header class="scan-head">
@@ -165,6 +165,12 @@
     <div class="scan-settings-box">
       <div class="scan-row"><strong>Scanner settings</strong><button type="button" id="settingsClose" class="scan-link">Close</button></div>
       <p class="scan-hint" style="margin-top:12px;">This phone is connected to the point shown on the Scan page. The token is stored only on this device.</p>
+      <div id="scanPushSection" class="scan-settings-section" hidden>
+        <div class="scan-card-title">Push notifications</div>
+        <p class="scan-hint">Get scan confirmations and point alerts on this phone, even when the scanner is closed.</p>
+        <button type="button" id="scanPushEnable" class="scan-btn scan-btn--outline" style="width:100%;margin-top:10px;">Enable scan notifications</button>
+        <p id="scanPushStatus" class="scan-hint" hidden></p>
+      </div>
       <button type="button" id="changeToken" class="scan-btn scan-btn--outline" style="width:100%;margin-top:16px;">Disconnect point / change token</button>
     </div>
   </div>
@@ -189,6 +195,7 @@
   </nav>
 
   <script src="/assets/js/jsQR.min.js?v=20261028f" defer></script>
-  <script src="/assets/js/scan.js?v=20261029r" defer></script>
+  <script src="/assets/js/scan.js?v=20261104a" defer></script>
 </body>
 </html>
+

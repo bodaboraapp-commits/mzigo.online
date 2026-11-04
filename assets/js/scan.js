@@ -1,4 +1,4 @@
-(function () {
+﻿(function () {
   'use strict';
   var API = '/api/scan.php';
   var TOKEN_KEY = 'mzigo_point_token';
@@ -22,6 +22,9 @@
   var qrRequestSeq = 0;
   var queueFlushing = false;
   var torchOn = false;
+  var scanPushConfig = null;
+  var scanPushLoading = false;
+  var scanSwPromise = null;
 
   function $(sel) { return document.querySelector(sel); }
   function esc(value) {
@@ -62,7 +65,7 @@
   function relativeScanTime(value) {
     if (!value) return 'No scans';
     var then = new Date(String(value).replace(' ', 'T'));
-    if (isNaN(then.getTime())) return '—';
+    if (isNaN(then.getTime())) return 'â€”';
     var mins = Math.max(0, Math.round((Date.now() - then.getTime()) / 60000));
     if (mins < 1) return 'Just now';
     if (mins < 60) return mins + 'm ago';
@@ -83,7 +86,7 @@
   function renderPoint() {
     $('#pointName').textContent = point.name;
     var meta = [point.code, point.location || point.partner_slug].filter(Boolean);
-    $('#pointMeta').textContent = meta.join(' · ');
+    $('#pointMeta').textContent = meta.join(' Â· ');
     $('#pointType').textContent = point.point_type;
     renderPointDash();
     selectedAction = '';
@@ -93,6 +96,7 @@
     syncManualEntry();
     $('#setup').hidden = true;
     $('#app').hidden = false;
+    refreshScanPushSection();
   }
   function clearAutoRecord() {
     if (autoRecordInterval) { clearInterval(autoRecordInterval); autoRecordInterval = 0; }
@@ -105,7 +109,7 @@
     if (!btn) return;
     btn.setAttribute('aria-busy', 'false');
     if (primaryMode === 'auto') {
-      btn.textContent = 'Recording…';
+      btn.textContent = 'Recordingâ€¦';
       btn.disabled = true;
       return;
     }
@@ -161,7 +165,7 @@
     if (!mount) return;
     if (vertical) {
       mount.innerHTML = (items || []).map(function (item, index) {
-        var mark = item.state === 'done' ? '✓' : (item.state === 'current' ? '●' : String(index + 1));
+        var mark = item.state === 'done' ? 'âœ“' : (item.state === 'current' ? 'â—' : String(index + 1));
         return '<div class="scan-journey__vrow is-' + esc(item.state) + '">' +
           '<span class="scan-journey__dot">' + mark + '</span>' +
           '<div><strong>' + esc(item.label) + '</strong><small>' + esc(item.description || '') + '</small></div></div>';
@@ -169,7 +173,7 @@
       return;
     }
     mount.innerHTML = (items || []).map(function (item, index) {
-      var mark = item.state === 'done' ? '✓' : (item.state === 'current' ? '●' : String(index + 1));
+      var mark = item.state === 'done' ? 'âœ“' : (item.state === 'current' ? 'â—' : String(index + 1));
       return '<div class="scan-journey__stop is-' + esc(item.state) + '">' +
         '<span class="scan-journey__dot">' + mark + '</span>' +
         '<strong>' + esc(item.label) + '</strong><small>' + esc(item.description || '') + '</small></div>' +
@@ -224,7 +228,7 @@
     clearAutoRecord();
     if (parcelJourney && parcelJourney.tracking !== value) resetJourney();
     var seq = ++lookupSeq;
-    $('#scanHint').textContent = 'Loading parcel journey…';
+    $('#scanHint').textContent = 'Loading parcel journeyâ€¦';
     apiGet({ tracking: value }).then(function (res) {
       if (seq !== lookupSeq) return;
       if (res.parcel) {
@@ -275,8 +279,8 @@
     var mount = $('#recentList');
     if (!rows.length) { mount.innerHTML = '<p class="scan-hint">No scans yet on this device.</p>'; return; }
     mount.innerHTML = rows.map(function (r) {
-      return '<div class="scan-recent-row"><div><strong>' + esc(r.tracking) + '</strong><span> · ' + esc(r.action) + '</span></div>' +
-        '<span>' + esc(r.label) + ' · ' + esc(r.at) + '</span></div>';
+      return '<div class="scan-recent-row"><div><strong>' + esc(r.tracking) + '</strong><span> Â· ' + esc(r.action) + '</span></div>' +
+        '<span>' + esc(r.label) + ' Â· ' + esc(r.at) + '</span></div>';
     }).join('');
   }
   function queueItems() {
@@ -375,8 +379,8 @@
       box.className = 'scan-result scan-result--ok';
       box.setAttribute('role', 'status');
       box.innerHTML = '<div class="scan-success"><div><strong>' + esc(res.label) + '</strong>' +
-        esc(res.tracking) + ' · ' + esc(res.status) +
-        (res.idempotent ? ' · already recorded' : '') + '</div></div>';
+        esc(res.tracking) + ' Â· ' + esc(res.status) +
+        (res.idempotent ? ' Â· already recorded' : '') + '</div></div>';
       saveRecent({ tracking: res.tracking, action: selectedAction, label: res.label, at: new Date().toLocaleTimeString() });
       if (!res.idempotent) {
         pointStats.today = Number(pointStats.today || 0) + 1;
@@ -441,7 +445,7 @@
     var btn = $('#submitScan');
     if (btn) { btn.disabled = true; btn.setAttribute('aria-busy', 'true'); }
     $('#qrOverlay').hidden = false;
-    setQrHint('Starting camera…');
+    setQrHint('Starting cameraâ€¦');
     navigator.mediaDevices.getUserMedia({
       video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }
     }).then(function (stream) {
@@ -507,12 +511,12 @@
             lookupParcel(scanned, true);
             if (!$('#manualEntryWrap').hidden) $('#tracking').focus();
           } else {
-            if (raw !== '') setQrHint('Not a Mzigo label — keep the camera on a valid QR/Locker label.');
+            if (raw !== '') setQrHint('Not a Mzigo label â€” keep the camera on a valid QR/Locker label.');
             scheduleNext(180);
           }
         }).catch(function () {
           if (!qrStream || seq !== qrRequestSeq) return;
-          setQrHint('Camera scanning… hold the label steady.');
+          setQrHint('Camera scanningâ€¦ hold the label steady.');
           scheduleNext(350);
         });
       }
@@ -577,7 +581,7 @@
       return;
     }
     var title = record.tracking || record.locker || record.ref || data.query;
-    var route = record.from && record.to ? record.from + ' → ' + record.to : '';
+    var route = record.from && record.to ? record.from + ' â†’ ' + record.to : '';
     var scanRows = scans.slice(0, 4).map(function (scan) {
       return '<div class="scan-track-scan"><strong>' + esc(statusLabel(scan.label || scan.status)) + '</strong>' +
         (scan.location ? '<span>' + esc(scan.location) + '</span>' : '') +
@@ -589,8 +593,8 @@
       '<div class="scan-track-head"><div><span class="scan-kicker">' + (data.kind === 'errand' ? 'Errand' : 'Parcel') + ' found</span>' +
       '<h2>' + esc(title) + '</h2>' + (route ? '<p class="scan-muted">' + esc(route) + '</p>' : '') + '</div>' +
       '<span class="scan-track-status">' + esc(statusLabel(record.status)) + '</span></div>' +
-      '<div class="scan-track-meta"><span>Carrier</span><strong>' + esc(record.carrier || '—') + '</strong>' +
-      '<span>Payment</span><strong>' + esc(statusLabel(record.payment_status || '—')) + '</strong></div>' +
+      '<div class="scan-track-meta"><span>Carrier</span><strong>' + esc(record.carrier || 'â€”') + '</strong>' +
+      '<span>Payment</span><strong>' + esc(statusLabel(record.payment_status || 'â€”')) + '</strong></div>' +
       (scanRows ? '<div class="scan-track-scans"><div class="scan-card-title">Latest scans</div>' + scanRows + '</div>' : '') +
       '<p class="scan-hint">Details are masked for privacy. Ask the customer for their receipt for full details.</p>';
   }
@@ -605,7 +609,7 @@
     if (!query) { toastError('#trackError', 'Enter a tracking number, Locker ID or errand reference.'); return; }
     button.disabled = true;
     var original = button.textContent;
-    button.textContent = 'Tracking…';
+    button.textContent = 'Trackingâ€¦';
     fetch('/api/track.php?q=' + encodeURIComponent(query), { cache: 'no-store' })
       .then(function (res) {
         return res.json().catch(function () { return { ok: false, error: { message: 'Unexpected response from the server.' } }; });
@@ -616,6 +620,93 @@
       })
       .catch(function (err) { toastError('#trackError', err.message); })
       .finally(function () { button.disabled = false; button.textContent = original; });
+  }
+
+  function refreshScanPushSection() {
+    var section = $('#scanPushSection');
+    if (!section) return;
+    section.hidden = !(scanPushConfig && point && token);
+  }
+
+  function setScanPushStatus(message, error) {
+    var el = $('#scanPushStatus');
+    if (!el) return;
+    el.hidden = !message;
+    el.textContent = message || '';
+    el.style.color = error ? 'var(--danger)' : '';
+  }
+
+  function loadScanPushScript(src) {
+    return new Promise(function (resolve, reject) {
+      var tag = document.createElement('script');
+      tag.src = src;
+      tag.async = true;
+      tag.onload = resolve;
+      tag.onerror = function () { reject(new Error('Could not load Firebase Messaging.')); };
+      document.head.appendChild(tag);
+    });
+  }
+
+  function loadScanPushConfig() {
+    if (scanPushLoading || !('Notification' in window)) return;
+    scanPushLoading = true;
+    fetch('/api/push-config.php', { cache: 'no-store' })
+      .then(function (res) { return res.json(); })
+      .then(function (res) {
+        if (res && res.enabled && res.config && res.vapidKey && res.config.apiKey) {
+          scanPushConfig = res;
+          refreshScanPushSection();
+        }
+      })
+      .catch(function () {})
+      .finally(function () { scanPushLoading = false; });
+  }
+
+  function enableScanPush() {
+    var btn = $('#scanPushEnable');
+    if (!btn || !point || !token || !scanPushConfig) return;
+    if (!('serviceWorker' in navigator) || !('Notification' in window)) {
+      setScanPushStatus('This browser does not support push notifications.', true);
+      return;
+    }
+    btn.disabled = true;
+    setScanPushStatus('Requesting permission…');
+    Notification.requestPermission().then(function (permission) {
+      if (permission !== 'granted') throw new Error('Notification permission was not granted.');
+      return Promise.all([
+        loadScanPushScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js'),
+        loadScanPushScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js')
+      ]);
+    }).then(function () {
+      if (!window.firebase) throw new Error('Firebase SDK did not load.');
+      if (!window.firebase.apps.length) window.firebase.initializeApp(scanPushConfig.config);
+      return scanSwPromise || navigator.serviceWorker.ready;
+    }).then(function (registration) {
+      if (!registration) throw new Error('Scanner service worker is not ready.');
+      return window.firebase.messaging().getToken({
+        vapidKey: scanPushConfig.vapidKey,
+        serviceWorkerRegistration: registration
+      });
+    }).then(function (pushToken) {
+      return fetch('/api/scan-push.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Point-Token': token },
+        body: JSON.stringify({ action: 'save', token: pushToken, platform: 'web' })
+      }).then(function (res) {
+        return res.json().catch(function () { throw new Error('Unexpected response from the server.'); })
+          .then(function (data) {
+            if (!res.ok || !data.ok) throw new Error((data.error && data.error.message) || 'Could not enable scan notifications.');
+            return data;
+          });
+      });
+    }).then(function () {
+      setScanPushStatus('Scan notifications are enabled on this phone.');
+      btn.textContent = 'Notifications enabled';
+      btn.disabled = true;
+    }).catch(function (err) {
+      setScanPushStatus((err && err.message) || 'Could not enable scan notifications.', true);
+      btn.disabled = false;
+    });
   }
 
   document.addEventListener('DOMContentLoaded', function () {
@@ -651,6 +742,7 @@
       if (ev.key === 'Enter') { ev.preventDefault(); lookupParcel($('#tracking').value); }
     });
     $('#settingsBtn').addEventListener('click', function () { $('#settingsOverlay').hidden = false; });
+    $('#scanPushEnable').addEventListener('click', enableScanPush);
     $('#settingsClose').addEventListener('click', function () { $('#settingsOverlay').hidden = true; });
     $('#settingsOverlay').addEventListener('click', function (ev) {
       if (ev.target === $('#settingsOverlay')) $('#settingsOverlay').hidden = true;
@@ -669,6 +761,7 @@
     $('#changeToken').addEventListener('click', function () {
       if (!window.confirm('Disconnect this point token from this phone?')) return;
       setToken(''); point = null; pendingKey = '';
+      refreshScanPushSection();
       $('#settingsOverlay').hidden = true;
       $('#app').hidden = true; $('#setup').hidden = false;
       $('#tokenInput').value = '';
@@ -676,7 +769,12 @@
     });
     var saved = localStorage.getItem(TOKEN_KEY);
     if (saved) connect(saved).then(function () { flushQueue(); }).catch(function () {});
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/scan-sw.js').catch(function () {});
+    if ('serviceWorker' in navigator) {
+      scanSwPromise = navigator.serviceWorker.register('/scan-sw.js')
+        .then(function () { return navigator.serviceWorker.ready; })
+        .catch(function () { return null; });
+    }
+    loadScanPushConfig();
     var installPrompt = null;
     window.addEventListener('beforeinstallprompt', function (ev) {
       ev.preventDefault(); installPrompt = ev; $('#installBtn').hidden = false;
@@ -687,3 +785,4 @@
     });
   });
 })();
+
