@@ -91,6 +91,7 @@
   var teamCredential = null;
   var pendingWebhookSecret = null;
   var runnerBellState = { items: [], unread: 0 };
+  var headerBellRole = 'freelancer';
   var APP = {
     user: null, tenant: null, branding: null, tenants: [], role: null, usage: null, csrf: '', showDemoAccounts: true,
     partners: [], packageSizes: [], paymentMethods: [],
@@ -718,6 +719,20 @@
     });
   }
   function markRunnerBellRead() {
+    if (headerBellRole === 'customer') {
+      api('notifications.php', { method: 'POST', body: { action: 'mark_all_read' } })
+        .then(function () {
+          var readAt = new Date().toISOString();
+          updateRunnerBell({
+            unread: 0,
+            items: (runnerBellState.items || []).map(function (n) {
+              return Object.assign({}, n, { read_at: n.read_at || readAt });
+            })
+          });
+        })
+        .catch(function (err) { toast(err.message, 'error'); });
+      return;
+    }
     api('freelancer.php', { method: 'POST', body: { action: 'mark-notifications-read' } })
       .then(function (fresh) { updateRunnerBell(fresh.notifications || { items: [], unread: 0 }); })
       .catch(function (err) { toast(err.message, 'error'); });
@@ -801,8 +816,11 @@
       if (role !== 'freelancer' && role !== 'customer' && role !== 'admin') menuLinks.push(['/billing', 'Billing & invoices']);
       if (role !== 'freelancer' && role !== 'customer') menuLinks.push(['/settings', 'Settings']);
       var isRunnerPage = document.body.getAttribute('data-page') === 'freelancer';
+      var isCustomerPage = document.body.getAttribute('data-page') === 'customer';
+      var isBellPage = isRunnerPage || isCustomerPage;
+      headerBellRole = isCustomerPage ? 'customer' : 'freelancer';
       slot.innerHTML =
-        (isRunnerPage ? runnerBellMarkup() : '') +
+        (isBellPage ? runnerBellMarkup() : '') +
         '<div class="mz-account-wrap">' +
           '<button type="button" class="mz-tenant-chip" data-account-toggle aria-haspopup="true" aria-expanded="false" title="' + esc(label) + '">' +
             chipLogo + '<span class="mz-tenant-chip__name">' + esc(label) + '</span>' + ICON.chevron +
@@ -843,7 +861,7 @@
       if (header.className.indexOf('md:hidden') === -1) return;
       var profileLink = header.querySelector('a[aria-label="Profile"]');
       if (profileLink) {
-        if (isRunnerPage && !header.querySelector('[data-mz-bell]')) {
+        if (isBellPage && !header.querySelector('[data-mz-bell]')) {
           var holder = document.createElement('div');
           holder.innerHTML = runnerBellMarkup();
           var bell = holder.firstElementChild;
@@ -855,7 +873,7 @@
       }
     });
     $$('[data-mz-bell-wrap]').forEach(bindRunnerBell);
-    if (isRunnerPage) updateRunnerBell(runnerBellState);
+    if (isBellPage) updateRunnerBell(runnerBellState);
   }
 
   function initMobileNav() {
@@ -5651,6 +5669,18 @@ return '<div class="mz-mobile-card">' +
         '<button type="button" class="mz-btn" data-save-notification-prefs>Save preferences</button>' +
         '<button type="button" class="mz-btn mz-btn--outline" data-save-channel>Save channel</button>' +
       '</div></div>';
+    var customerNotes = data.notifications || [];
+    updateRunnerBell({
+      unread: customerNotes.filter(function (n) { return !n.read_at; }).length,
+      items: customerNotes.map(function (n) {
+        return {
+          title: n.subject || n.template || 'Update',
+          body: n.body || '',
+          created_at: n.created_at,
+          read_at: n.read_at
+        };
+      })
+    });
     var cards = parcels.length
       ? parcels.map(customerParcelCard).join('')
       : '<div class="mz-saas-card"><div class="mz-card__title">No incoming parcels yet</div>' +
@@ -5720,7 +5750,6 @@ return '<div class="mz-mobile-card">' +
       '<div id="pay">' + cards + '</div>' +
       csatCard +
       customerClaimsSection(data) +
-      '<div style="margin-top:16px;">' + customerNotificationsCard(data.notifications) + '</div>' +
       '<div style="margin-top:16px;">' + prefCard + '</div>' +
       '<div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">' +
         '<button type="button" class="mz-tab mz-signout-inline" data-customer-signout>Sign out</button>' +
@@ -5822,13 +5851,6 @@ return '<div class="mz-mobile-card">' +
         .catch(function (err) { toast(err.message, 'error'); savePrefs.disabled = false; });
     });
     bindCustomerClaims(host, data);
-    var markRead = host.querySelector('[data-customer-notifications-read]');
-    if (markRead) markRead.addEventListener('click', function () {
-      markRead.disabled = true;
-      api('notifications.php', { method: 'POST', body: { action: 'mark_all_read' } })
-        .then(function () { loadCustomer(host); })
-        .catch(function (err) { toast(err.message, 'error'); markRead.disabled = false; });
-    });
     var out = host.querySelector('[data-customer-signout]');
     if (out) out.addEventListener('click', function () {
       signOut().then(function () { window.location.href = '/login'; });
