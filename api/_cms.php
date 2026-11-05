@@ -103,7 +103,7 @@ function cms_branding(): array
     return [
         'logo_url' => $logo !== '' ? $logo : '/assets/img/mzigo-logo.png',
         'favicon_url' => $favicon !== '' ? $favicon : '/assets/img/favicon.ico',
-        'hero_url' => $hero !== '' ? $hero : '/assets/img/delivery.jpg',
+        'hero_url' => $hero !== '' ? $hero : '/assets/img/delivery.webp',
         'hero_title' => $heroTitle !== '' ? $heroTitle : 'Send or Track Mzigo',
         'hero_subtitle' => $heroSubtitle !== '' ? $heroSubtitle : 'Your trusted package delivery and tracking solution',
         'custom_logo' => $logo !== '',

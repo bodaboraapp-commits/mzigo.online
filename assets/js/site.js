@@ -1275,11 +1275,13 @@
     var logo = branding.logo_url;
     var favicon = branding.favicon_url;
     var hero = branding.hero_url;
-    var defaultHero = '/assets/img/delivery.jpg';
+    var defaultHero = '/assets/img/delivery.webp';
     $$('[data-mz-hero-image], img[alt="Parcel delivery"]').forEach(function (img) {
       var next = hero || defaultHero;
       if (img.getAttribute('src') !== next) img.setAttribute('src', next);
       img.removeAttribute('data-mz-hero-placeholder');
+      img.setAttribute('loading', 'eager');
+      img.setAttribute('fetchpriority', 'high');
       img.style.opacity = '';
     });
     if (logo && branding.custom_logo) {
@@ -9211,7 +9213,7 @@ return '<div class="mz-mobile-card">' +
           '</div>' +
         '</div>' +
         '<div class="mz-brand-row">' +
-          '<div class="mz-brand-preview mz-brand-preview--hero"><img src="' + esc(branding.hero_url || '/assets/img/delivery.jpg') + '" alt="Hero photo preview"></div>' +
+          '<div class="mz-brand-preview mz-brand-preview--hero"><img src="' + esc(branding.hero_url || '/assets/img/delivery.webp') + '" alt="Hero photo preview"></div>' +
           '<div class="mz-brand-body">' +
             '<div class="mz-label">Hero photo</div>' +
             '<div class="mz-hint">JPG, PNG or WebP · up to 2 MB · landscape 16:9 works best (e.g. 1920×1080). Shown in the landing-page hero.</div>' +

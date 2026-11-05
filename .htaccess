@@ -1,4 +1,4 @@
-﻿# Clean URLs for the static Mzigo.online clone.
+# Clean URLs for the static Mzigo.online clone.
 # Mirrors the original routes: / , /send-mzigo , /send-mzigo/<carrier> ,
 # /track-mzigo , /partners , /profile , /send-errand
 
@@ -49,21 +49,38 @@ ErrorDocument 404 /404.html
 ErrorDocument 500 /500.html
 
 # Caching policy.
-#   â€¢ HTML + CSS/JS: always revalidate, so edits show immediately (304 is cheap).
-#   â€¢ Images/fonts/manifest: cache for a week; uploaded brand files get unique
-#     names and the bundled assets are effectively static.
+#   • HTML: always revalidate so content changes appear immediately.
+#   • Versioned CSS/JS: cache for one year (the ?v= build version busts it).
+#   • Service workers must bypass long-lived caching.
+#   • Images/fonts use unique/hashed names, so cache them for one year.
 <IfModule mod_headers.c>
-    <FilesMatch "\.(html|css|js)$">
+    <FilesMatch "\.(html|php)$">
+        Header set Cache-Control "no-cache, must-revalidate"
+    </FilesMatch>
+    <FilesMatch "\.(css|js)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+    <FilesMatch "^(firebase-messaging-sw|scan-sw)\.js$">
         Header set Cache-Control "no-cache, must-revalidate"
     </FilesMatch>
     <FilesMatch "\.(png|jpe?g|webp|svg|ico|woff2?|webmanifest)$">
-        Header set Cache-Control "public, max-age=604800, immutable"
+        Header set Cache-Control "public, max-age=31536000, immutable"
     </FilesMatch>
+    Header append Vary "Accept-Encoding"
 </IfModule>
 
-# Compression is disabled in this XAMPP install (mod_deflate is not loaded).
-# In production enable mod_deflate for text/css, application/javascript and
-# image/svg+xml â€” site.js alone is ~285 KB uncompressed.
+# Compression for text assets (Apache generates and caches the compressed copy).
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/css text/xml
+    AddOutputFilterByType DEFLATE application/javascript application/json application/xml
+    AddOutputFilterByType DEFLATE image/svg+xml
+</IfModule>
+<IfModule mod_brotli.c>
+    AddOutputFilterByType BROTLI_COMPRESS text/html text/plain text/css text/xml
+    AddOutputFilterByType BROTLI_COMPRESS application/javascript application/json application/xml
+    AddOutputFilterByType BROTLI_COMPRESS image/svg+xml
+</IfModule>
+
 
 
 
