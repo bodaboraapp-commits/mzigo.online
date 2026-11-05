@@ -2363,3 +2363,24 @@ img[data-mz-hero-placeholder] { opacity: 0; }
 @media (max-width: 420px) {
   .mz-coupon-row .mz-btn { padding: 0 13px; font-size: 11px; }
 }
+
+/* Partners page header: copy left, CTAs right. */
+.mz-partners-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.mz-partners-head > div:first-child { min-width: 0; }
+.mz-partners-head__cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex: none;
+}
+@media (max-width: 767px) {
+  .mz-partners-head { align-items: flex-start; flex-direction: column; }
+  .mz-partners-head__cta { justify-content: flex-start; }
+}
